@@ -38,7 +38,16 @@ RPC_ENDPOINT = '/RPC2'
 
 app = Flask(__name__)
 
-app.add_url_rule("/load_model", "/load_model", load_model, methods=["POST"])
+def do_load():
+    filename = request.form["filename"]
+    load_model(filename)
+    return "done"
+    
+app.add_url_rule("/load_model", "/load_model", do_load, methods=["POST"])
+
+@app.route("/")
+def hello():
+    return "Hello World!"
 
 
 # Allow "python -m bumps.gui.gui_app options..."

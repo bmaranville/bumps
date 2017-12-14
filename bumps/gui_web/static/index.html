@@ -2,8 +2,22 @@
   <head>
     <title>Refl1d</title>
     <script type="text/javascript" src="js/msgpack.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js"></script> 
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+      window.onload = function() {
+        $("button#send").on("click", function() {
+          alert($("#to_test").val());
+        });
+        $("input#to_load").on("change", function() {
+          alert(this.value);
+          $.post("/load_model", {filename: this.value});
+        })
+      }
+    </script>
   </head>
   <body>
       <label>Load: <input type="file" id="to_load"/></label>
+      <label>Test: <input type="text" id="to_test"/><button id="send">send</button></label>
   </body>  
 </html>
