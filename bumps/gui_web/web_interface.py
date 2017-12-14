@@ -45,6 +45,15 @@ def do_load():
     
 app.add_url_rule("/load_model", "/load_model", do_load, methods=["POST"])
 
+@app.errorhandler(Exception)
+def handle_error(e):
+    code = 500
+    if isinstance(e, HTTPException):
+        code = e.code
+    content = {'exception': repr(e), 'traceback': traceback.format_exc()}
+    logging.info(content['traceback'])
+    return make_response(msgpack_converter.dumps(content), code)
+
 @app.route("/")
 def hello():
     return "Hello World!"
@@ -52,14 +61,7 @@ def hello():
 
 # Allow "python -m bumps.gui.gui_app options..."
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
-    #import http.server
-    #import socketserver
-    #Handler = http.server.SimpleHTTPRequestHandler
-    #httpd = socketserver.TCPServer(("", PORT), Handler)
-    #print("serving at port", PORT)
-    #httpd.serve_forever()
-    
+    logging.basicConfig(level=logging.WARNING)    
     port = 8002
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
