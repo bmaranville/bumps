@@ -219,7 +219,7 @@ class BaseParameter(object):
         return Operator(self, other, "mul", "*")
 
     def __div__(self, other):
-        return Operator(self, other, "div", "/")
+        return Operator(self, other, "truediv", "/")
 
     def __pow__(self, other):
         return Operator(self, other, "pow", "**")
@@ -234,7 +234,7 @@ class BaseParameter(object):
         return Operator(other, self, "mul", "*")
 
     def __rdiv__(self, other):
-        return Operator(other, self, "div", "/")
+        return Operator(other, self, "truediv", "/")
 
     def __rpow__(self, other):
         return Operator(other, self, "pow", "**")
