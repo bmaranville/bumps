@@ -1,0 +1,7 @@
+bumps.lsqerror module
+=====================
+
+.. automodule:: bumps.lsqerror
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+bumps.gui.util module
+=====================
+
+.. automodule:: bumps.gui.util
+   :members:
+   :undoc-members:
+   :show-inheritance:

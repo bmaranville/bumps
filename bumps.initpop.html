@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.initpop module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.initpop module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.initpop">
+<span id="bumps-initpop-module"></span><h1>bumps.initpop module<a class="headerlink" href="#module-bumps.initpop" title="Link to this heading">¶</a></h1>
+<p>Population initialization strategies.</p>
+<p>To start the analysis an initial population is required.  This will be
+an array of size M x N, where M is the number of dimensions in the fitting
+problem and N is the number of individuals in the population.</p>
+<p>Normally the initialization will use a call to <a class="reference internal" href="#bumps.initpop.generate" title="bumps.initpop.generate"><code class="xref py py-func docutils literal notranslate"><span class="pre">generate()</span></code></a> with
+key-value pairs from the command line options.  This will include the
+‘init’ option, with the name of the strategy used to initialize the
+population.</p>
+<p>Additional strategies like uniform box in [0,1] or standard norm
+(rand(m,n) and randn(m,n) respectively), may also be useful.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.initpop.cov_init">
+<span class="sig-prename descclassname"><span class="pre">bumps.initpop.</span></span><span class="sig-name descname"><span class="pre">cov_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/bumps/initpop.html#cov_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.initpop.cov_init" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize <em>n</em> sets of random variables from a gaussian model.</p>
+<p>The center is at <em>x</em> with an uncertainty ellipse specified by the
+1-sigma independent uncertainty values <em>dx</em> or the full covariance
+matrix uncertainty <em>cov</em>.</p>
+<p>For example, create an initial population for 20 sequences for a
+model with local minimum x with covariance matrix C:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop</span> <span class="o">=</span> <span class="n">cov_init</span><span class="p">(</span><span class="n">cov</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <em>use_point</em> is True, then the current value of the parameters
+is returned as the first point in the population.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.initpop.eps_init">
+<span class="sig-prename descclassname"><span class="pre">bumps.initpop.</span></span><span class="sig-name descname"><span class="pre">eps_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/bumps/initpop.html#eps_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.initpop.eps_init" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a random population using an epsilon ball around the current
+value.</p>
+<p>Since the initial population is contained in a small volume, this
+method is useful for exploring a local minimum around a point.  Over
+time the ball will expand to fill the minimum, and perhaps tunnel
+through barriers to nearby minima given enough burn-in time.</p>
+<p>eps is in proportion to the bounds on the parameter, or the current
+value of the parameter if the parameter is unbounded.  This gives the
+initialization a bit of scale independence.</p>
+<p>If <em>use_point</em> is True, then the current value of the parameters
+is returned as the first point in the population.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.initpop.generate">
+<span class="sig-prename descclassname"><span class="pre">bumps.initpop.</span></span><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'eps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">...</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">np.ndarray</span></span></span><a class="reference internal" href="_modules/bumps/initpop.html#generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.initpop.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Population initializer.</p>
+<p><em>problem</em> is a fit problem with <em>getp</em> and <em>bounds</em> methods.</p>
+<p><em>init</em> is ‘eps’, ‘cov’, ‘lhs’ or ‘random’, indicating which
+initializer should be used.</p>
+<p><em>pop</em> is the population scale factor, generating <em>pop</em> individuals
+for each parameter in the fit. If <em>pop &lt; 0</em>, generate a total of
+<em>-pop</em> individuals regardless of the number of parameters.</p>
+<p><em>use_point</em> is True if the initial value should be a member of the
+population.</p>
+<p>Additional options are ignored so that generate can be called using
+all command line options.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.initpop.lhs_init">
+<span class="sig-prename descclassname"><span class="pre">bumps.initpop.</span></span><span class="sig-name descname"><span class="pre">lhs_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/bumps/initpop.html#lhs_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.initpop.lhs_init" title="Link to this definition">¶</a></dt>
+<dd><p>Latin hypercube sampling.</p>
+<p>Returns an array whose columns and rows each have <em>n</em> samples from
+equally spaced bins between <em>bounds=(xmin, xmax)</em> for the column.
+Unlike random, this method guarantees a certain amount of coverage
+of the parameter space.  Consider, though that the diagonal matrix
+satisfies the LHS condition, and you can see that the guarantees are
+not very strong.  A better methods, similar to sudoku puzzles, would
+guarantee coverage in each block of the matrix, but this is not
+yet implmeneted.</p>
+<p>If <em>use_point</em> is True, then the current value of the parameters
+is returned as the first point in the population, preserving the the
+LHS property.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.initpop.random_init">
+<span class="sig-prename descclassname"><span class="pre">bumps.initpop.</span></span><span class="sig-name descname"><span class="pre">random_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_point</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/initpop.html#random_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.initpop.random_init" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a random population from the problem parameters.</p>
+<p>Values are selected at random from the bounds of the problem according
+to the underlying probability density of each parameter.  Uniform
+semi-definite and indefinite bounds use the standard normal distribution
+for the underlying probability, with a scale factor determined by the
+initial value of the parameter.</p>
+<p>If <em>use_point</em> is True, then the current value of the parameters
+is returned as the first point in the population.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.initpop module</a><ul>
+<li><a class="reference internal" href="#bumps.initpop.cov_init"><code class="docutils literal notranslate"><span class="pre">cov_init()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.initpop.eps_init"><code class="docutils literal notranslate"><span class="pre">eps_init()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.initpop.generate"><code class="docutils literal notranslate"><span class="pre">generate()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.initpop.lhs_init"><code class="docutils literal notranslate"><span class="pre">lhs_init()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.initpop.random_init"><code class="docutils literal notranslate"><span class="pre">random_init()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.initpop.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.initpop module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

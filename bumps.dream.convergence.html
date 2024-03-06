@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.convergence module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.convergence module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.convergence">
+<span id="bumps-dream-convergence-module"></span><h1>bumps.dream.convergence module<a class="headerlink" href="#module-bumps.dream.convergence" title="Link to this heading">¶</a></h1>
+<section id="convergence-diagnostics">
+<h2>Convergence diagnostics<a class="headerlink" href="#convergence-diagnostics" title="Link to this heading">¶</a></h2>
+<p>The function <a class="reference internal" href="dream/convergence.html#bumps.dream.convergence.burn_point" title="bumps.dream.convergence.burn_point"><code class="xref py py-func docutils literal notranslate"><span class="pre">burn_point()</span></code></a> returns the point within the MCMC
+chain at which the chain can be said to have converged, or -1 if
+the log probabilities are still improving throughout the chain.</p>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.convergence.burn_point">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.convergence.</span></span><span class="sig-name descname"><span class="pre">burn_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dream/state.html#bumps.dream.state.MCMCDraw" title="bumps.dream.state.MCMCDraw"><span class="pre">MCMCDraw</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'window'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/bumps/dream/convergence.html#burn_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.convergence.burn_point" title="Link to this definition">¶</a></dt>
+<dd><p>Determines the point at which the MCMC chain seems to have converged.</p>
+<p><em>state</em> contains the MCMC chain information.</p>
+<p><em>method=”window”</em> is the name of the convergence diagnostic (see below).</p>
+<p><em>trials</em> is the number of times to run the K-S test.</p>
+<p>Returns the index of the burn points, or -1 if no good burn point is found.</p>
+<p><strong>Kolmogorov-Smirnov sliding window</strong></p>
+<p>The “window” method detects convergence by comparing the distribution of
+<span class="math notranslate nohighlight">\(\log(p)\)</span> values in a small window at the start of the chains and the
+values in a section at the end of the chain using a Kolmogorov-Smirnov
+test.  See <a class="reference internal" href="dream/convergence.html#bumps.dream.convergence.ks_converged" title="bumps.dream.convergence.ks_converged"><code class="xref py py-func docutils literal notranslate"><span class="pre">ks_converged()</span></code></a> for a description of the parameters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.convergence.ks_converged">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.convergence.</span></span><span class="sig-name descname"><span class="pre">ks_converged</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dream/state.html#bumps.dream.state.MCMCDraw" title="bumps.dream.state.MCMCDraw"><span class="pre">MCMCDraw</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">density</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/bumps/dream/convergence.html#ks_converged"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.convergence.ks_converged" title="Link to this definition">¶</a></dt>
+<dd><p>Return True if the MCMC has converged according to the K-S window test.</p>
+<p>Since we are only looking at the distribution of logp values, and not the
+individual points, we should be relatively stable regardless of the
+properties of the sampler.  The main reason for failure will be “stuck”
+fits which have not had a chance to jump to a lower minimum.</p>
+<p><em>state</em> contains the MCMC chain information.</p>
+<p><em>trials</em> is the number of times to run the K-S test.</p>
+<p><em>density</em> is the proportion of samples to select from the window.  Prefer
+lower density from larger number of samples so the sets chosen for the
+K-S test have fewer duplicates.  For density=0.1 about 5% of samples will
+be duplicates.  For density=0.6 about 25% will be duplicates.</p>
+<p><em>alpha</em> is the significance level for the test.  With smaller alpha
+values the K-S test is less likely to reject the current window when
+testing against the tail of the distribution, and so the fit will end
+earlier, with more samples after the burn point.</p>
+<p><em>samples</em> is the size of the sample window. If the window is too big
+the test will falsly end burn when the start of the window is still
+converging.  If the window is too small the test will take a long time,
+and will start to show effects of autocorrelation (efficient MCMC
+samplers move slowly across the posterior probability space, showing
+short term autocorrelation between samples.)  A minimum of 10 generations
+and a maximum of 1/2 the generations will be used.</p>
+<p>There is a strong interaction between density, alpha, samples and trials.
+If the K-S test has too many points (=density*samples), it will often
+reject simply because the different portions of the Markov chain are
+not identical (Markov chains can have short range correlations yet
+still have the full chain as a representative draw from the posterior
+distribution) unless alpha is reduced.  With fewer points, the estimated
+K-S statistic will have more variance, and so more trials will be needed
+to avoid spurious accept/reject decisions.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.convergence module</a><ul>
+<li><a class="reference internal" href="#convergence-diagnostics">Convergence diagnostics</a></li>
+<li><a class="reference internal" href="#bumps.dream.convergence.burn_point"><code class="docutils literal notranslate"><span class="pre">burn_point()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.convergence.ks_converged"><code class="docutils literal notranslate"><span class="pre">ks_converged()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.convergence.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.convergence module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

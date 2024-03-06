@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.cheby module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.cheby module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.cheby">
+<span id="bumps-cheby-module"></span><h1>bumps.cheby module<a class="headerlink" href="#module-bumps.cheby" title="Link to this heading">¶</a></h1>
+<p>Freeform modeling with Chebyshev polynomials.</p>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Chebyshev_polynomials">Chebyshev polynomials</a>
+<span class="math notranslate nohighlight">\(T_k\)</span> form a basis set for functions over <span class="math notranslate nohighlight">\([-1,1]\)</span>.  The truncated
+interpolating polynomial <span class="math notranslate nohighlight">\(P_n\)</span> is a weighted sum of Chebyshev polynomials
+up to degree <span class="math notranslate nohighlight">\(n\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[f(x) \approx P_n(x) = \sum_{k=0}^n c_i T_k(x)\]</div>
+<p>The interpolating polynomial exactly matches <span class="math notranslate nohighlight">\(f(x)\)</span> at the chebyshev
+nodes <span class="math notranslate nohighlight">\(z_k\)</span> and is near the optimal polynomial approximation to <span class="math notranslate nohighlight">\(f\)</span>
+of degree <span class="math notranslate nohighlight">\(n\)</span> under the maximum norm.  For well behaved functions,
+the coefficients <span class="math notranslate nohighlight">\(c_k\)</span> decrease rapidly, and furthermore are independent
+of the degree <span class="math notranslate nohighlight">\(n\)</span> of the polynomial.</p>
+<p>The models can either be defined directly in terms of the Chebyshev
+coefficients <span class="math notranslate nohighlight">\(c_k\)</span> with <em>method</em> = ‘direct’, or in terms of control
+points <span class="math notranslate nohighlight">\((z_k, f(z_k))\)</span> at the Chebyshev nodes <a class="reference internal" href="#bumps.cheby.cheby_points" title="bumps.cheby.cheby_points"><code class="xref py py-func docutils literal notranslate"><span class="pre">cheby_points()</span></code></a>
+with <em>method</em> = ‘interp’.  Bounds on the parameters are easier to
+control using ‘interp’, but the function may oscillate wildly outside
+the bounds.  Bounds on the oscillation are easier to control using
+‘direct’, but the shape of the profile is difficult to control.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cheby.cheby_approx">
+<span class="sig-prename descclassname"><span class="pre">bumps.cheby.</span></span><span class="sig-name descname"><span class="pre">cheby_approx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cheby.html#cheby_approx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cheby.cheby_approx" title="Link to this definition">¶</a></dt>
+<dd><p>Return the coefficients for the order n chebyshev approximation to
+function f evaluated over the range [low,high].</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cheby.cheby_coeff">
+<span class="sig-prename descclassname"><span class="pre">bumps.cheby.</span></span><span class="sig-name descname"><span class="pre">cheby_coeff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cheby.html#cheby_coeff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cheby.cheby_coeff" title="Link to this definition">¶</a></dt>
+<dd><p>Compute chebyshev coefficients for a polynomial of order n given
+the function evaluated at the chebyshev points for order n.</p>
+<p>This can be used as the basis of a direct interpolation method where
+the n control points are positioned at cheby_points(n).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cheby.cheby_points">
+<span class="sig-prename descclassname"><span class="pre">bumps.cheby.</span></span><span class="sig-name descname"><span class="pre">cheby_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cheby.html#cheby_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cheby.cheby_points" title="Link to this definition">¶</a></dt>
+<dd><p>Return the points in at which a function must be evaluated to
+generate the order <span class="math notranslate nohighlight">\(n\)</span> Chebyshev approximation function.</p>
+<p>Over the range [-1,1], the points are <span class="math notranslate nohighlight">\(p_k = \cos(\pi(2 k + 1)/(2n))\)</span>.
+Adjusting the range to <span class="math notranslate nohighlight">\([x_L,x_R]\)</span>, the points become
+<span class="math notranslate nohighlight">\(x_k = \frac{1}{2} (p_k - x_L + 1)/(x_R-x_L)\)</span>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cheby.cheby_val">
+<span class="sig-prename descclassname"><span class="pre">bumps.cheby.</span></span><span class="sig-name descname"><span class="pre">cheby_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cheby.html#cheby_val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cheby.cheby_val" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the chebyshev approximation c at points x.</p>
+<p>The values <span class="math notranslate nohighlight">\(c_i\)</span> are the coefficients for the chebyshev
+polynomials <span class="math notranslate nohighlight">\(T_i\)</span> yielding <span class="math notranslate nohighlight">\(p(x) = \sum_i{c_i T_i(x)}\)</span>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cheby.profile">
+<span class="sig-prename descclassname"><span class="pre">bumps.cheby.</span></span><span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cheby.html#profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cheby.profile" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the chebyshev approximation c at points x.</p>
+<p>If method is ‘direct’ then <span class="math notranslate nohighlight">\(c_i\)</span> are the coefficients for the chebyshev
+polynomials <span class="math notranslate nohighlight">\(T_i\)</span> yielding <span class="math notranslate nohighlight">\(P = \sum_i{c_i T_i(x)}\)</span>.</p>
+<p>If method is ‘interp’ then <span class="math notranslate nohighlight">\(c_i\)</span> are the values of the interpolated
+function <span class="math notranslate nohighlight">\(f\)</span> evaluated at the chebyshev points returned by
+<a class="reference internal" href="#bumps.cheby.cheby_points" title="bumps.cheby.cheby_points"><code class="xref py py-func docutils literal notranslate"><span class="pre">cheby_points()</span></code></a>.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.cheby module</a><ul>
+<li><a class="reference internal" href="#bumps.cheby.cheby_approx"><code class="docutils literal notranslate"><span class="pre">cheby_approx()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cheby.cheby_coeff"><code class="docutils literal notranslate"><span class="pre">cheby_coeff()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cheby.cheby_points"><code class="docutils literal notranslate"><span class="pre">cheby_points()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cheby.cheby_val"><code class="docutils literal notranslate"><span class="pre">cheby_val()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cheby.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.cheby.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.cheby module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

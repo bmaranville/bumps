@@ -1,0 +1,7 @@
+bumps.mystic.solver module
+==========================
+
+.. automodule:: bumps.mystic.solver
+   :members:
+   :undoc-members:
+   :show-inheritance:

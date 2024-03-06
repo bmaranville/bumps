@@ -1,0 +1,7 @@
+bumps.gui.resfiles module
+=========================
+
+.. automodule:: bumps.gui.resfiles
+   :members:
+   :undoc-members:
+   :show-inheritance:

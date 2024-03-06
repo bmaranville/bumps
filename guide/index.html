@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>User’s Guide &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using Bumps" href="intro.html" />
+    <link rel="prev" title="Inequality constraints" href="../tutorial/constraints/inequality.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Using Bumps"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../tutorial/constraints/inequality.html" title="Inequality constraints"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">User’s Guide</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="user-s-guide">
+<span id="users-guide-index"></span><h1>User’s Guide<a class="headerlink" href="#user-s-guide" title="Link to this heading">¶</a></h1>
+<p>Bumps is designed to determine the ideal model parameters for a given
+set of measurements, and provide uncertainty on the parameter values.
+This is an inverse problem, where measured data can be predicted from
+theory, but theory cannot be directly inferred from measured data.  This
+means that bumps must search through parameter space, calling the theory
+function many times to find the parameter values that are most consistent
+with the data.</p>
+<p>Unlike traditional Levenburg-Marquardt fitting programs, Bumps does not
+require normally distributed measurement uncertainty.  If a measurement
+comes from counting statistics, for example, you can define your model with
+poisson probability rather than gaussian probability.  Parameter values
+can have constraints.  For example, if the size of a sample is known to
+within 5%, the size parameter in the model can set to a gaussian distribution
+with a standard deviation of 5%.  Simple bounds are also supported.  Parameter
+expressions allow you to set the value of a parameter based on other
+parameters, which allows simultaneous fitting of multiple datasets to
+different models without having to define a specialized fit function.</p>
+<p>Bumps includes Markov chain Monte Carlo (MCMC) methods to compute the
+joint distribution of parameter probabilities.  These methods require
+hundreds of thousand function calls to explore the search space, so
+for moderately complex problems, you need to run in parallel.  Bumps
+can fully utilize multiple cores on one computer, or through MPI, it
+runs on supercomputing clusters.</p>
+<blockquote>
+<div><p># Data handling has been removed so that we can ship a pure python package.
+In addition to inverse problem solving, bumps has acquired code for
+theory building and data handling.  For example, many problems have
+measurements in which the instrument resolution plays a role, and
+the theory function must be convolved with a data dependent resolution
+function.</p>
+</div></blockquote>
+<p><a class="reference internal" href="intro.html#intro-guide"><span class="std std-ref">Using Bumps</span></a></p>
+<blockquote>
+<div><p>Model scripts associate a sample description with data and fitting
+options to define the system you wish to refine.</p>
+</div></blockquote>
+<p><a class="reference internal" href="data.html#data-guide"><span class="std std-ref">Data Representation</span></a></p>
+<blockquote>
+<div><p>Data management is the responsibility of the modeller. Bumps
+provides a generic data loader <a class="reference internal" href="../bumps.data.html#module-bumps.data" title="bumps.data"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.data</span></code></a> with a key-value
+header section followed by columns of numeric data, but it is up to
+the model script to compute the theory along with any resolution
+effects and compare that with the data. The <a class="reference internal" href="../bumps.curve.html#bumps.curve.Curve" title="bumps.curve.Curve"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.curve.Curve</span></code></a>
+class associates a theory function with measurements with Gaussian
+uncertainty, and <a class="reference internal" href="../bumps.curve.html#bumps.curve.PoissonCurve" title="bumps.curve.PoissonCurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.curve.PoissonCurve</span></code></a> does the same for
+measurements following Poisson statistics.</p>
+</div></blockquote>
+<p><a class="reference internal" href="parameter.html#parameter-guide"><span class="std std-ref">Parameters</span></a></p>
+<blockquote>
+<div><p>The adjustable values in each component of the system are defined
+by <a class="reference internal" href="../bumps.parameter.html#module-bumps.parameter" title="bumps.parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> objects.  When you
+set the range on a parameter, the system will be able to automatically
+adjust the value in order to find the best match between theory
+and data.</p>
+</div></blockquote>
+<p><a class="reference internal" href="fitting.html#fitting-guide"><span class="std std-ref">Fitting</span></a></p>
+<blockquote>
+<div><p>One or more experiments can be combined into a
+<a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitProblem</span></code></a>.  This is then
+given to one of the many fitters, such as
+<a class="reference internal" href="../bumps.fitters.html#bumps.fitters.PTFit" title="bumps.fitters.PTFit"><code class="xref py py-class docutils literal notranslate"><span class="pre">DEFit</span></code></a>, which adjust the fitting
+parameters, trying to find the best fit.  See <a class="reference internal" href="optimizer.html#optimizer-guide"><span class="std std-ref">Optimizer Selection</span></a>
+for a description of available optimizers and <a class="reference internal" href="options.html#option-guide"><span class="std std-ref">Bumps Options</span></a> for
+a description of the bumps options.  Entropy can be calculated when
+the fit is complete.  See <a class="reference internal" href="entropy.html#entropy-guide"><span class="std std-ref">Calculating Entropy</span></a>.</p>
+</div></blockquote>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="../tutorial/constraints/inequality.html"
+                          title="previous chapter">Inequality constraints</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="intro.html"
+                          title="next chapter">Using Bumps</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Using Bumps"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../tutorial/constraints/inequality.html" title="Inequality constraints"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">User’s Guide</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

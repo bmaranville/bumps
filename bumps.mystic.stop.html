@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.mystic.stop module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.stop module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.mystic.stop">
+<span id="bumps-mystic-stop-module"></span><h1>bumps.mystic.stop module<a class="headerlink" href="#module-bumps.mystic.stop" title="Link to this heading">¶</a></h1>
+<p>Termination conditions for solvers.</p>
+<p>In order to decide when to stop fitting, the user needs to specify
+stop conditions based on the optimizer history.  The test can use
+the most recent value, the last n values or the entire computation.
+See <code class="xref py py-mod docutils literal notranslate"><span class="pre">monitor</span></code> for details.</p>
+<p>Conditions can be composed, creating complicated criterion for
+termination.  We may want to stop when we have found a minimum
+and know its location.  We may be content just knowing the
+minimum, and not worrying about the uncertainty in its location.
+For some searches we want to be sure we that we are examining a
+broad range of search space.  Here are some examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mystic.termination</span> <span class="k">as</span> <span class="nn">stop</span>
+
+<span class="c1"># Stop when we know the location of the minimum; fail if run too long</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">Dx</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">stop</span><span class="o">.</span><span class="n">Df</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">failure</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">Steps</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+
+<span class="c1"># Stop when we know the value of the minimum; fail if run too long</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">Dx</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span> <span class="o">|</span> <span class="n">stop</span><span class="o">.</span><span class="n">Df</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">failure</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">Steps</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># GA may want to run for a while, but only with a diverse population</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">Df</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">stop</span><span class="o">.</span><span class="n">Steps</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">failure</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">Steps</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">|</span> <span class="n">stop</span><span class="o">.</span><span class="n">Dx</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When testing a conditional expression, a list of all conditions which
+match is returned, or [] if no conditions match.</p>
+<section id="predefined-conditions">
+<h2>Predefined Conditions<a class="headerlink" href="#predefined-conditions" title="Link to this heading">¶</a></h2>
+<p>Dx: difference in x for step size test</p>
+<blockquote>
+<div><p>|| (x_k - x_{k-1})/scale || &lt; tolerance</p>
+</div></blockquote>
+<p>Df: difference in f for improvement rate test</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">(f_k - f_{k-1})/scale | &lt; tolerance</div>
+</div>
+</div></blockquote>
+<p>Rx: range in x for population distribution test</p>
+<blockquote>
+<div><p>max || (y - &lt;y&gt;)/ scale || &lt; tolerance
+for y in population</p>
+</div></blockquote>
+<p>Rf: range in f for value distribution test</p>
+<blockquote>
+<div><p>(max f(y) - min f(y))/scale &lt; tolerance
+for y in population</p>
+</div></blockquote>
+<p>Cx: constant x for target point</p>
+<blockquote>
+<div><p>||(x_k - Z)/scale|| &lt; tolerance</p>
+</div></blockquote>
+<p>Cf: constant f for target value</p>
+<blockquote>
+<div><p><a href="#id5"><span class="problematic" id="id6">|f_k - A|</span></a>/scale &lt; tolerance</p>
+</div></blockquote>
+<p>Steps: specific number of iterations</p>
+<blockquote>
+<div><p>k &gt;= steps</p>
+</div></blockquote>
+<p>Calls: specific number of function calls</p>
+<blockquote>
+<div><p>n &gt;= calls</p>
+</div></blockquote>
+<p>Time: wall clock time</p>
+<blockquote>
+<div><p>t_k &gt;= time</p>
+</div></blockquote>
+<p>CPU: CPU time</p>
+<blockquote>
+<div><p>t(CPU)_k &gt;= time</p>
+</div></blockquote>
+<p>Worse: fit is diverging</p>
+<blockquote>
+<div><p>(f_k - f_{k-1})/scale &lt; -tolerance</p>
+</div></blockquote>
+<p>Grad: fit is flat</p>
+<blockquote>
+<div><p>|| del f_k || &lt; tolerance</p>
+</div></blockquote>
+<p>Feasible: value is in the feasible region ** Not implemented **</p>
+<blockquote>
+<div><p>f_k satisfies soft constraints</p>
+</div></blockquote>
+<p>Invalid: values are not well defined ** Not implemented **</p>
+<blockquote>
+<div><p>isinf(y) or isinf(f(y)) or isnan(y) or isnan(f(y))
+for y in population</p>
+</div></blockquote>
+<section id="distances-and-scaling">
+<h3>Distances and scaling<a class="headerlink" href="#distances-and-scaling" title="Link to this heading">¶</a></h3>
+<p>The following distance functions are predefined:</p>
+<blockquote>
+<div><p>norm_p(p): (sum <a href="#id7"><span class="problematic" id="id8">|x_i|^p )^(1/p)  (generalized p-norm)
+norm_1:    sum |x_i|</span></a>             (Manahattan distance)
+norm_2:    sqrt sum <a href="#id9"><span class="problematic" id="id10">|x_i|^2      (Euclidian distance)
+norm_inf:  max |x_i|</span></a>             (Chebychev distance)
+norm_min:  min <a href="#id11"><span class="problematic" id="id12">|x_i|</span></a>             (not a true norm)</p>
+</div></blockquote>
+<p>The predefined scale factors in essence test for
+percentage changes rather than absolute changes.</p>
+</section>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.CPU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">CPU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#CPU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.CPU" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>CPU time.</p>
+<p>This condition tests CPU time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="p">(</span><span class="n">CPU</span><span class="p">)</span><span class="n">_k</span> <span class="o">&gt;=</span> <span class="n">time</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">time</span><span class="o">*</span> <span class="nb">float</span> <span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">time</span> <span class="n">since</span> <span class="n">start</span> <span class="n">of</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">seconds</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.CPU.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#CPU.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.CPU.config_history" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Calls">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Calls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Calls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Calls" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Specific number of function calls</p>
+<p>This condition tests the number of function evaluations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n_k</span> <span class="o">&gt;=</span> <span class="n">calls</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">calls</span><span class="o">*</span> <span class="nb">int</span> <span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">total</span> <span class="n">number</span> <span class="n">of</span> <span class="n">function</span> <span class="n">calls</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Calls.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Calls.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Calls.config_history" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Cf">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Cf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Cf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Cf" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Target value</p>
+<p>This condition measures the distance from the best value
+to some target value:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span><span class="p">(</span><span class="n">f_k</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="o">|</span> <span class="o">&lt;</span> <span class="n">tol</span>
+</pre></div>
+</div>
+<p>scale is <a href="#id13"><span class="problematic" id="id14">|A|</span></a> or 1 if A=0</p>
+<p>Paramaters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">value</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">target</span> <span class="n">value</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Cf.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Cf.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Cf.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous point from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Cx">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Cx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">norm_2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Cx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Cx" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Target point</p>
+<p>This condition measures the distance from the best point
+to some target point:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">||</span><span class="p">(</span><span class="n">x_k</span> <span class="o">-</span> <span class="n">Z</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="o">||</span> <span class="o">&lt;</span> <span class="n">tol</span>
+</pre></div>
+</div>
+<p>scale is fit range if given,  <a href="#id15"><span class="problematic" id="id16">|Z_i|</span></a>, or 1 if Z_i=0</p>
+<p>Paramaters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">point</span><span class="o">*</span> <span class="p">(</span><span class="n">array</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">target</span> <span class="n">point</span>
+<span class="o">*</span><span class="n">norm</span><span class="o">*</span> <span class="p">(</span> <span class="n">f</span><span class="p">(</span><span class="n">vector</span><span class="p">):</span> <span class="nb">float</span>  <span class="o">=</span>  <span class="n">norm_2</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="n">to</span> <span class="n">use</span> <span class="n">to</span> <span class="n">measure</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">x</span><span class="o">.</span>  <span class="n">Predefined</span> <span class="n">norms</span>
+    <span class="n">include</span> <span class="n">norm_1</span><span class="p">,</span> <span class="n">norm_2</span><span class="p">,</span> <span class="n">norm_info</span><span class="p">,</span> <span class="n">norm_min</span> <span class="ow">and</span> <span class="n">norm_p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Cx.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Cx.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Cx.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous point from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Df">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Df" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Improvement in F(x)</p>
+<p>This condition measures the improvement over the last n iterations
+in terms of how much the value of the function has changed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="p">(</span><span class="n">F</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">F</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">scale</span> <span class="o">|</span> <span class="o">&lt;</span> <span class="n">tol</span>
+</pre></div>
+</div>
+<p>where F[k] is the value for the best parameter set for iteration step k.</p>
+<p>The scale factor to use is 1/2 (<a href="#id17"><span class="problematic" id="id18">|F(k)|</span></a> + <a href="#id19"><span class="problematic" id="id20">|F(k-n)|</span></a>) with protection
+against zero.</p>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">n</span><span class="o">*</span> <span class="p">(</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">number</span> <span class="n">of</span> <span class="n">steps</span> <span class="n">back</span> <span class="ow">in</span> <span class="n">history</span> <span class="n">to</span> <span class="n">compare</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Df.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Df.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Df.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous n points from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Dx">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Dx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">norm_2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Dx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Dx" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Improvement in x.</p>
+<p>This condition measures the improvement over the last n iterations
+in terms of how much the value of x has changed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="n">n</span><span class="p">])</span><span class="o">/</span><span class="n">scale</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span>
+</pre></div>
+</div>
+<p>where x[k] is the best parameter set for iteration step k.</p>
+<p>The scale factor to use if scaled is upper bound - lower bound
+if the parameter is bounded, or 1/2 (<a href="#id21"><span class="problematic" id="id22">|x[k]|</span></a> + <a href="#id23"><span class="problematic" id="id24">|x[k-n]|</span></a>)
+if the parameter is unbounded, with protection against a scale
+factor of zero.</p>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">norm</span><span class="o">*</span> <span class="p">(</span> <span class="n">f</span><span class="p">(</span><span class="n">vector</span><span class="p">):</span> <span class="nb">float</span>  <span class="o">=</span>  <span class="n">norm_2</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="n">to</span> <span class="n">use</span> <span class="n">to</span> <span class="n">measure</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">x</span><span class="o">.</span>  <span class="n">Predefined</span> <span class="n">norms</span>
+    <span class="n">include</span> <span class="n">norm_1</span><span class="p">,</span> <span class="n">norm_2</span><span class="p">,</span> <span class="n">norm_info</span><span class="p">,</span> <span class="n">norm_min</span> <span class="ow">and</span> <span class="n">norm_p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="o">*</span><span class="n">n</span><span class="o">*</span> <span class="p">(</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">number</span> <span class="n">of</span> <span class="n">steps</span> <span class="n">back</span> <span class="ow">in</span> <span class="n">history</span> <span class="n">to</span> <span class="n">compare</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Dx.completeness">
+<span class="sig-name descname"><span class="pre">completeness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Dx.completeness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Dx.completeness" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Dx.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Dx.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Dx.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous n points from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Grad">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">norm_2&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Grad" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Flat function value</p>
+<p>This condition measures whether the fit surface is flat near the best
+value.  This only works for fits which compute the gradient.</p>
+<blockquote>
+<div><p>|| del F[k]/scale || &lt; tol</p>
+</div></blockquote>
+<p>where F[k] is the value for the best parameter set for iteration step k.</p>
+<p>The scale factor to use is <a href="#id25"><span class="problematic" id="id26">|F(k)|</span></a> with protection against zero.</p>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">norm</span><span class="o">*</span> <span class="p">(</span> <span class="n">f</span><span class="p">(</span><span class="n">vector</span><span class="p">):</span> <span class="nb">float</span>  <span class="o">=</span>  <span class="n">norm_2</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="n">to</span> <span class="n">use</span> <span class="n">to</span> <span class="n">measure</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">x</span><span class="o">.</span>  <span class="n">Predefined</span> <span class="n">norms</span>
+    <span class="n">include</span> <span class="n">norm_1</span><span class="p">,</span> <span class="n">norm_2</span><span class="p">,</span> <span class="n">norm_info</span><span class="p">,</span> <span class="n">norm_min</span> <span class="ow">and</span> <span class="n">norm_p</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Grad.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Grad.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Grad.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous n points from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Rf">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Rf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Rf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Rf" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Range size</p>
+<p>This condition measures the size of the population range:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">max</span> <span class="n">f</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span> <span class="n">f</span><span class="p">(</span><span class="n">y</span><span class="p">))</span><span class="o">/</span><span class="n">scale</span> <span class="o">&lt;</span> <span class="n">tol</span>
+</pre></div>
+</div>
+<p>for y in the current population
+scale is mean(<a href="#id27"><span class="problematic" id="id28">|f(y)|</span></a>)</p>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Rf.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Rf.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Rf.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous n points from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Rx">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Rx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius=&lt;bumps.mystic.stop.r_centroid</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Rx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Rx" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Domain size</p>
+<p>This condition measures the size of the population domain.  Some
+algorithms are done when the domain size shrinks while others have
+failed if the domain size shrinks.</p>
+<p>There are a number of ways of measuring the domain size:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">r_best</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span> <span class="p">:</span> <span class="n">radius</span> <span class="kn">from</span> <span class="nn">best</span> <span class="n">point</span>
+
+    <span class="nb">max</span> <span class="o">||</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">/</span><span class="n">scale</span><span class="o">||</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">population</span>
+
+<span class="n">r_centroid</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span> <span class="p">:</span> <span class="n">radius</span> <span class="kn">from</span> <span class="nn">centroid</span>
+
+    <span class="nb">max</span> <span class="o">||</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="o">&lt;</span><span class="n">y</span><span class="o">&gt;</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="o">||</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">population</span>
+
+<span class="n">r_boundingbox</span> <span class="p">:</span> <span class="n">radius</span> <span class="kn">from</span> <span class="nn">bounding</span> <span class="n">box</span>
+
+    <span class="p">(</span><span class="n">product</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y_i</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_i</span><span class="p">))</span><span class="o">/</span><span class="n">scale</span><span class="p">)</span><span class="o">**</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span>  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="o">-</span><span class="n">k</span>
+
+<span class="n">r_hull</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span> <span class="p">:</span> <span class="n">radius</span> <span class="kn">from</span> <span class="nn">convex</span> <span class="n">hull</span>
+
+    <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="nb">max</span> <span class="o">||</span> <span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y2</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span> <span class="o">||</span> <span class="k">for</span> <span class="n">y1</span><span class="p">,</span><span class="n">y2</span> <span class="ow">in</span> <span class="n">population</span>
+</pre></div>
+</div>
+<p>scale is determined from the fit bounds (max-min) or the
+values sum(<a href="#id29"><span class="problematic" id="id30">|y_i|</span></a>)/n, with protection against zero values.</p>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">radius</span><span class="o">*</span> <span class="p">(</span><span class="n">function</span><span class="p">(</span><span class="n">history</span><span class="p">,</span><span class="n">best</span><span class="p">,</span><span class="n">scale</span><span class="p">):</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">r_centroid</span><span class="p">(</span><span class="n">norm_2</span><span class="p">))</span>
+    <span class="n">measure</span> <span class="n">of</span> <span class="n">domain</span> <span class="n">size</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Rx.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Rx.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Rx.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous n points from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Steps">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Steps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Steps" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Specific number of iterations</p>
+<p>This condition test the number of iterations of a fit:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">k</span> <span class="o">&gt;=</span> <span class="n">steps</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">steps</span><span class="o">*</span> <span class="nb">int</span> <span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">total</span> <span class="n">number</span> <span class="n">of</span> <span class="n">steps</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Steps.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Steps.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Steps.config_history" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Time">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Time" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Wall clock time.</p>
+<p>This condition tests wall clock time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">t_k</span> <span class="o">&gt;=</span> <span class="n">time</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">time</span><span class="o">*</span> <span class="nb">float</span> <span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">Time</span> <span class="n">since</span> <span class="n">start</span> <span class="n">of</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">seconds</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Time.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Time.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Time.config_history" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Worse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">Worse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Worse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Worse" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Worsening of F(x)</p>
+<p>This condition measures whether the fit is diverging.  You may want
+to use this for non-greedy optimizers which can get worse over time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">F</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">F</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">scale</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">tol</span>
+</pre></div>
+</div>
+<p>where F[k] is the value for the best parameter set for iteration step k.</p>
+<p>The scale factor to use is 1/2 (<a href="#id31"><span class="problematic" id="id32">|F(k)|</span></a> + <a href="#id33"><span class="problematic" id="id34">|F(k-n)|</span></a>) with protection
+against zero.</p>
+<p>Parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">tol</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="n">to</span> <span class="n">test</span> <span class="n">against</span>
+<span class="o">*</span><span class="n">n</span><span class="o">*</span> <span class="p">(</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">number</span> <span class="n">of</span> <span class="n">steps</span> <span class="n">back</span> <span class="ow">in</span> <span class="n">history</span> <span class="n">to</span> <span class="n">compare</span>
+<span class="o">*</span><span class="n">scaled</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">whether</span> <span class="n">to</span> <span class="n">use</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">scaled</span> <span class="n">differences</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">norm</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">condition</span><span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="p">:</span> <span class="n">boolean</span><span class="p">)</span>
+    <span class="n">a</span> <span class="nb">callable</span> <span class="n">returning</span> <span class="n">true</span> <span class="k">if</span> <span class="n">the</span> <span class="n">condition</span> <span class="ow">is</span> <span class="n">met</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.stop.Worse.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#Worse.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.Worse.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Needs the previous n points from history.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.norm_1">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">norm_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#norm_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.norm_1" title="Link to this definition">¶</a></dt>
+<dd><p>1-norm: sum(<a href="#id35"><span class="problematic" id="id36">|x_i|</span></a>)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.norm_2">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">norm_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#norm_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.norm_2" title="Link to this definition">¶</a></dt>
+<dd><p>2-norm: sqrt(sum(<a href="#id1"><span class="problematic" id="id2">|</span></a>x_i|^2))</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.norm_inf">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">norm_inf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#norm_inf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.norm_inf" title="Link to this definition">¶</a></dt>
+<dd><p>inf-norm: max(<a href="#id37"><span class="problematic" id="id38">|x_i|</span></a>)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.norm_min">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">norm_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#norm_min"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.norm_min" title="Link to this definition">¶</a></dt>
+<dd><p>min-norm: min(<a href="#id39"><span class="problematic" id="id40">|x_i|</span></a>); this is not a true norm</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.norm_p">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">norm_p</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#norm_p"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.norm_p" title="Link to this definition">¶</a></dt>
+<dd><p>p-norm: sum(<a href="#id3"><span class="problematic" id="id4">|</span></a>x_i|^p)^(1/p)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.parse_condition">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">parse_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cond</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#parse_condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.parse_condition" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.r_best">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">r_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#r_best"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.r_best" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Measure of population radius based on distance from the best.</p>
+<blockquote>
+<div><p>max ||(y - x[k])/scale|| for y in population</p>
+</div></blockquote>
+<p>scipy.optimize.fmin uses r_best(norm_inf) as its measure of radius.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.stop.r_boundingbox">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">r_boundingbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">population</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#r_boundingbox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.r_boundingbox" title="Link to this definition">¶</a></dt>
+<dd><p>Measure of population radius based on the volume of the bounding box.</p>
+<blockquote>
+<div><p>(product (max(y_i) - min(y_i))/scale)**1/k  for i in dimensions-k</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.r_centroid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">r_centroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#r_centroid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.r_centroid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Measure of population radius based on distance from the centroid.</p>
+<blockquote>
+<div><p>max ||(y - &lt;y&gt;)/scale|| for y in population</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.stop.r_hull">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.stop.</span></span><span class="sig-name descname"><span class="pre">r_hull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/stop.html#r_hull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.stop.r_hull" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Measure of population radius based on maximum diameter in convex hull.</p>
+<blockquote>
+<div><p>1/2 max || (y1 - y2)/scale || for y1,y2 in population</p>
+</div></blockquote>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.mystic.stop module</a><ul>
+<li><a class="reference internal" href="#predefined-conditions">Predefined Conditions</a><ul>
+<li><a class="reference internal" href="#distances-and-scaling">Distances and scaling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.CPU"><code class="docutils literal notranslate"><span class="pre">CPU</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.CPU.config_history"><code class="docutils literal notranslate"><span class="pre">CPU.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Calls"><code class="docutils literal notranslate"><span class="pre">Calls</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Calls.config_history"><code class="docutils literal notranslate"><span class="pre">Calls.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Cf"><code class="docutils literal notranslate"><span class="pre">Cf</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Cf.config_history"><code class="docutils literal notranslate"><span class="pre">Cf.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Cx"><code class="docutils literal notranslate"><span class="pre">Cx</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Cx.config_history"><code class="docutils literal notranslate"><span class="pre">Cx.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Df"><code class="docutils literal notranslate"><span class="pre">Df</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Df.config_history"><code class="docutils literal notranslate"><span class="pre">Df.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Dx"><code class="docutils literal notranslate"><span class="pre">Dx</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Dx.completeness"><code class="docutils literal notranslate"><span class="pre">Dx.completeness()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Dx.config_history"><code class="docutils literal notranslate"><span class="pre">Dx.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Grad"><code class="docutils literal notranslate"><span class="pre">Grad</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Grad.config_history"><code class="docutils literal notranslate"><span class="pre">Grad.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Rf"><code class="docutils literal notranslate"><span class="pre">Rf</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Rf.config_history"><code class="docutils literal notranslate"><span class="pre">Rf.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Rx"><code class="docutils literal notranslate"><span class="pre">Rx</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Rx.config_history"><code class="docutils literal notranslate"><span class="pre">Rx.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Steps"><code class="docutils literal notranslate"><span class="pre">Steps</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Steps.config_history"><code class="docutils literal notranslate"><span class="pre">Steps.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Time"><code class="docutils literal notranslate"><span class="pre">Time</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Time.config_history"><code class="docutils literal notranslate"><span class="pre">Time.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.Worse"><code class="docutils literal notranslate"><span class="pre">Worse</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.stop.Worse.config_history"><code class="docutils literal notranslate"><span class="pre">Worse.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.stop.norm_1"><code class="docutils literal notranslate"><span class="pre">norm_1()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.norm_2"><code class="docutils literal notranslate"><span class="pre">norm_2()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.norm_inf"><code class="docutils literal notranslate"><span class="pre">norm_inf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.norm_min"><code class="docutils literal notranslate"><span class="pre">norm_min()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.norm_p"><code class="docutils literal notranslate"><span class="pre">norm_p()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.parse_condition"><code class="docutils literal notranslate"><span class="pre">parse_condition()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.r_best"><code class="docutils literal notranslate"><span class="pre">r_best</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.r_boundingbox"><code class="docutils literal notranslate"><span class="pre">r_boundingbox()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.r_centroid"><code class="docutils literal notranslate"><span class="pre">r_centroid</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.stop.r_hull"><code class="docutils literal notranslate"><span class="pre">r_hull</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.mystic.stop.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.stop module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

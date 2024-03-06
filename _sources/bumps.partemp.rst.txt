@@ -1,0 +1,7 @@
+bumps.partemp module
+====================
+
+.. automodule:: bumps.partemp
+   :members:
+   :undoc-members:
+   :show-inheritance:

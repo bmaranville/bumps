@@ -1,0 +1,7 @@
+bumps.data module
+=================
+
+.. automodule:: bumps.data
+   :members:
+   :undoc-members:
+   :show-inheritance:

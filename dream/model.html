@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>model - MCMC model types &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="outliers - Chain outlier tests" href="outliers.html" />
+    <link rel="prev" title="metropolis - MCMC step acceptance test" href="metropolis.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="outliers.html" title="outliers - Chain outlier tests"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="metropolis.html" title="metropolis - MCMC step acceptance test"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">model - MCMC model types</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="model-mcmc-model-types">
+<h1>model - MCMC model types<a class="headerlink" href="#model-mcmc-model-types" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p></td>
+<td><p>MCMCM model abstract base class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.model.Density" title="bumps.dream.model.Density"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Density</span></code></a></p></td>
+<td><p>Construct an MCMC model from a probablility density function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.model.LogDensity" title="bumps.dream.model.LogDensity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogDensity</span></code></a></p></td>
+<td><p>Construct an MCMC model from a log probablility density function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.model.Simulation" title="bumps.dream.model.Simulation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Simulation</span></code></a></p></td>
+<td><p>Construct an MCMC model from a simulation function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.model.MVNormal" title="bumps.dream.model.MVNormal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVNormal</span></code></a></p></td>
+<td><p>multivariate normal negative log likelihood function</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.model.Mixture" title="bumps.dream.model.Mixture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mixture</span></code></a></p></td>
+<td><p>Create a mixture model from a list of weighted density models.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.model">MCMC model types</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<p>First create a <a class="reference internal" href="bounds.html#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.dream.bounds.Bounds</span></code></a> object. This stores the
+ranges available on the parameters, and controls how values outside the
+range are handled:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M_bounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;reflect|clip|fold|randomize|none&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For simple functions you can use one of the existing models.</p>
+<p>If your model <em>f</em> computes the probability density, use <a class="reference internal" href="#bumps.dream.model.Density" title="bumps.dream.model.Density"><code class="xref py py-class docutils literal notranslate"><span class="pre">Density</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">Density</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If your model <em>f</em> computes the log probability density,
+use <a class="reference internal" href="#bumps.dream.model.LogDensity" title="bumps.dream.model.LogDensity"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogDensity</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">LogDensity</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If your model <em>f</em> computes a simulation which returns a vector, and you
+have <em>data</em> associated with the simulation, use <a class="reference internal" href="#bumps.dream.model.Simulation" title="bumps.dream.model.Simulation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The measurement <em>data</em> can have a 1-sigma uncertainty associated with it, as
+well as a <em>gamma</em> factor if the uncertainty distribution has non-Gaussian
+kurtosis associated with it.</p>
+<p>Multivariate normal distribution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">MVNormal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Mixture models:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">Mixture</span><span class="p">(</span><span class="n">M1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">M2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more complex functions, you can subclass MCMCModel:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">MCMCModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="o">...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="o">...</span>
+    <span class="k">def</span> <span class="nf">nnlf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="s2">&quot;Return the negative log likelihood of seeing x&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">probability</span> <span class="n">of</span> <span class="n">seeing</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+<span class="n">M</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The MCMC program uses only two methods from the model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apply_bounds</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+<span class="n">log_density</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If your model provides these methods, you will not need to subclass MCMCModel
+in order to interact with DREAM.</p>
+</section>
+<section id="compatibility-with-matlab-dream">
+<h2>Compatibility with matlab DREAM<a class="headerlink" href="#compatibility-with-matlab-dream" title="Link to this heading">¶</a></h2>
+<p>First generate a bounds handling function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M_bounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">(</span><span class="n">ParRange</span><span class="o">.</span><span class="n">minn</span><span class="p">,</span> <span class="n">ParRange</span><span class="o">.</span><span class="n">maxn</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then generate a model, depending on what kind of function you have.</p>
+<p>Option 1. Model directly computes posterior density:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Density</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Option 2. Model computes simulation, data has known 1-sigma uncertainty:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">Measurement</span><span class="o">.</span><span class="n">MeasData</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">,</span>
+                   <span class="n">sigma</span><span class="o">=</span><span class="n">Measurement</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">MCMCPar</span><span class="o">.</span><span class="n">Gamma</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Option 3. Model computes simulation, data has unknown 1-sigma uncertainty:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">Measurement</span><span class="o">.</span><span class="n">MeasData</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">,</span>
+                   <span class="n">gamma</span> <span class="o">=</span> <span class="n">MCMCPar</span><span class="o">.</span><span class="n">Gamma</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Option 4. Model directly computes log posterior density:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">LogDensity</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">M_bounds</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Option 5 is like option 2 but the reported likelihoods do not take the
+1-sigma uncertainty into account.  The metropolis steps are still based
+on the 1-sigma uncertainty, so use the style given in option 2 for this case.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.model.Density">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.model.</span></span><span class="sig-name descname"><span class="pre">Density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Density" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p>
+<p>Construct an MCMC model from a probablility density function.</p>
+<p><em>f</em> is the density function</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.Density.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.Density.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.Density.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.Density.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Density.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Density.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Density.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Density.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Density.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Density.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Density.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Density.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Density.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.model.</span></span><span class="sig-name descname"><span class="pre">LogDensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#LogDensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.LogDensity" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p>
+<p>Construct an MCMC model from a log probablility density function.</p>
+<p><em>f</em> is the log density function</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.LogDensity.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.LogDensity.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.LogDensity.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.LogDensity.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#LogDensity.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.LogDensity.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.LogDensity.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.LogDensity.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.model.</span></span><span class="sig-name descname"><span class="pre">MCMCModel</span></span><a class="reference internal" href="../_modules/bumps/dream/model.html#MCMCModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MCMCModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>MCMCM model abstract base class.</p>
+<p>Each model must have a negative log likelihood function which operates
+on a point x, returning the negative log likelihood, or inf if the point
+is outside the domain.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.MCMCModel.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.MCMCModel.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#MCMCModel.log_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MCMCModel.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#MCMCModel.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MCMCModel.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#MCMCModel.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MCMCModel.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MCMCModel.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#MCMCModel.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MCMCModel.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.model.</span></span><span class="sig-name descname"><span class="pre">MVNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#MVNormal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MVNormal" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p>
+<p>multivariate normal negative log likelihood function</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.MVNormal.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.MVNormal.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.MVNormal.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.MVNormal.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#MVNormal.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.MVNormal.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.MVNormal.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.MVNormal.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.model.</span></span><span class="sig-name descname"><span class="pre">Mixture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Mixture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Mixture" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p>
+<p>Create a mixture model from a list of weighted density models.</p>
+<p>MixtureModel( M1, w1, M2, w2, …)</p>
+<p>Models M1, M2, … are MCMC models with M.nllf(x) returning the negative
+log likelihood of x.  Weights w1, w2, … are arbitrary scalars.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.Mixture.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.Mixture.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Mixture.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Mixture.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Mixture.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Mixture.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Mixture.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Mixture.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.model.</span></span><span class="sig-name descname"><span class="pre">Simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Simulation" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p>
+<p>Construct an MCMC model from a simulation function.</p>
+<p><em>f</em> is the function which simulates the data
+<em>data</em> is the measurement(s) to compare it to
+<em>sigma</em> is the 1-sigma uncertainty of the measurement(s).
+<em>gamma</em> in (-1, 1] represents kurtosis on the data measurement uncertainty.</p>
+<p>Data is assumed to come from an exponential power density:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p</span><span class="p">(</span><span class="n">v</span><span class="o">|</span><span class="n">S</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span> <span class="o">=</span> <span class="n">w</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">/</span><span class="n">S</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">c</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">|</span><span class="n">v</span><span class="o">/</span><span class="n">S</span><span class="o">|^</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">G</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>where S is <em>sigma</em> and G is <em>gamma</em>.</p>
+<p>The values of <em>sigma</em> and <em>gamma</em> can be uniform or can vary with the
+individual measurement points.</p>
+<dl class="simple">
+<dt>Certain values of <em>gamma</em> select particular distributions::</dt><dd><p>G = 0: normal
+G = 1: double exponential
+G -&gt; -1: uniform</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.Simulation.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.model.Simulation.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Simulation.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.model.Simulation.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Simulation.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Simulation.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.model.Simulation.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/model.html#Simulation.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.model.Simulation.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">model - MCMC model types</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#compatibility-with-matlab-dream">Compatibility with matlab DREAM</a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Density"><code class="docutils literal notranslate"><span class="pre">Density</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.model.Density.bounds"><code class="docutils literal notranslate"><span class="pre">Density.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Density.labels"><code class="docutils literal notranslate"><span class="pre">Density.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Density.log_density"><code class="docutils literal notranslate"><span class="pre">Density.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Density.map"><code class="docutils literal notranslate"><span class="pre">Density.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Density.nllf"><code class="docutils literal notranslate"><span class="pre">Density.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Density.plot"><code class="docutils literal notranslate"><span class="pre">Density.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity"><code class="docutils literal notranslate"><span class="pre">LogDensity</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity.bounds"><code class="docutils literal notranslate"><span class="pre">LogDensity.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity.labels"><code class="docutils literal notranslate"><span class="pre">LogDensity.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity.log_density"><code class="docutils literal notranslate"><span class="pre">LogDensity.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity.map"><code class="docutils literal notranslate"><span class="pre">LogDensity.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity.nllf"><code class="docutils literal notranslate"><span class="pre">LogDensity.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.LogDensity.plot"><code class="docutils literal notranslate"><span class="pre">LogDensity.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel"><code class="docutils literal notranslate"><span class="pre">MCMCModel</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel.bounds"><code class="docutils literal notranslate"><span class="pre">MCMCModel.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel.labels"><code class="docutils literal notranslate"><span class="pre">MCMCModel.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel.log_density"><code class="docutils literal notranslate"><span class="pre">MCMCModel.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel.map"><code class="docutils literal notranslate"><span class="pre">MCMCModel.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel.nllf"><code class="docutils literal notranslate"><span class="pre">MCMCModel.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MCMCModel.plot"><code class="docutils literal notranslate"><span class="pre">MCMCModel.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal"><code class="docutils literal notranslate"><span class="pre">MVNormal</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal.bounds"><code class="docutils literal notranslate"><span class="pre">MVNormal.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal.labels"><code class="docutils literal notranslate"><span class="pre">MVNormal.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal.log_density"><code class="docutils literal notranslate"><span class="pre">MVNormal.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal.map"><code class="docutils literal notranslate"><span class="pre">MVNormal.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal.nllf"><code class="docutils literal notranslate"><span class="pre">MVNormal.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.MVNormal.plot"><code class="docutils literal notranslate"><span class="pre">MVNormal.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture"><code class="docutils literal notranslate"><span class="pre">Mixture</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture.bounds"><code class="docutils literal notranslate"><span class="pre">Mixture.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture.labels"><code class="docutils literal notranslate"><span class="pre">Mixture.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture.log_density"><code class="docutils literal notranslate"><span class="pre">Mixture.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture.map"><code class="docutils literal notranslate"><span class="pre">Mixture.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture.nllf"><code class="docutils literal notranslate"><span class="pre">Mixture.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Mixture.plot"><code class="docutils literal notranslate"><span class="pre">Mixture.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation.bounds"><code class="docutils literal notranslate"><span class="pre">Simulation.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation.labels"><code class="docutils literal notranslate"><span class="pre">Simulation.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation.log_density"><code class="docutils literal notranslate"><span class="pre">Simulation.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation.map"><code class="docutils literal notranslate"><span class="pre">Simulation.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation.nllf"><code class="docutils literal notranslate"><span class="pre">Simulation.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.model.Simulation.plot"><code class="docutils literal notranslate"><span class="pre">Simulation.plot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="metropolis.html"
+                          title="previous chapter">metropolis - MCMC step acceptance test</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="outliers.html"
+                          title="next chapter">outliers - Chain outlier tests</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/model.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="outliers.html" title="outliers - Chain outlier tests"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="metropolis.html" title="metropolis - MCMC step acceptance test"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">model - MCMC model types</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

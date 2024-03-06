@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.walk module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.walk module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.walk">
+<span id="bumps-dream-walk-module"></span><h1>bumps.dream.walk module<a class="headerlink" href="#module-bumps.dream.walk" title="Link to this heading">¶</a></h1>
+<p>Random walk functions.</p>
+<p><a href="#id1"><span class="problematic" id="id2">:function:`walk`</span></a> simulates a mean-reverting random walk.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.walk.walk">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.walk.</span></span><span class="sig-name descname"><span class="pre">walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/walk.html#walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.walk.walk" title="Link to this definition">¶</a></dt>
+<dd><p>Mean reverting random walk.</p>
+<p>Returns an array of n-1 steps in the following process:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">alpha</span><span class="o">*</span><span class="p">(</span><span class="n">mu</span><span class="o">-</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>with e ~ N(0,sigma).</p>
+<p>The parameters are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">n</span><span class="o">*</span> <span class="n">walk</span> <span class="n">length</span>
+<span class="o">*</span><span class="n">s0</span><span class="o">*</span> <span class="n">starting</span> <span class="n">value</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">N</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">)</span>
+<span class="o">*</span><span class="n">mu</span><span class="o">*</span> <span class="n">target</span> <span class="n">mean</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="mi">0</span>
+<span class="o">*</span><span class="n">sigma</span><span class="o">*</span> <span class="n">volatility</span>
+<span class="o">*</span><span class="n">alpha</span><span class="o">*</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="n">reversion</span> <span class="n">rate</span>
+</pre></div>
+</div>
+<p>Use alpha=0 for a pure Gaussian random walk or alpha=1 independent
+samples about the mean.</p>
+<p>If <em>mu</em> is a vector, multiple streams are run in parallel.  In this
+case <em>s0</em>, <em>sigma</em> and <em>alpha</em> can either be scalars or vectors.</p>
+<p>If <em>mu</em> is an array, the target value is non-stationary, and the
+parameter <em>n</em> is ignored.</p>
+<p>Note: the default starting value should be selected from a distribution
+whose width depends on alpha.  N(mu,sigma) is too narrow.  This
+effect is illustrated in <a href="#id3"><span class="problematic" id="id4">:function:`demo`</span></a>, where the following choices
+of sigma and alpha give approximately the same histogram:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sigma</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.138</span><span class="p">,</span> <span class="mf">0.31</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span>  <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span>  <span class="mf">0.5</span><span class="p">,</span>  <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.walk module</a><ul>
+<li><a class="reference internal" href="#bumps.dream.walk.walk"><code class="docutils literal notranslate"><span class="pre">walk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.walk.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.walk module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

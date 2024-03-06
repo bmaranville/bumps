@@ -1,0 +1,45 @@
+bumps.gui package
+=================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.gui.resources
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.gui.about
+   bumps.gui.app_frame
+   bumps.gui.app_panel
+   bumps.gui.console
+   bumps.gui.convergence_view
+   bumps.gui.data_view
+   bumps.gui.fit_dialog
+   bumps.gui.fit_thread
+   bumps.gui.fit_view
+   bumps.gui.gui_app
+   bumps.gui.input_list
+   bumps.gui.log_view
+   bumps.gui.parameter_view
+   bumps.gui.plot_view
+   bumps.gui.resfiles
+   bumps.gui.signal
+   bumps.gui.summary_view
+   bumps.gui.uncertainty_view
+   bumps.gui.util
+   bumps.gui.utilities
+
+Module contents
+---------------
+
+.. automodule:: bumps.gui
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>metropolis - MCMC step acceptance test &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="model - MCMC model types" href="model.html" />
+    <link rel="prev" title="mahal - Mahalanobis distance calculator" href="mahal.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="model - MCMC model types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mahal.html" title="mahal - Mahalanobis distance calculator"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">metropolis - MCMC step acceptance test</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="metropolis-mcmc-step-acceptance-test">
+<h1>metropolis - MCMC step acceptance test<a class="headerlink" href="#metropolis-mcmc-step-acceptance-test" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.metropolis.metropolis" title="bumps.dream.metropolis.metropolis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metropolis</span></code></a></p></td>
+<td><p>Metropolis rule for acceptance or rejection</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.metropolis.metropolis_dr" title="bumps.dream.metropolis.metropolis_dr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metropolis_dr</span></code></a></p></td>
+<td><p>Delayed rejection metropolis</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.metropolis">MCMC step acceptance test.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.metropolis.metropolis">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.metropolis.</span></span><span class="sig-name descname"><span class="pre">metropolis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xtry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp_try</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_alpha</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/metropolis.html#metropolis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.metropolis.metropolis" title="Link to this definition">¶</a></dt>
+<dd><p>Metropolis rule for acceptance or rejection</p>
+<p>Generates the next generation, <em>newgen</em> from:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x_new</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>     <span class="k">if</span> <span class="n">U</span> <span class="o">&gt;</span> <span class="n">alpha</span>
+         <span class="o">=</span> <span class="n">x_old</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">if</span> <span class="n">U</span> <span class="o">&lt;=</span> <span class="n">alpha</span>
+</pre></div>
+</div>
+<p>where alpha is p/p_old and accept is U &gt; alpha.</p>
+<p>Returns x_new, logp_new, alpha, accept</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.metropolis.metropolis_dr">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.metropolis.</span></span><span class="sig-name descname"><span class="pre">metropolis_dr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xtry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp_try</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/metropolis.html#metropolis_dr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.metropolis.metropolis_dr" title="Link to this definition">¶</a></dt>
+<dd><p>Delayed rejection metropolis</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">metropolis - MCMC step acceptance test</a><ul>
+<li><a class="reference internal" href="#bumps.dream.metropolis.metropolis"><code class="docutils literal notranslate"><span class="pre">metropolis()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.metropolis.metropolis_dr"><code class="docutils literal notranslate"><span class="pre">metropolis_dr()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="mahal.html"
+                          title="previous chapter">mahal - Mahalanobis distance calculator</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="model.html"
+                          title="next chapter">model - MCMC model types</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/metropolis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="model - MCMC model types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mahal.html" title="mahal - Mahalanobis distance calculator"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">metropolis - MCMC step acceptance test</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+bumps.gui.plot\_view module
+===========================
+
+.. automodule:: bumps.gui.plot_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

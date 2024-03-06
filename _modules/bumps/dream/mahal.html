@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.mahal &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.mahal</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.mahal</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is public domain</span>
+<span class="c1"># Author: Paul Kienzle, April 2010</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Mahalanobis distance calculator</span>
+
+<span class="sd">Compute the</span>
+<span class="sd">`Mahalanobis distance &lt;https://en.wikipedia.org/wiki/Mahalanobis_distance&gt;`_</span>
+<span class="sd">between observations and a reference set.  The principle components of the</span>
+<span class="sd">reference set define the basis of the space for the observations.  The simple</span>
+<span class="sd">Euclidean distance is used within this space.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mahalanobis&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">dot</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="nb">sum</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">svd</span>
+
+<div class="viewcode-block" id="mahalanobis">
+<a class="viewcode-back" href="../../../dream/mahal.html#bumps.dream.mahal.mahalanobis">[docs]</a>
+<span class="k">def</span> <span class="nf">mahalanobis</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the distances of the observations from a reference set.</span>
+
+<span class="sd">    Observations are stored in rows *Y* and the reference set in *X*.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>                 <span class="c1"># mean</span>
+    <span class="n">Xc</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">mean</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>            <span class="c1"># center the reference</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">Xc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Xc</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Xc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># covariance of reference</span>
+    <span class="n">Yc</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">M</span>                          <span class="c1"># center the observations</span>
+    <span class="c1"># Distance is diag(Yc * inv(W) * Yc.H)</span>
+    <span class="c1"># solve Wb = Yc.H using singular value decomposition because it is</span>
+    <span class="c1"># the most accurate with numpy; QR decomposition does not use pivoting,</span>
+    <span class="c1"># and is less accurate.  The built-in solve routine is between the two.</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">svd</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">SVinv</span> <span class="o">=</span> <span class="n">vh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">/</span><span class="n">s</span>
+    <span class="n">Uy</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Yc</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">SVinv</span><span class="p">,</span> <span class="n">Uy</span><span class="p">)</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Yc</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># compute distance</span>
+    <span class="k">return</span> <span class="n">D</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span>
+    <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">mahalanobis</span><span class="p">(</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]),</span>
+                    <span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]))</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">d</span><span class="o">-</span><span class="p">[</span><span class="mf">290.25</span><span class="p">,</span> <span class="mf">290.25</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="s2">&quot;diff=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">-</span><span class="p">[</span><span class="mf">290.25</span><span class="p">,</span> <span class="mf">290.25</span><span class="p">])</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.mahal</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

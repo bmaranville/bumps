@@ -1,0 +1,7 @@
+bumps.mystic.optimizer.diffev\_compat module
+============================================
+
+.. automodule:: bumps.mystic.optimizer.diffev_compat
+   :members:
+   :undoc-members:
+   :show-inheritance:

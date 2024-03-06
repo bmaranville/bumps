@@ -1,0 +1,7 @@
+bumps.dream.initpop module
+==========================
+
+.. automodule:: bumps.dream.initpop
+   :members:
+   :undoc-members:
+   :show-inheritance:

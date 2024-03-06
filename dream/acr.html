@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>acr - A C Rencher normal outlier test &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="bounds - Bounds handling" href="bounds.html" />
+    <link rel="prev" title="Reference: bumps.dream" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bounds.html" title="bounds - Bounds handling"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Reference: bumps.dream"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">acr - A C Rencher normal outlier test</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="acr-a-c-rencher-normal-outlier-test">
+<h1>acr - A C Rencher normal outlier test<a class="headerlink" href="#acr-a-c-rencher-normal-outlier-test" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.acr.ACR" title="bumps.dream.acr.ACR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ACR</span></code></a></p></td>
+<td><p>Return critical value for test of single multivariate normal outlier using the Mahalanobis distance metric.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.acr">ACR upper percentiles critical value for test of single multivariate
+normal outlier.</p>
+<p>From the method given by Wilks (1963) and approaching to a F distribution
+function by the Yang and Lee (1987) formulation, we compute the critical
+value of the maximum squared Mahalanobis distance to detect outliers from
+a normal multivariate sample.</p>
+<p>We can generate all the critical values of the maximum squared Mahalanobis
+distance presented on the Table XXXII of by Barnett and Lewis (1978) and
+Table A.6 of Rencher (2002). Also with any given significance level (alpha).</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">ACR</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">))</span>
+<span class="go">13.1753</span>
+</pre></div>
+</div>
+<p>Created by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="o">.</span> <span class="n">Trujillo</span><span class="o">-</span><span class="n">Ortiz</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span> <span class="n">Hernandez</span><span class="o">-</span><span class="n">Walls</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span> <span class="n">Castro</span><span class="o">-</span><span class="n">Perez</span> <span class="ow">and</span> <span class="n">K</span><span class="o">.</span> <span class="n">Barba</span><span class="o">-</span><span class="n">Rojo</span>
+<span class="n">Facultad</span> <span class="n">de</span> <span class="n">Ciencias</span> <span class="n">Marinas</span>
+<span class="n">Universidad</span> <span class="n">Autonoma</span> <span class="n">de</span> <span class="n">Baja</span> <span class="n">California</span>
+<span class="n">Apdo</span><span class="o">.</span> <span class="n">Postal</span> <span class="mi">453</span>
+<span class="n">Ensenada</span><span class="p">,</span> <span class="n">Baja</span> <span class="n">California</span>
+<span class="n">Mexico</span><span class="o">.</span>
+<span class="n">atrujo</span><span class="nd">@uabc</span><span class="o">.</span><span class="n">mx</span>
+</pre></div>
+</div>
+<p>Copyright. August 20, 2006.</p>
+<p>To cite this file, this would be an appropriate format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Trujillo-Ortiz, A., R. Hernandez-Walls, A. Castro-Perez and K. Barba-Rojo.
+(2006). *ACR:Upper percentiles critical value for test of single
+multivariate  normal outlier.* A MATLAB file. [WWW document].  URL
+http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=12161
+</pre></div>
+</div>
+<p>The function’s name is given in honour of Dr. Alvin C. Rencher for his
+invaluable contribution to multivariate statistics with his text ‘Methods of
+Multivariate Analysis’.</p>
+<p>References:</p>
+<dl class="simple">
+<dt>[1] Barnett, V. and Lewis, T. (1978), Outliers on Statistical Data.</dt><dd><p>New-York:John Wiley &amp; Sons.</p>
+</dd>
+<dt>[2] Rencher, A. C. (2002), Methods of Multivariate Analysis. 2nd. ed.</dt><dd><p>New-Jersey:John Wiley &amp; Sons. Chapter 13 (pp. 408-450).</p>
+</dd>
+<dt>[3] Wilks, S. S. (1963), Multivariate Statistical Outliers. Sankhya,</dt><dd><p>Series A, 25: 407-426.</p>
+</dd>
+<dt>[4] Yang, S. S. and Lee, Y. (1987), Identification of a Multivariate</dt><dd><p>Outlier. Presented at the Annual  Meeting of the American
+Statistical Association, San Francisco, August 1987.</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.acr.ACR">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.acr.</span></span><span class="sig-name descname"><span class="pre">ACR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/acr.html#ACR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.acr.ACR" title="Link to this definition">¶</a></dt>
+<dd><p>Return critical value for test of single multivariate normal outlier
+using the Mahalanobis distance metric.</p>
+<p><em>p</em> is the number of independent variables,
+<em>n</em> is the number of samples, and
+<em>alpha</em> is the significance level cutoff (default=0.05).</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">acr - A C Rencher normal outlier test</a><ul>
+<li><a class="reference internal" href="#bumps.dream.acr.ACR"><code class="docutils literal notranslate"><span class="pre">ACR()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Reference: bumps.dream</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="bounds.html"
+                          title="next chapter">bounds - Bounds handling</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/acr.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bounds.html" title="bounds - Bounds handling"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Reference: bumps.dream"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">acr - A C Rencher normal outlier test</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

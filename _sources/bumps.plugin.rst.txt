@@ -1,0 +1,7 @@
+bumps.plugin module
+===================
+
+.. automodule:: bumps.plugin
+   :members:
+   :undoc-members:
+   :show-inheritance:

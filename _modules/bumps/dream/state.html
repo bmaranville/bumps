@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.state &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.state</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.state</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sampling history for MCMC.</span>
+
+<span class="sd">MCMC keeps track of a number of things during sampling.</span>
+
+<span class="sd">The results may be queried as follows::</span>
+
+<span class="sd">    draws, generation, thinning</span>
+<span class="sd">    sample(condition) returns draws, points, logp</span>
+<span class="sd">    logp()            returns draws, logp</span>
+<span class="sd">    acceptance_rate() returns draws, AR</span>
+<span class="sd">    chains()          returns draws, chains, logp</span>
+<span class="sd">    CR_weight()       returns draws, CR_weight</span>
+<span class="sd">    best()            returns best_x, best_logp</span>
+<span class="sd">    outliers()        returns outliers</span>
+<span class="sd">    show()/save(file)/load(file)</span>
+
+<span class="sd">Data is stored in circular arrays, which keeps the last N generations and</span>
+<span class="sd">throws the rest away.</span>
+
+<span class="sd">draws is the total number of draws from the sampler.</span>
+
+<span class="sd">generation is the total number of generations.</span>
+
+<span class="sd">thinning is the number of generations per stored sample.</span>
+
+<span class="sd">draws[i] is the number of draws including those required to produce the</span>
+<span class="sd">information in the corresponding return vector.  Note that draw numbers</span>
+<span class="sd">need not be linearly spaced, since techniques like delayed rejection</span>
+<span class="sd">will result in a varying number of samples per generation.</span>
+
+<span class="sd">logp[i] is the set of log likelihoods, one for each member of the population.</span>
+<span class="sd">The logp() method returns the complete set, and the sample() method returns</span>
+<span class="sd">a thinned set, with on element of logp[i] for each vector point[i, :].</span>
+
+<span class="sd">AR[i] is the acceptance rate at generation i, showing the proportion of</span>
+<span class="sd">proposed points which are accepted into the population.</span>
+
+<span class="sd">chains[i, :, :] is the set of points in the differential evolution population</span>
+<span class="sd">at thinned generation i.  Ideally, the thinning rate of the MCMC process</span>
+<span class="sd">is chosen so that thinned generations i and i+1 are independent samples</span>
+<span class="sd">from the posterior distribution, though there is a chance that this may</span>
+<span class="sd">not be the case, and indeed, some points in generation i+1 may be identical</span>
+<span class="sd">to those in generation i.  Actual generation number is i*thinning.</span>
+
+<span class="sd">points[i, :] is the ith point in a returned sample.  The i is just a place</span>
+<span class="sd">holder; there is no inherent ordering to the sample once they have been</span>
+<span class="sd">extracted from the chains.  Note that the sample may be from a marginal</span>
+<span class="sd">distribution.</span>
+
+<span class="sd">R[i] is the Gelman R statistic measuring convergence of the Markov chain.</span>
+
+<span class="sd">CR_weight[i] is the set of weights used for selecting between the crossover</span>
+<span class="sd">ratios available to the candidate generation process of differential</span>
+<span class="sd">evolution.  These will be fixed early in the sampling, even when adaptive</span>
+<span class="sd">differential evolution is selected.</span>
+
+<span class="sd">outliers[i] is a vector containing the thinned generation number at which</span>
+<span class="sd">an outlier chain was removed, the id of the chain that was removed and</span>
+<span class="sd">the id of the chain that replaced it.  We leave it to the reader to decide</span>
+<span class="sd">if the cloned samples, point[:generation, :, removed_id], should be included</span>
+<span class="sd">in further analysis.</span>
+
+<span class="sd">best_logp is the highest log likelihood observed during the analysis and</span>
+<span class="sd">best_x is the corresponding point at which it was observed.</span>
+
+<span class="sd">generation is the last generation number</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#TODO: state should be collected in files as we go</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MCMCDraw&#39;</span><span class="p">,</span> <span class="s1">&#39;load_state&#39;</span><span class="p">,</span> <span class="s1">&#39;save_state&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">empty</span><span class="p">,</span> <span class="nb">sum</span><span class="p">,</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">inf</span><span class="p">,</span> <span class="n">argmax</span><span class="p">,</span> <span class="n">hstack</span><span class="p">,</span> <span class="n">dstack</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">savetxt</span><span class="p">,</span> <span class="n">reshape</span>
+
+<span class="kn">from</span> <span class="nn">.convergence</span> <span class="kn">import</span> <span class="n">burn_point</span>
+<span class="kn">from</span> <span class="nn">.outliers</span> <span class="kn">import</span> <span class="n">identify_outliers</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">draw</span><span class="p">,</span> <span class="n">rng</span>
+<span class="kn">from</span> <span class="nn">.gelman</span> <span class="kn">import</span> <span class="n">gelman</span>
+
+<span class="n">EXT</span> <span class="o">=</span> <span class="s2">&quot;.mc.gz&quot;</span>
+<span class="n">CREATE</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span>
+<span class="c1">#EXT = &quot;.mc&quot;</span>
+<span class="c1">#CREATE = open</span>
+
+<span class="c1"># CRUFT: python 2 uses bytes rather than unicode for strings</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># python 2.x</span>
+    <span class="n">unicode</span>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+    <span class="c1"># python 3.x</span>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">fid</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">s</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">NoTrace</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="save_state">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.save_state">[docs]</a>
+<span class="k">def</span> <span class="nf">save_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">NoTrace</span><span class="p">()</span>
+    <span class="c1">#trace = open(filename+&quot;-trace.mc&quot;, &quot;w&quot;)</span>
+
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;starting trace</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Build 2-D data structures</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;extracting draws, logp</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">logp</span><span class="p">(</span><span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;extracting acceptance rate</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">AR</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">acceptance_rate</span><span class="p">()</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;building chain from draws, AR and logp</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">((</span><span class="n">draws</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">AR</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">logp</span><span class="p">))</span>
+
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;extracting point, logp</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span>
+    <span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;shape is </span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;adding logp to point</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">point</span> <span class="o">=</span> <span class="n">dstack</span><span class="p">((</span><span class="n">logp</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">point</span><span class="p">))</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;collapsing to draws x point</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">point</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;extracting CR_weight</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">CR_weight</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">CR_weight</span><span class="p">()</span>
+    <span class="n">Nupdate</span><span class="p">,</span> <span class="n">Ncr</span> <span class="o">=</span> <span class="n">CR_weight</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;building stats</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">((</span><span class="n">draws</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">CR_weight</span><span class="p">))</span>
+
+    <span class="c1">#TODO: missing _outliers from save_state</span>
+
+    <span class="c1"># Write convergence info</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;writing chain</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">fid</span> <span class="o">=</span> <span class="n">CREATE</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;-chain&#39;</span><span class="o">+</span><span class="n">EXT</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="s1">&#39;# draws acceptance_rate </span><span class="si">%d</span><span class="s1">*logp</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Npop</span><span class="p">)</span>
+    <span class="n">savetxt</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">chain</span><span class="p">)</span>
+    <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Write point info</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;writing point</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">fid</span> <span class="o">=</span> <span class="n">CREATE</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;-point&#39;</span><span class="o">+</span><span class="n">EXT</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="s1">&#39;# logp point (Nthin x Npop x Nvar = [</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">])</span><span class="se">\n</span><span class="s1">&#39;</span>
+          <span class="o">%</span> <span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+    <span class="n">savetxt</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
+    <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Write stats</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;writing stats</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">fid</span> <span class="o">=</span> <span class="n">CREATE</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;-stats&#39;</span><span class="o">+</span><span class="n">EXT</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="s1">&#39;# draws </span><span class="si">%d</span><span class="s1">*CR_weight</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Ncr</span><span class="p">)</span>
+    <span class="n">savetxt</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+    <span class="n">fid</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">write</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="s2">&quot;done state save</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">trace</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="n">IND_PAT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;-1#IND&#39;</span><span class="p">)</span>
+<span class="n">INF_PAT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;1#INF&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">loadtxt</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Like numpy loadtxt, but adapted for windows non-finite numbers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;readline&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">):</span>
+            <span class="c1">#print(&quot;opening with gzip&quot;)</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">file</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">section</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">lineno</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="n">lineno</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">report</span> <span class="ow">and</span> <span class="n">lineno</span><span class="o">%</span><span class="n">report</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="n">section</span><span class="o">*</span><span class="n">report</span><span class="p">)</span>
+            <span class="n">section</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">IND_PAT</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+        <span class="n">INF_PAT</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parse error:&quot;</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fh</span> <span class="o">!=</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">asarray</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">path_contains_saved_state</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">chain_file</span> <span class="o">=</span> <span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;-chain&#39;</span> <span class="o">+</span> <span class="n">EXT</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">chain_file</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">openmc</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="c1">#print(&quot;opening with gzip&quot;)</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]):</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;file </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span><span class="o">%</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s2">&quot;.gz&quot;</span><span class="p">):</span>
+            <span class="c1">#print(&quot;opening with gzip&quot;)</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s2">&quot;.gz&quot;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;file </span><span class="si">%s</span><span class="s2"> does not exist&quot;</span><span class="o">%</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fh</span>
+
+
+<div class="viewcode-block" id="load_state">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.load_state">[docs]</a>
+<span class="k">def</span> <span class="nf">load_state</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">derived_vars</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="c1"># Read chain file</span>
+    <span class="k">with</span> <span class="n">openmc</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;-chain&#39;</span><span class="o">+</span><span class="n">EXT</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="n">loadtxt</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span>
+
+    <span class="c1"># Read point file</span>
+    <span class="k">with</span> <span class="n">openmc</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;-point&#39;</span><span class="o">+</span><span class="n">EXT</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">point_dims</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">)]</span>
+        <span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">point_dims</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">skip</span><span class="o">*</span><span class="n">Npop</span><span class="p">):</span>
+            <span class="n">fid</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">loadtxt</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="o">*</span><span class="n">Npop</span><span class="p">)</span>
+
+    <span class="c1"># Read stats file</span>
+    <span class="k">with</span> <span class="n">openmc</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;-stats&#39;</span><span class="o">+</span><span class="n">EXT</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="n">stats_header</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">loadtxt</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+
+    <span class="c1"># Determine number of R-stat stored in the stats file</span>
+    <span class="k">if</span> <span class="s1">&#39;R-stat&#39;</span> <span class="ow">in</span> <span class="n">stats_header</span><span class="p">:</span>
+        <span class="c1"># Old header looks like:</span>
+        <span class="c1">#     # draws {Nvar}*R-stat {Ncr}*CR_weight</span>
+        <span class="c1"># however, number of R-stat stored in stats file is the number of</span>
+        <span class="c1"># variables stored each generation, not including the derived variables</span>
+        <span class="c1"># calculated after the MCMC has completed.</span>
+        <span class="n">num_r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stats_header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">derived_vars</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num_r</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Guess dimensions</span>
+    <span class="n">Ngen</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">thinning</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Nthin</span> <span class="o">-=</span> <span class="n">skip</span>
+    <span class="n">Nupdate</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Create empty draw and fill it with loaded data</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">MCMCDraw</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">thinning</span><span class="p">)</span>
+    <span class="c1">#print(&quot;gen, var, pop&quot;, Ngen, Nvar, Npop)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">draws</span> <span class="o">=</span> <span class="n">Ngen</span> <span class="o">*</span> <span class="n">Npop</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">=</span> <span class="n">Ngen</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_gen_draws</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_gen_logp</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">thinning</span> <span class="o">=</span> <span class="n">thinning</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_thin_count</span> <span class="o">=</span> <span class="n">Ngen</span><span class="o">//</span><span class="n">thinning</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_thin_draws</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">[(</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">thinning</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="n">thinning</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_thin_logp</span> <span class="o">=</span> <span class="n">point</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">))</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_thin_point</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">point</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="n">Nvar</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="n">derived_vars</span><span class="p">],</span> <span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_gen_current</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">=</span> <span class="n">Nupdate</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_update_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_update_draws</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_update_CR_weight</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[:,</span> <span class="mi">1</span><span class="o">+</span><span class="n">num_r</span><span class="p">:]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_outliers</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">bestidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">point</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_best_logp</span> <span class="o">=</span> <span class="n">point</span><span class="p">[</span><span class="n">bestidx</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_best_x</span> <span class="o">=</span> <span class="n">point</span><span class="p">[</span><span class="n">bestidx</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="n">Nvar</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="n">derived_vars</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_best_gen</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">state</span></div>
+
+
+
+<div class="viewcode-block" id="MCMCDraw">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw">[docs]</a>
+<span class="k">class</span> <span class="nc">MCMCDraw</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_integer_vars</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># boolean array of integer variables, or None</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ngen</span><span class="p">,</span> <span class="n">Nthin</span><span class="p">,</span> <span class="n">Nupdate</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Ncr</span><span class="p">,</span> <span class="n">thinning</span><span class="p">):</span>
+        <span class="c1"># Total number of draws so far</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draws</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Maximum observed likelihood</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_best_x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span> <span class="o">=</span> <span class="o">-</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_best_gen</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Per generation iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">Ngen</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">Ngen</span><span class="p">)</span>
+
+        <span class="c1"># If we are thinning, we need to keep the current generation</span>
+        <span class="c1"># separately. [Note: don&#39;t remember why we need both the _gen_*</span>
+        <span class="c1"># and _thin_*]  [Note: the caller x vector is assigned to</span>
+        <span class="c1"># _gen_current; this may lead to unexpected behaviour if x is</span>
+        <span class="c1"># changed by the caller.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Per thinned generation iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thinning</span> <span class="o">=</span> <span class="n">thinning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_timer</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">))</span>
+
+        <span class="c1"># Per update iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">Nupdate</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">Nupdate</span><span class="p">,</span> <span class="n">Ncr</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outliers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Query functions will not return outlier chains; initially, all</span>
+        <span class="c1"># chains are marked as good.  Call mark_outliers to remove</span>
+        <span class="c1"># outlier chains from the set.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Ngen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Nsamples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Nthin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Nupdate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Nvar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of parameters in the fit&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Npop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Ncr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MCMCDraw.resize">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.resize">[docs]</a>
+    <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ngen</span><span class="p">,</span> <span class="n">Nthin</span><span class="p">,</span> <span class="n">Nupdate</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Ncr</span><span class="p">,</span> <span class="n">thinning</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nvar</span> <span class="o">!=</span> <span class="n">Nvar</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">Npop</span> <span class="o">!=</span> <span class="n">Npop</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ncr</span> <span class="o">!=</span> <span class="n">Ncr</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot change Nvar, Npop or Ncr on resize&quot;</span><span class="p">)</span>
+
+        <span class="c1"># For now, only handle the case where the we have one complete</span>
+        <span class="c1"># frame of data, such as on reloading the state vector</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nupdate</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nthin</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">thinning</span> <span class="o">=</span> <span class="n">thinning</span>
+
+        <span class="k">if</span> <span class="n">Ngen</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span>  <span class="c1"># must happen before resize!!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">,</span> <span class="n">Ngen</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">,</span> <span class="p">(</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span> \
+                <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span><span class="p">,</span> <span class="n">Ngen</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">Ngen</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">[</span><span class="o">-</span><span class="n">Ngen</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="o">-</span><span class="n">Ngen</span><span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span> \
+                <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span><span class="p">[</span><span class="o">-</span><span class="n">Ngen</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">Nthin</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nthin</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nthin</span>  <span class="c1"># must happen before resize!!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">,</span> <span class="n">Nthin</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">,</span> <span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">,</span> <span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">Nthin</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nthin</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">[</span><span class="o">-</span><span class="n">Nthin</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[</span><span class="o">-</span><span class="n">Nthin</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">[</span><span class="o">-</span><span class="n">Nthin</span><span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">Nupdate</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nupdate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nupdate</span>  <span class="c1"># must happen before resize!!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">,</span> <span class="n">Nupdate</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span> \
+                <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span><span class="p">,</span> <span class="p">(</span><span class="n">Nupdate</span><span class="p">,</span> <span class="n">Ncr</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">Nupdate</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nupdate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">[</span><span class="o">-</span><span class="n">Nupdate</span><span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span><span class="p">[</span><span class="o">-</span><span class="n">Nupdate</span><span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.save">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">save_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.trim_portion">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.trim_portion">[docs]</a>
+    <span class="k">def</span> <span class="nf">trim_portion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">burn_point</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">portion</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">index</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">)</span> <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.5</span>
+        <span class="k">return</span> <span class="n">portion</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.show">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.show">[docs]</a>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">figfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.views</span> <span class="kn">import</span> <span class="n">plot_all</span>
+        <span class="n">plot_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="n">portion</span><span class="p">,</span> <span class="n">figfile</span><span class="o">=</span><span class="n">figfile</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_last_gen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns x, logp for most recent generation to dream.py.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Note: if generation number has wrapped and _gen_index is 0</span>
+        <span class="c1"># (the usual case when this function is called to resume an</span>
+        <span class="c1"># existing chain), then this returns the last row in the array.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_generation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_draws</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">accept</span><span class="p">,</span> <span class="n">force_keep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from dream.py after each generation is completed with</span>
+<span class="sd">        a set of accepted points and their values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Keep track of the total number of draws</span>
+        <span class="c1"># Note: this is first so that we tag the record with the number of</span>
+        <span class="c1"># draws taken so far, including the current draw.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draws</span> <span class="o">+=</span> <span class="n">new_draws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Record if this is the best so far</span>
+        <span class="n">maxid</span> <span class="o">=</span> <span class="n">argmax</span><span class="p">(</span><span class="n">logp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">logp</span><span class="p">[</span><span class="n">maxid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">maxid</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_best_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">maxid</span><span class="p">,</span> <span class="p">:]</span><span class="o">+</span><span class="mi">0</span> <span class="c1"># Force a copy</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_best_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span>
+            <span class="c1">#print(&quot;new best&quot;, logp[maxid], self.generation)</span>
+
+        <span class="c1"># Record acceptance rate and cost</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span>
+        <span class="c1">#print(&quot;generation&quot;, i, self.draws, &quot;\n x&quot;, x, &quot;\n logp&quot;, logp, &quot;\n accept&quot;, accept)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="nb">sum</span><span class="p">(</span><span class="n">accept</span><span class="p">)</span><span class="o">/</span><span class="n">new_draws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">logp</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="c1"># Keep every nth iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_timer</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_timer</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">thinning</span> <span class="ow">or</span> <span class="n">force_keep</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_timer</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">logp</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">):</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span> <span class="o">=</span> <span class="n">x</span><span class="o">+</span><span class="mi">0</span> <span class="c1"># force a copy</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span> <span class="o">=</span> <span class="n">x</span><span class="o">+</span><span class="mi">0</span> <span class="c1"># force a copy</span>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CR_weight</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from dream.py when a series of DE steps is completed and</span>
+<span class="sd">        summary statistics/adaptations are ready to be stored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span>
+        <span class="c1">#print(&quot;update&quot;, i, self.draws, &quot;\n CR weight&quot;, CR_weight)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">CR_weight</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">):</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;P</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
+
+    <span class="nd">@labels</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="k">def</span> <span class="nf">_draw_pop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current population.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span>
+
+    <span class="k">def</span> <span class="nf">_draw_large_pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Npop</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span>
+        <span class="n">Ngen</span><span class="p">,</span> <span class="n">Nchain</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="p">(</span><span class="n">Ngen</span><span class="o">*</span><span class="n">Nchain</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+
+        <span class="c1"># There are two complications with the history buffer:</span>
+        <span class="c1"># (1) due to thinning, not every generation is stored</span>
+        <span class="c1"># (2) because it is circular, the cursor may be in the middle</span>
+        <span class="c1"># If the current generation isn&#39;t in the buffer (but is instead</span>
+        <span class="c1"># stored separately as _gen_current), then the entire buffer</span>
+        <span class="c1"># becomes the history pool.</span>
+        <span class="c1"># otherwise we need to exclude the current generation from</span>
+        <span class="c1"># the pool.  If (2) happens, we need to increment everything</span>
+        <span class="c1"># above the cursor by the number of chains.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pool_size</span> <span class="o">=</span> <span class="n">Ngen</span><span class="o">*</span><span class="n">Nchain</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">pool_size</span>  <span class="c1"># infinite</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pool_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ngen</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Nchain</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">)</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">Nchain</span><span class="o">*</span><span class="p">((</span><span class="n">k</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">%</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="c1"># Make a return population and fill it with the current generation</span>
+        <span class="n">pop</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pop</span><span class="p">[:</span><span class="n">Nchain</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#print(pop.shape, points.shape, chains.shape)</span>
+            <span class="n">pop</span><span class="p">[:</span><span class="n">Nchain</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">cursor</span><span class="p">:</span><span class="n">cursor</span><span class="o">+</span><span class="n">Nchain</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">Npop</span> <span class="o">&gt;</span> <span class="n">Nchain</span><span class="p">:</span>
+            <span class="c1"># Find the remainder with unique ancestors.</span>
+            <span class="c1"># Again, because this is a circular buffer, their may be random</span>
+            <span class="c1"># numbers generated at or above the cursor.  All of these must</span>
+            <span class="c1"># be shifted by Nchains to avoid the cursor.</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="n">Npop</span><span class="o">-</span><span class="n">Nchain</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">)</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">perm</span> <span class="o">&gt;=</span> <span class="n">cursor</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Nchain</span>
+            <span class="c1">#print(&quot;perm&quot;, perm; raw_input(&#39;wait&#39;))</span>
+            <span class="n">pop</span><span class="p">[</span><span class="n">Nchain</span><span class="p">:]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">pop</span>
+
+    <span class="k">def</span> <span class="nf">_unroll</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unroll the circular queue so that data access can be done inplace.</span>
+
+<span class="sd">        Call this when done stepping, and before plotting.  Calls to</span>
+<span class="sd">        logp, sample, etc. assume the data is already unrolled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">,</span>
+                                         <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">,</span>
+                                        <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span><span class="p">,</span>
+                                                   <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">,</span>
+                                          <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">,</span>
+                                          <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">,</span>
+                                         <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">,</span>
+                                            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span><span class="p">,</span>
+                                                <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="MCMCDraw.remove_outliers">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.remove_outliers">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_outliers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace outlier chains with clones of good ones.  This should happen</span>
+<span class="sd">        early in the sampling processes so the clones have an opportunity</span>
+<span class="sd">        to evolve their own identity.  Only the head of the chain is modified.</span>
+
+<span class="sd">        *state* contains the chains, with log likelihood for each point.</span>
+
+<span class="sd">        *x*, *logp* are the current population and the corresponding</span>
+<span class="sd">        log likelihoods; these are updated with cloned chain values.</span>
+
+<span class="sd">        *test* is the name of the test to use (one of IQR, Grubbs, Mahal</span>
+<span class="sd">        or none). See :func:`.outliers.identify_outliers` for details.</span>
+
+<span class="sd">        Updates *state*, *x* and *logp* to reflect the changes.</span>
+
+<span class="sd">        Returns a list of the outliers that were removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Grab the last part of the chain histories</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logp</span><span class="p">()</span>
+        <span class="n">chain_len</span><span class="p">,</span> <span class="n">Nchains</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">outliers</span> <span class="o">=</span> <span class="n">identify_outliers</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="c1">#if len(outliers): print(&quot;old llf&quot;, logp[outliers])</span>
+
+        <span class="c1"># Loop over each outlier chain, replacing each with another</span>
+        <span class="k">for</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">outliers</span><span class="p">:</span>
+            <span class="c1"># Draw another chain at random, with replacement</span>
+            <span class="c1"># TODO: consider using relative likelihood as a weight factor</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">new</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">Nchains</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outliers</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="c1"># Update the saved state and current population</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_replace_outlier</span><span class="p">(</span><span class="n">old</span><span class="o">=</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="n">new</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">old</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">new</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">logp</span><span class="p">[</span><span class="n">old</span><span class="p">]</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">new</span><span class="p">]</span>
+
+        <span class="c1">#if len(outliers): print(&quot;new llf&quot;, logp[outliers])</span>
+        <span class="k">return</span> <span class="n">outliers</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_replace_outlier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called from outliers.py when a chain is replaced by the</span>
+<span class="sd">        clone of another.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outliers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">))</span>
+
+        <span class="c1"># 2017-10-06 [PAK] only replace the head, not the full chain</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span><span class="p">[</span><span class="n">old</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_current</span><span class="p">[</span><span class="n">new</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">old</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">new</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">old</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">new</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="p">:]</span>
+
+<div class="viewcode-block" id="MCMCDraw.mark_outliers">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.mark_outliers">[docs]</a>
+    <span class="k">def</span> <span class="nf">mark_outliers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark some chains as outliers but don&#39;t remove them.  This can happen</span>
+<span class="sd">        after drawing is complete, so that chains that did not converge are</span>
+<span class="sd">        not included in the statistics.</span>
+
+<span class="sd">        *test* is &#39;IQR&#39;, &#39;Mahol&#39; or &#39;none&#39;.</span>
+
+<span class="sd">        *portion* indicates what portion of the samples should be included</span>
+<span class="sd">        in the outlier test.  The default is to include all of them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Ngen</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Ngen</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">portion</span><span class="p">))</span> <span class="k">if</span> <span class="n">portion</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">outliers</span> <span class="o">=</span> <span class="n">identify_outliers</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">logp</span><span class="p">[</span><span class="n">start</span><span class="p">:],</span> <span class="n">chains</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1">#print(&quot;outliers&quot;, outliers)</span>
+            <span class="c1">#print(logp.shape, chains.shape)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outliers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span>
+                                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">logp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                                              <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outliers</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+            <span class="c1">#print(self._good_chains)</span>
+
+<div class="viewcode-block" id="MCMCDraw.logp">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.logp">[docs]</a>
+    <span class="k">def</span> <span class="nf">logp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the iteration number and the log likelihood for each point in</span>
+<span class="sd">        the individual sequences in that iteration.</span>
+
+<span class="sd">        For example, to plot the convergence of each sequence::</span>
+
+<span class="sd">            draw, logp = state.logp()</span>
+<span class="sd">            plot(draw, logp)</span>
+
+<span class="sd">        Note that draw[i] represents the total number of samples taken,</span>
+<span class="sd">        including those for the samples in logp[i].</span>
+
+<span class="sd">        If full is True, then return all chains, not just good chains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#self._unroll()</span>
+        <span class="c1">#draws, logp = self._gen_draws, self._gen_logp</span>
+        <span class="c1">#if self.generation == self._gen_index:</span>
+        <span class="c1">#    draws, logp = [v[:self.generation] for v in (draws, logp)]</span>
+
+        <span class="c1"># Don&#39;t do a full unroll here</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">]</span>
+            <span class="n">logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">logp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span>
+            <span class="n">logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span>
+
+        <span class="c1"># TODO: just return logp, not logp and draws</span>
+        <span class="k">return</span> <span class="n">draws</span><span class="p">,</span> <span class="p">(</span><span class="n">logp</span> <span class="k">if</span> <span class="n">full</span> <span class="k">else</span> <span class="n">logp</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.logp_slice">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.logp_slice">[docs]</a>
+    <span class="k">def</span> <span class="nf">logp_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a slice of the logp chains, either the first n if n &gt; 0</span>
+<span class="sd">        or the last n if n &lt; 0.  Avoids unrolling the circular buffer if</span>
+<span class="sd">        possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># tail</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">n</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="o">+</span><span class="n">n</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">n</span><span class="p">:]</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># unroll across boundary</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:],</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># head</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="o">+</span><span class="n">n</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="o">+</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:],</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:]))</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.min_slice">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.min_slice">[docs]</a>
+    <span class="k">def</span> <span class="nf">min_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the minimum logp for n slices, from the head if positive</span>
+<span class="sd">        or the tail if negative.</span>
+
+<span class="sd">        This is a specialized function so it can be fast.  Convergence</span>
+<span class="sd">        can be quickly rejected if the min in a short head is smaller</span>
+<span class="sd">        than the min in a long tail.  Unfortunately, if the data is</span>
+<span class="sd">        wrapped, then the max function will cost extra.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Copy the logic of slice</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># tail</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">n</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="o">+</span><span class="n">n</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">n</span><span class="p">:])</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># max across boundary</span>
+                <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:]),</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># head</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="o">+</span><span class="n">n</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="o">+</span><span class="n">n</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:]),</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_logp</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:]))</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.acceptance_rate">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.acceptance_rate">[docs]</a>
+    <span class="k">def</span> <span class="nf">acceptance_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the iteration number and the acceptance rate for that iteration.</span>
+
+<span class="sd">        For example, to plot the acceptance rate over time::</span>
+
+<span class="sd">            draw, AR = state.acceptance_rate()</span>
+<span class="sd">            plot(draw, AR)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_draws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_acceptance_rate</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">retval</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">retval</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.chains">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.chains">[docs]</a>
+    <span class="k">def</span> <span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the observed Markov chains and the corresponding likelihoods.</span>
+
+<span class="sd">        The return value is a tuple (*draws*, *chains*, *logp*).</span>
+
+<span class="sd">        *draws* is the number of samples taken up to and including the samples</span>
+<span class="sd">        for the current generation.</span>
+
+<span class="sd">        *chains* is a three dimensional array of generations X chains X vars</span>
+<span class="sd">        giving the set of points observed for each chain in every generation.</span>
+<span class="sd">        Only the thinned samples are returned.</span>
+
+<span class="sd">        *logp* is a two dimensional array of generation X population giving</span>
+<span class="sd">        the log likelihood of observing the set of variable values given in</span>
+<span class="sd">        chains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unroll</span><span class="p">()</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_draws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_logp</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_index</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">retval</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.gelman">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.gelman">[docs]</a>
+    <span class="k">def</span> <span class="nf">gelman</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the R-statistic for the current frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Calculate Gelman and Rubin convergence diagnostic</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gelman</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">],</span> <span class="n">portion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gelman</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.CR_weight">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.CR_weight">[docs]</a>
+    <span class="k">def</span> <span class="nf">CR_weight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the crossover ratio weights to be used in the next generation.</span>
+
+<span class="sd">        For example, to see if the adaptive CR is stable use::</span>
+
+<span class="sd">            draw, weight = state.CR_weight()</span>
+<span class="sd">            plot(draw, weight)</span>
+
+<span class="sd">        See :mod:`.crossover` for details.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unroll</span><span class="p">()</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_draws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_CR_weight</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_index</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_count</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">retval</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.outliers">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.outliers">[docs]</a>
+    <span class="k">def</span> <span class="nf">outliers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of outlier removal operations.</span>
+
+<span class="sd">        Each outlier operation is a tuple giving the thinned generation</span>
+<span class="sd">        in which it occurred, the old chain id and the new chain id.</span>
+
+<span class="sd">        The chains themselves have already been updated to reflect the</span>
+<span class="sd">        removal.</span>
+
+<span class="sd">        Curiously, it is possible for the maximum likelihood seen so far</span>
+<span class="sd">        to be removed by this operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_outliers</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.best">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.best">[docs]</a>
+    <span class="k">def</span> <span class="nf">best</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the best point seen and its log likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.stable_best">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.stable_best">[docs]</a>
+    <span class="k">def</span> <span class="nf">stable_best</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the best point seen and its log likelihood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_gen</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngen</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.keep_best">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.keep_best">[docs]</a>
+    <span class="k">def</span> <span class="nf">keep_best</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Place the best point at the end of the last good chain.</span>
+
+<span class="sd">        Good chains are defined by mark_outliers.</span>
+
+<span class="sd">        Because the Markov chain is designed to wander the parameter</span>
+<span class="sd">        space, the best individual seen during the random walk may have</span>
+<span class="sd">        been observed during the burn-in period, and may no longer be</span>
+<span class="sd">        present in the chain.  If this is the case, replace the final</span>
+<span class="sd">        point with the best, otherwise swap the positions of the final</span>
+<span class="sd">        and the best.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get state as a 1D array</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span>
+        <span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="p">(</span><span class="n">Ngen</span><span class="o">*</span><span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+        <span class="n">logp</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">logp</span><span class="p">,</span> <span class="n">Ngen</span><span class="o">*</span><span class="n">Npop</span><span class="p">)</span>
+
+        <span class="c1"># Set the final position to the end of the last good chain.  If</span>
+        <span class="c1"># mark_outliers has not been called, then _good_chains will</span>
+        <span class="c1"># just be slice(None, None)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="n">final</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">final</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_good_chains</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Npop</span>
+
+        <span class="c1"># Find the location of the best point if it exists and swap with</span>
+        <span class="c1"># the final position</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">logp</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logp</span><span class="p">[</span><span class="n">final</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">final</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logp</span><span class="p">[</span><span class="n">final</span><span class="p">],</span> <span class="n">logp</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">logp</span><span class="p">[</span><span class="n">final</span><span class="p">]</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">final</span><span class="p">,</span> <span class="p">:],</span> <span class="n">points</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:],</span> <span class="n">points</span><span class="p">[</span><span class="n">final</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="c1"># For multiple minima, arbitrarily choose one of them</span>
+        <span class="c1"># TODO: this will lead to possible confusion when the best value</span>
+        <span class="c1"># spontaneously changes when the fit is complete.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_best_p</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">final</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_best_logp</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">final</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.sample">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.sample">[docs]</a>
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample from the posterior distribution.</span>
+
+<span class="sd">        **Deprecated** use :meth:`draw` instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">drawn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">drawn</span><span class="o">.</span><span class="n">logp</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.entropy">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.entropy">[docs]</a>
+    <span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+                <span class="n">thin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return entropy estimate and uncertainty from an MCMC draw.</span>
+
+<span class="sd">        *portion* is the portion of each chain to use</span>
+
+<span class="sd">        *vars* is the set of variables to marginalize over.  It is None for</span>
+<span class="sd">        the visible variables, or a list of variables.</span>
+
+<span class="sd">        *vars* is the list of variables to use for marginalization.</span>
+
+<span class="sd">        *selection* sets the range each parameter in the returned distribution,</span>
+<span class="sd">        using {variable: (low, high)}. Missing variables use the full range.</span>
+
+<span class="sd">        *n_est* is the number of points to use from the draw when estimating</span>
+<span class="sd">        the entropy (default=10000).</span>
+
+<span class="sd">        *thin* is the amount of thinning to use when selecting points from the</span>
+<span class="sd">        draw.</span>
+
+<span class="sd">        *method* determines which entropy calculation to use:</span>
+
+<span class="sd">        * gmm: fit sample to a gaussian mixture model (GMM) with $5 \sqrt{d}$</span>
+<span class="sd">          components where $d$ is the number fitted parameters and estimate</span>
+<span class="sd">          entropy by sampling from the GMM.</span>
+
+<span class="sd">        * llf: estimates likelihood scale factor from ratio of density</span>
+<span class="sd">          estimate to model likelihood, then computes Monte Carlo entropy</span>
+<span class="sd">          from sample; this does not work for marginal likelihood estimates.</span>
+<span class="sd">          DOI:10.1109/CCA.2010.5611198</span>
+
+<span class="sd">        * mvn: fit sample to a multi-variate Gaussian and return the entropy</span>
+<span class="sd">          of the best fit gaussian; uses bootstrap to estimate uncertainty.</span>
+
+<span class="sd">        * wnn: estimate entropy from nearest-neighbor distances in sample.</span>
+<span class="sd">          DOI:10.1214/18-AOS1688</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">entropy</span>
+
+        <span class="c1"># Get the sample from the state.</span>
+        <span class="c1"># set default thinning to max((steps * samples/step) // n_est, 1)</span>
+        <span class="k">if</span> <span class="n">thin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Nsteps</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nthin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_count</span><span class="p">)</span>
+            <span class="n">thin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">Nsteps</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Npop</span><span class="o">//</span><span class="n">n_est</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="c1">#print(&quot;thin&quot;, thin, Nsteps, self.Npop, self.Nthin, self._thin_count)</span>
+        <span class="n">drawn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">portion</span><span class="o">=</span><span class="n">portion</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="nb">vars</span><span class="p">,</span>
+                          <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="n">thin</span><span class="p">)</span>
+
+        <span class="c1"># TODO: don&#39;t print within a library function!</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">MVNEntropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from MVN: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">M</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># TODO: change default to gmm</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;llf&quot;</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;llf&quot;</span><span class="p">:</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">Serr</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">drawn</span><span class="o">.</span><span class="n">logp</span><span class="p">,</span> <span class="n">N_entropy</span><span class="o">=</span><span class="n">n_est</span><span class="p">)</span>
+            <span class="c1">#print(&quot;Entropy from llf (Kramer): %s&quot;%str(S))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;gmm&quot;</span><span class="p">:</span>
+            <span class="c1"># Try pure gmm ... pretty good</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">Serr</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">gmm_entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="n">n_est</span><span class="p">)</span>
+            <span class="c1">#print(&quot;Entropy from gmm: %g +/- %g&quot;% (S, Serr))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;wnn&quot;</span><span class="p">:</span>
+            <span class="c1"># Try pure wnn ... no good</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">Serr</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">wnn_entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="n">n_est</span><span class="p">)</span>
+            <span class="c1">#print(&quot;Entropy from wnn: %s&quot;%str(S))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mvn&quot;</span><span class="p">:</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">Serr</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">mvn_entropy_bootstrap</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+            <span class="c1">#print(&quot;Entropy from mvn: %s&quot;%str(S))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown method </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+
+        <span class="c1"># Always return entropy estimate from draw, even if it is normal</span>
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">Serr</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.draw">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.draw">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sample from the posterior distribution.</span>
+
+<span class="sd">        *portion* is the portion of each chain to use</span>
+
+<span class="sd">        *vars* is a list of variables to return for each point</span>
+
+<span class="sd">        *selection* sets the range each parameter in the returned distribution,</span>
+<span class="sd">        using {variable: (low, high)}. Missing variables use the full range.</span>
+
+<span class="sd">        *thin* takes every nth item.</span>
+
+<span class="sd">        To plot the distribution for parameter p1::</span>
+
+<span class="sd">            draw = state.draw()</span>
+<span class="sd">            hist(draw.points[:, 0])</span>
+
+<span class="sd">        To plot the interdependence of p1 and p2::</span>
+
+<span class="sd">            draw = state.sample()</span>
+<span class="sd">            plot(draw.points[:, 0], draw.points[:, 1], &#39;.&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">vars</span> <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_shown&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="n">portion</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="nb">vars</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span>
+                    <span class="n">thin</span><span class="o">=</span><span class="n">thin</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.set_visible_vars">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.set_visible_vars">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_visible_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shown</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span></div>
+
+        <span class="c1">#print(&quot;\n&quot;.join(str(pair) for pair in enumerate(self.labels)))</span>
+        <span class="c1">#print(labels)</span>
+        <span class="c1">#print(self._shown)</span>
+
+<div class="viewcode-block" id="MCMCDraw.set_integer_vars">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.set_integer_vars">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_integer_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicate tha variables should be considered integer variables when</span>
+<span class="sd">        computing statistics.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_integer_vars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">var</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="MCMCDraw.derive_vars">
+<a class="viewcode-back" href="../../../dream/state.html#bumps.dream.state.MCMCDraw.derive_vars">[docs]</a>
+    <span class="k">def</span> <span class="nf">derive_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate derived variables from the current sample, adding columns</span>
+<span class="sd">        for the derived variables to each sample of every chain.</span>
+
+<span class="sd">        The new columns are treated as part of the sample.</span>
+
+<span class="sd">        *fn* is a function taking points p[:, k] for k in 0 ... samples and</span>
+<span class="sd">        returning a set of derived variables pj[k] for each sample k.  The</span>
+<span class="sd">        variables can be returned as any kind of sequence including an</span>
+<span class="sd">        array or a tuple with one entry per variable.  The caller uses</span>
+<span class="sd">        asarray to convert the returned variables into a vars X samples array.</span>
+<span class="sd">        For convenience, a single variable can be returned by itself.</span>
+
+<span class="sd">        *labels* are the labels to use for the derived variables.</span>
+
+<span class="sd">        The following example adds the new variable x+y = P[0] + P[1]::</span>
+
+<span class="sd">            state.derive_vars(lambda p: p[0]+p[1], labels=[&quot;x+y&quot;])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Grab all samples as a set of points</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span>
+        <span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="p">(</span><span class="n">Ngen</span><span class="o">*</span><span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+
+        <span class="c1"># Compute new variables from the points</span>
+        <span class="n">newvars</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">fn</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">T</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">Nnew</span> <span class="o">=</span> <span class="n">newvars</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">newvars</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">newvars</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nnew</span><span class="p">))</span>
+
+        <span class="c1"># Extend new variables to be the same length as the stored selection</span>
+        <span class="n">Nthin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">newvars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">newvars</span><span class="p">,</span> <span class="p">(</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nnew</span><span class="p">))</span>
+
+        <span class="c1"># Add new variables to the points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span> <span class="o">=</span> <span class="n">dstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin_point</span><span class="p">,</span> <span class="n">newvars</span><span class="p">))</span>
+
+        <span class="c1"># Add labels for the new variables, if available.</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">+</span> <span class="n">labels</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;P</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nvar</span><span class="p">,</span> <span class="n">Nvar</span><span class="o">+</span><span class="n">Nnew</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">+</span> <span class="n">labels</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># no labels specified, old or new</span>
+            <span class="k">pass</span></div>
+</div>
+
+
+
+<span class="k">class</span> <span class="nc">Draw</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars</span> <span class="o">=</span> <span class="nb">vars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">portion</span> <span class="o">=</span> <span class="n">portion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection</span> <span class="o">=</span> <span class="n">selection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">logp</span> <span class="o">=</span> <span class="n">_sample</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span> <span class="n">portion</span><span class="o">=</span><span class="n">portion</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="nb">vars</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="n">thin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> \
+            <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">labels</span> <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stats</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">_integer_vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integers</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_integer_vars</span><span class="p">[</span><span class="nb">vars</span><span class="p">]</span> <span class="k">if</span> <span class="nb">vars</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integers</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_sample</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">portion</span><span class="p">,</span> <span class="nb">vars</span><span class="p">,</span> <span class="n">selection</span><span class="p">,</span> <span class="n">thin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a sample from a set of chains.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">draw</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">portion</span><span class="p">)</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">draw</span><span class="p">))</span> <span class="k">if</span> <span class="n">portion</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="c1"># Collect the subset we are interested in</span>
+    <span class="n">chains</span> <span class="o">=</span> <span class="n">chains</span><span class="p">[</span><span class="n">start</span><span class="p">::</span><span class="n">thin</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">_good_chains</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">logp</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">start</span><span class="p">::</span><span class="n">thin</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">_good_chains</span><span class="p">]</span>
+
+    <span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+    <span class="n">logp</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">logp</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">selection</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">{}]:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">selection</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s1">&#39;logp&#39;</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">logp</span> <span class="o">&gt;=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">logp</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="n">v</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="n">v</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">logp</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[:,</span> <span class="nb">vars</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="n">logp</span>
+
+
+<span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">rand</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">arange</span>
+
+    <span class="c1"># Make some fake data</span>
+    <span class="n">Nupdate</span><span class="p">,</span> <span class="n">Nstep</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span>
+    <span class="n">Ngen</span> <span class="o">=</span> <span class="n">Nupdate</span><span class="o">*</span><span class="n">Nstep</span>
+    <span class="n">Nvar</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Ncr</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span>
+    <span class="n">xin</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">)</span>
+    <span class="n">pin</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">)</span>
+    <span class="n">accept</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Npop</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span>
+    <span class="n">CRin</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">Nupdate</span><span class="p">,</span> <span class="n">Ncr</span><span class="p">)</span>
+    <span class="c1">#thinning = 2</span>
+    <span class="c1">#Nthin = int(Ngen/thinning)</span>
+
+    <span class="c1"># Put it into a state</span>
+    <span class="n">thinning</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Nthin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Ngen</span><span class="o">/</span><span class="n">thinning</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">MCMCDraw</span><span class="p">(</span><span class="n">Ngen</span><span class="o">=</span><span class="n">Ngen</span><span class="p">,</span> <span class="n">Nthin</span><span class="o">=</span><span class="n">Nthin</span><span class="p">,</span> <span class="n">Nupdate</span><span class="o">=</span><span class="n">Nupdate</span><span class="p">,</span>
+                     <span class="n">Nvar</span><span class="o">=</span><span class="n">Nvar</span><span class="p">,</span> <span class="n">Npop</span><span class="o">=</span><span class="n">Npop</span><span class="p">,</span> <span class="n">Ncr</span><span class="o">=</span><span class="n">Ncr</span><span class="p">,</span> <span class="n">thinning</span><span class="o">=</span><span class="n">thinning</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nupdate</span><span class="p">):</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">_update</span><span class="p">(</span><span class="n">CR_weight</span><span class="o">=</span><span class="n">CRin</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nstep</span><span class="p">):</span>
+            <span class="n">gen</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">Nstep</span><span class="o">+</span><span class="n">j</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">_generation</span><span class="p">(</span><span class="n">new_draws</span><span class="o">=</span><span class="n">Npop</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">xin</span><span class="p">[</span><span class="n">gen</span><span class="p">],</span>
+                              <span class="n">logp</span><span class="o">=</span><span class="n">pin</span><span class="p">[</span><span class="n">gen</span><span class="p">],</span> <span class="n">accept</span><span class="o">=</span><span class="n">accept</span><span class="p">[</span><span class="n">gen</span><span class="p">])</span>
+
+    <span class="c1"># Check that it got there</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">logp</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">draws</span> <span class="o">-</span> <span class="n">Npop</span><span class="o">*</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">Ngen</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">logp</span> <span class="o">-</span> <span class="n">pin</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">AR</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">acceptance_rate</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">draws</span> <span class="o">-</span> <span class="n">Npop</span><span class="o">*</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">Ngen</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">AR</span> <span class="o">-</span> <span class="mi">100</span><span class="o">*</span><span class="nb">sum</span><span class="p">(</span><span class="n">accept</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">Npop</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+    <span class="c1">#assert norm(draws - thinning*Npop*arange(1, Nthin+1)) == 0</span>
+    <span class="c1">#assert norm(sample - xin[thinning-1::thinning]) == 0</span>
+    <span class="c1">#assert norm(logp - pin[thinning-1::thinning]) == 0</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">CR</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">CR_weight</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">draws</span> <span class="o">-</span> <span class="n">Npop</span><span class="o">*</span><span class="n">Nstep</span><span class="o">*</span><span class="n">arange</span><span class="p">(</span><span class="n">Nupdate</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">CR</span> <span class="o">-</span> <span class="n">CRin</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">best</span><span class="p">()</span>
+    <span class="n">bestid</span> <span class="o">=</span> <span class="n">argmax</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span>
+    <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">bestid</span><span class="o">//</span><span class="n">Npop</span><span class="p">,</span> <span class="n">bestid</span><span class="o">%</span><span class="n">Npop</span>
+    <span class="k">assert</span> <span class="n">pin</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="n">p</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">xin</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="p">:]</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># Check that outlier updates properly</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">_replace_outlier</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">outliers</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">outliers</span><span class="p">()</span>
+    <span class="n">draws</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">outliers</span> <span class="o">-</span> <span class="n">asarray</span><span class="p">([[</span><span class="n">state</span><span class="o">.</span><span class="n">_thin_index</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]))</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="c1">#assert norm(sample[:, 1, :] - xin[thinning-1::thinning, 2, :]) == 0</span>
+    <span class="c1">#assert norm(sample[:, 2, :] - xin[thinning-1::thinning, 2, :]) == 0</span>
+    <span class="c1">#assert norm(logp[:, 1] - pin[thinning-1::thinning, 2]) == 0</span>
+    <span class="c1">#assert norm(logp[:, 2] - pin[thinning-1::thinning, 2]) == 0</span>
+
+    <span class="kn">from</span> <span class="nn">.stats</span> <span class="kn">import</span> <span class="n">var_stats</span><span class="p">,</span> <span class="n">format_vars</span>
+    <span class="n">vstats</span> <span class="o">=</span> <span class="n">var_stats</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">draw</span><span class="p">())</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="n">format_vars</span><span class="p">(</span><span class="n">vstats</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.state</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

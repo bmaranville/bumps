@@ -1,0 +1,30 @@
+bumps.mystic package
+====================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.mystic.examples
+   bumps.mystic.optimizer
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.mystic.condition
+   bumps.mystic.solver
+   bumps.mystic.stop
+   bumps.mystic.util
+
+Module contents
+---------------
+
+.. automodule:: bumps.mystic
+   :members:
+   :undoc-members:
+   :show-inheritance:

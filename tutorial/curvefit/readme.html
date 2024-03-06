@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Simple functions &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Fitting a curve" href="curve.html" />
+    <link rel="prev" title="Tutorial" href="../index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="curve.html" title="Fitting a curve"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Tutorial</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Simple functions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="simple-functions">
+<span id="curvefit-example"></span><h1>Simple functions<a class="headerlink" href="#simple-functions" title="Link to this heading">¶</a></h1>
+<p>Bumps allows fits with varying levels of complexity.  Simple fits accept
+a function <span class="math notranslate nohighlight">\(f(x;p)\)</span> and data <span class="math notranslate nohighlight">\(x,y,\sigma_y\)</span>, where vector <span class="math notranslate nohighlight">\(y\)</span> is the value
+measured in conditions <span class="math notranslate nohighlight">\(x\)</span>, and <span class="math notranslate nohighlight">\(\sigma_y\)</span> is the <span class="math notranslate nohighlight">\(1-\sigma\)</span> uncertainty in
+the measurement.  Bumps also provides a simple wrapper for poisson data
+taken from counting statistics, with function <span class="math notranslate nohighlight">\(f(x;p)\)</span> and data <span class="math notranslate nohighlight">\(x,y\)</span>.
+sim.py is a simulation of data from a poisson process, showing maximum
+likelihood, expected value and variance.</p>
+<p>The ode2 example shows how to fit a system of coupled differential equations
+where multiple values are tracked at each time step.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="curve.html">Fitting a curve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="poisson.html">Fitting Poisson data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim.html">Poisson simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ode.html">Fitting an ODE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ode2.html">Fitting a multi-valued function</a></li>
+</ul>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="../index.html"
+                          title="previous chapter">Tutorial</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="curve.html"
+                          title="next chapter">Fitting a curve</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tutorial/curvefit/readme.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="curve.html" title="Fitting a curve"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Tutorial"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Simple functions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

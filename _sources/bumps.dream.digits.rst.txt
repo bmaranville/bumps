@@ -1,0 +1,7 @@
+bumps.dream.digits module
+=========================
+
+.. automodule:: bumps.dream.digits
+   :members:
+   :undoc-members:
+   :show-inheritance:

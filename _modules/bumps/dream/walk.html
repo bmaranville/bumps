@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.walk &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.walk</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.walk</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is in the public domain</span>
+<span class="c1"># Author: Paul Kienzle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Random walk functions.</span>
+
+<span class="sd">:function:`walk` simulates a mean-reverting random walk.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># This code was developed to test outlier detection</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;walk&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">ones_like</span><span class="p">,</span> <span class="n">NaN</span><span class="p">,</span> <span class="n">isnan</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+
+
+<div class="viewcode-block" id="walk">
+<a class="viewcode-back" href="../../../bumps.dream.walk.html#bumps.dream.walk.walk">[docs]</a>
+<span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">s0</span><span class="o">=</span><span class="n">NaN</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mean reverting random walk.</span>
+
+<span class="sd">    Returns an array of n-1 steps in the following process::</span>
+
+<span class="sd">        s[i] = s[i-1] + alpha*(mu-s[i-1]) + e[i]</span>
+
+<span class="sd">    with e ~ N(0,sigma).</span>
+
+<span class="sd">    The parameters are::</span>
+
+<span class="sd">        *n* walk length</span>
+<span class="sd">        *s0* starting value, defaults to N(mu,sigma)</span>
+<span class="sd">        *mu* target mean, defaults to 0</span>
+<span class="sd">        *sigma* volatility</span>
+<span class="sd">        *alpha* in [0,1] reversion rate</span>
+
+<span class="sd">    Use alpha=0 for a pure Gaussian random walk or alpha=1 independent</span>
+<span class="sd">    samples about the mean.</span>
+
+<span class="sd">    If *mu* is a vector, multiple streams are run in parallel.  In this</span>
+<span class="sd">    case *s0*, *sigma* and *alpha* can either be scalars or vectors.</span>
+
+<span class="sd">    If *mu* is an array, the target value is non-stationary, and the</span>
+<span class="sd">    parameter *n* is ignored.</span>
+
+<span class="sd">    Note: the default starting value should be selected from a distribution</span>
+<span class="sd">    whose width depends on alpha.  N(mu,sigma) is too narrow.  This</span>
+<span class="sd">    effect is illustrated in :function:`demo`, where the following choices</span>
+<span class="sd">    of sigma and alpha give approximately the same histogram::</span>
+
+<span class="sd">        sigma = [0.138, 0.31, 0.45, 0.85, 1]</span>
+<span class="sd">        alpha = [0.01,  0.05, 0.1,  0.5,  1]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s0</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="p">[</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">s0</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)]</span>
+    <span class="n">nchains</span> <span class="o">=</span> <span class="n">mu</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">mu</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">mu</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">s0</span><span class="p">):</span>
+            <span class="n">s0</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nchains</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">s0</span><span class="o">*</span><span class="n">ones_like</span><span class="p">(</span><span class="n">mu</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">alpha</span><span class="o">*</span><span class="p">(</span><span class="n">mu</span><span class="o">-</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">sigma</span><span class="o">*</span><span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nchains</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">mu</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">s0</span><span class="p">):</span>
+            <span class="n">s0</span> <span class="o">=</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nchains</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">s0</span><span class="o">*</span><span class="n">ones_like</span><span class="p">(</span><span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mu</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">alpha</span><span class="o">*</span><span class="p">(</span><span class="n">mu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                     <span class="o">+</span> <span class="n">sigma</span><span class="o">*</span><span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nchains</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mu must be scalar, vector or 2D array&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">asarray</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">demo</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Example showing the relationship between alpha and sigma in the random</span>
+<span class="sd">    walk posterior distribution.</span>
+
+<span class="sd">    The lag 1 autocorrelation coefficient R^2 is approximately 1-alpha.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="nb">sum</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">MaxNLocator</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># Pick a pretty starting point</span>
+
+    <span class="c1"># Generate chains</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">5000</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.138</span><span class="p">,</span> <span class="mf">0.31</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">chains</span> <span class="o">=</span> <span class="n">walk</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="c1"># Compute lag 1 correlation coefficient</span>
+    <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">std</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">r2</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">chains</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">chains</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">m</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">r2</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">r2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Plot chains</span>
+    <span class="n">ax_data</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">])</span>  <span class="c1"># x,y,w,h</span>
+    <span class="n">ax_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span>
+    <span class="n">textkw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">textcoords</span><span class="o">=</span><span class="s1">&#39;offset points&#39;</span><span class="p">,</span>
+                  <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                  <span class="n">backgroundcolor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">))</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$\ \alpha\,</span><span class="si">%.2f</span><span class="s1">\ \ \sigma\,</span><span class="si">%.3f</span><span class="s1">\ \ &#39;</span> \
+            <span class="sa">r</span><span class="s1">&#39;R^2\,</span><span class="si">%.2f</span><span class="s1">\ \ avg\,</span><span class="si">%.2f</span><span class="s1">\ \ std\,</span><span class="si">%.2f</span><span class="s1">\ $&#39;</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">em</span><span class="p">,</span> <span class="n">es</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">label</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">em</span><span class="o">-</span><span class="n">m</span><span class="p">,</span> <span class="n">es</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span> <span class="o">**</span><span class="n">textkw</span><span class="p">)</span>
+
+    <span class="c1"># Plot histogram</span>
+    <span class="n">ax_hist</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">axes</span><span class="p">([</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax_data</span><span class="p">)</span>
+    <span class="n">ax_hist</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">chains</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="mi">100</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;horizontal&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax_hist</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax_hist</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">MaxNLocator</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">demo</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.walk</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

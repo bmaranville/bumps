@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.plugin &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plugin</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.plugin</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Bumps plugin architecture.</span>
+
+<span class="sd">With sophisticated models, developers need to be able to provide tools</span>
+<span class="sd">such as model builders and data viewers.</span>
+
+<span class="sd">Some of these will be tools for the GUI, such as views.  Others will be</span>
+<span class="sd">tools to display results.</span>
+
+<span class="sd">This file defines the interface that can be defined by your own application</span>
+<span class="sd">so that it interacts with models of your type.  Define your own model</span>
+<span class="sd">package with a module plugin.py.</span>
+
+<span class="sd">Create a main program which looks like::</span>
+
+
+<span class="sd">    if __name__ == &quot;__main__&quot;:</span>
+<span class="sd">        import multiprocessing</span>
+<span class="sd">        multiprocessing.freeze_support()</span>
+
+<span class="sd">        import bumps.cli</span>
+<span class="sd">        import mypackage.plugin</span>
+<span class="sd">        bumps.cli.install_plugin(mypackage.plugin)</span>
+<span class="sd">        bumps.cli.main()</span>
+
+<span class="sd">You should be able to use this as a driver program for your application.</span>
+
+<span class="sd">Note: the plugin architecture is likely to change radically as more models</span>
+<span class="sd">are added to the system, particularly so that we can accommodate simultaneous</span>
+<span class="sd">fitting of data taken using different experimental techniques.  For now, only</span>
+<span class="sd">only one plugin at a time is supported.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;new_model&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;load_model&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;calc_errors&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;show_errors&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;data_view&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;model_view&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># TODO: refl1d wants to do the following after cli.getopts()</span>
+<span class="c1">#</span>
+<span class="c1">#    from refl1d.probe import Probe</span>
+<span class="c1">#    Probe.view = opts.plot</span>
+<span class="c1">#</span>
+<span class="c1"># It also wants to modify the opts so that more plotters are available,</span>
+<span class="c1"># such as Fresnel.</span>
+
+
+<div class="viewcode-block" id="new_model">
+<a class="viewcode-back" href="../../bumps.plugin.html#bumps.plugin.new_model">[docs]</a>
+<span class="k">def</span> <span class="nf">new_model</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a new empty model or None.</span>
+
+<span class="sd">    Called in response to &gt;File &gt;New from the GUI.  Creates a new empty</span>
+<span class="sd">    model.  Also triggered if GUI is started without a model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="load_model">
+<a class="viewcode-back" href="../../bumps.plugin.html#bumps.plugin.load_model">[docs]</a>
+<span class="k">def</span> <span class="nf">load_model</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a model stored within a file.</span>
+
+<span class="sd">    This routine is for specialized model descriptions not defined by script.</span>
+
+<span class="sd">    If the filename does not contain a model of the appropriate type (e.g.,</span>
+<span class="sd">    because the extension is incorrect), then return None.</span>
+
+<span class="sd">    No need to load pickles or script models.  These will be attempted if</span>
+<span class="sd">    load_model returns None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="calc_errors">
+<a class="viewcode-back" href="../../bumps.plugin.html#bumps.plugin.calc_errors">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_errors</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gather data needed to display uncertainty in the model and the data.</span>
+
+<span class="sd">    Returns an object to be passed later to :func:`show_errors`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="show_errors">
+<a class="viewcode-back" href="../../bumps.plugin.html#bumps.plugin.show_errors">[docs]</a>
+<span class="k">def</span> <span class="nf">show_errors</span><span class="p">(</span><span class="n">errs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Display the model with uncertainty on the current figure.</span>
+
+<span class="sd">    *errs* is the data returned from calc_errs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="data_view">
+<a class="viewcode-back" href="../../bumps.plugin.html#bumps.plugin.data_view">[docs]</a>
+<span class="k">def</span> <span class="nf">data_view</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Panel factory for the data tab in the GUI.</span>
+
+<span class="sd">    If your model has an adequate show() function this should not be</span>
+<span class="sd">    necessary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.gui.data_view</span> <span class="kn">import</span> <span class="n">DataView</span>
+    <span class="k">return</span> <span class="n">DataView</span></div>
+
+
+
+<div class="viewcode-block" id="model_view">
+<a class="viewcode-back" href="../../bumps.plugin.html#bumps.plugin.model_view">[docs]</a>
+<span class="k">def</span> <span class="nf">model_view</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Panel factory for the model tab in the GUI.</span>
+
+<span class="sd">    Return None if not present.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plugin</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

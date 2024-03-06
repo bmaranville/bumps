@@ -1,0 +1,7 @@
+bumps.dream.tile module
+=======================
+
+.. automodule:: bumps.dream.tile
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+bumps.dream.mahal module
+========================
+
+.. automodule:: bumps.dream.mahal
+   :members:
+   :undoc-members:
+   :show-inheritance:

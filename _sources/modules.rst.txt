@@ -1,0 +1,12 @@
+bumps
+=====
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps
+   check_examples
+   check_fitters
+   master_builder
+   run
+   test

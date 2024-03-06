@@ -1,0 +1,7 @@
+bumps.mystic.examples.decay module
+==================================
+
+.. automodule:: bumps.mystic.examples.decay
+   :members:
+   :undoc-members:
+   :show-inheritance:

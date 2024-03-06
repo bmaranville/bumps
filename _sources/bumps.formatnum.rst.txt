@@ -1,0 +1,7 @@
+bumps.formatnum module
+======================
+
+.. automodule:: bumps.formatnum
+   :members:
+   :undoc-members:
+   :show-inheritance:

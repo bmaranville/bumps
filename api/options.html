@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>options - Command line options processor &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="parameter - Optimization parameter definition" href="parameter.html" />
+    <link rel="prev" title="names - External interface" href="names.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="parameter.html" title="parameter - Optimization parameter definition"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="names.html" title="names - External interface"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">options - Command line options processor</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="options-command-line-options-processor">
+<h1>options - Command line options processor<a class="headerlink" href="#options-command-line-options-processor" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.BumpsOpts" title="bumps.options.BumpsOpts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BumpsOpts</span></code></a></p></td>
+<td><p>Option parser for bumps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.ChoiceList" title="bumps.options.ChoiceList"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ChoiceList</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.FIT_CONFIG" title="bumps.options.FIT_CONFIG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FIT_CONFIG</span></code></a></p></td>
+<td><p>FitConfig singleton for the common case in which only one config is needed.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.FitConfig" title="bumps.options.FitConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitConfig</span></code></a></p></td>
+<td><p>Fit settings configuration object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.ParseOpts" title="bumps.options.ParseOpts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParseOpts</span></code></a></p></td>
+<td><p>Options parser.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.getopts" title="bumps.options.getopts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getopts</span></code></a></p></td>
+<td><p>Process command line options.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.parse_int" title="bumps.options.parse_int"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_int</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.options.html#bumps.options.yesno" title="bumps.options.yesno"><code class="xref py py-obj docutils literal notranslate"><span class="pre">yesno</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.options">Option parser for bumps command line</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">BumpsOpts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#BumpsOpts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.BumpsOpts" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.options.html#bumps.options.ParseOpts" title="bumps.options.ParseOpts"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParseOpts</span></code></a></p>
+<p>Option parser for bumps.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.FLAGS">
+<span class="sig-name descname"><span class="pre">FLAGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'batch',</span> <span class="pre">'chisq',</span> <span class="pre">'cov',</span> <span class="pre">'edit',</span> <span class="pre">'err',</span> <span class="pre">'i',</span> <span class="pre">'keep_best',</span> <span class="pre">'mpi',</span> <span class="pre">'multiprocessing-fork',</span> <span class="pre">'noshow',</span> <span class="pre">'overwrite',</span> <span class="pre">'preview',</span> <span class="pre">'profile',</span> <span class="pre">'remote',</span> <span class="pre">'shake',</span> <span class="pre">'simrandom',</span> <span class="pre">'simulate',</span> <span class="pre">'staj',</span> <span class="pre">'stepmon',</span> <span class="pre">'time_model',</span> <span class="pre">'worker'}</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.FLAGS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.IMPLICIT_VALUES">
+<span class="sig-name descname"><span class="pre">IMPLICIT_VALUES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'entropy':</span> <span class="pre">'llf',</span> <span class="pre">'parallel':</span> <span class="pre">'0',</span> <span class="pre">'resume':</span> <span class="pre">'-'}</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.IMPLICIT_VALUES" title="Link to this definition">¶</a></dt>
+<dd><p>Value to use if a value flag is is present without ‘=’.  This is
+different from the default value if the flag is not present, which
+is the default value set in the calling class.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.MINARGS">
+<span class="sig-name descname"><span class="pre">MINARGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.MINARGS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.PLOTTERS">
+<span class="sig-name descname"><span class="pre">PLOTTERS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('linear',</span> <span class="pre">'log',</span> <span class="pre">'residuals')</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.PLOTTERS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.TRANSPORTS">
+<span class="sig-name descname"><span class="pre">TRANSPORTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('amqp',</span> <span class="pre">'mp',</span> <span class="pre">'mpi',</span> <span class="pre">'celery')</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.TRANSPORTS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.USAGE">
+<span class="sig-name descname"><span class="pre">USAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Usage:</span> <span class="pre">bumps</span> <span class="pre">[options]</span> <span class="pre">modelfile</span> <span class="pre">[modelargs]\n\nThe</span> <span class="pre">modelfile</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">Python</span> <span class="pre">script</span> <span class="pre">(i.e.,</span> <span class="pre">a</span> <span class="pre">series</span> <span class="pre">of</span> <span class="pre">Python</span> <span class="pre">commands)\nwhich</span> <span class="pre">sets</span> <span class="pre">up</span> <span class="pre">the</span> <span class="pre">data,</span> <span class="pre">the</span> <span class="pre">models,</span> <span class="pre">and</span> <span class="pre">the</span> <span class="pre">fittable</span> <span class="pre">parameters.\nThe</span> <span class="pre">model</span> <span class="pre">arguments</span> <span class="pre">are</span> <span class="pre">available</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">modelfile</span> <span class="pre">as</span> <span class="pre">sys.argv[1:].\nModel</span> <span class="pre">arguments</span> <span class="pre">may</span> <span class="pre">not</span> <span class="pre">start</span> <span class="pre">with</span> <span class="pre">\'-\'.\n\nOptions:\n\n</span>&#160;&#160;&#160; <span class="pre">--preview\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">display</span> <span class="pre">model</span> <span class="pre">but</span> <span class="pre">do</span> <span class="pre">not</span> <span class="pre">perform</span> <span class="pre">a</span> <span class="pre">fitting</span> <span class="pre">operation\n</span>&#160;&#160;&#160; <span class="pre">--pars=filename</span> <span class="pre">or</span> <span class="pre">store</span> <span class="pre">path\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">initial</span> <span class="pre">parameter</span> <span class="pre">values;</span> <span class="pre">fit</span> <span class="pre">results</span> <span class="pre">are</span> <span class="pre">saved</span> <span class="pre">as</span> <span class="pre">path/&lt;modelname&gt;.par\n</span>&#160;&#160;&#160; <span class="pre">--plot=log</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[linear|log|residuals]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">type</span> <span class="pre">of</span> <span class="pre">plot</span> <span class="pre">to</span> <span class="pre">display\n</span>&#160;&#160;&#160; <span class="pre">--trim=true\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">trim</span> <span class="pre">any</span> <span class="pre">remaining</span> <span class="pre">burn</span> <span class="pre">before</span> <span class="pre">displaying</span> <span class="pre">plots</span> <span class="pre">[dream</span> <span class="pre">only]\n</span>&#160;&#160;&#160; <span class="pre">--simulate\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">simulate</span> <span class="pre">a</span> <span class="pre">dataset</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">initial</span> <span class="pre">problem</span> <span class="pre">parameters\n</span>&#160;&#160;&#160; <span class="pre">--simrandom\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">simulate</span> <span class="pre">a</span> <span class="pre">dataset</span> <span class="pre">using</span> <span class="pre">random</span> <span class="pre">problem</span> <span class="pre">parameters\n</span>&#160;&#160;&#160; <span class="pre">--shake\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">set</span> <span class="pre">random</span> <span class="pre">parameters</span> <span class="pre">before</span> <span class="pre">fitting\n</span>&#160;&#160;&#160; <span class="pre">--noise=5%\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">percent</span> <span class="pre">noise</span> <span class="pre">to</span> <span class="pre">add</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">simulated</span> <span class="pre">data\n</span>&#160;&#160;&#160; <span class="pre">--seed=integer\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">random</span> <span class="pre">number</span> <span class="pre">seed\n</span>&#160;&#160;&#160; <span class="pre">--err\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">show</span> <span class="pre">uncertainty</span> <span class="pre">estimate</span> <span class="pre">from</span> <span class="pre">curvature</span> <span class="pre">at</span> <span class="pre">the</span> <span class="pre">minimum\n</span>&#160;&#160;&#160; <span class="pre">--cov\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">show</span> <span class="pre">the</span> <span class="pre">covariance</span> <span class="pre">matrix</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">model</span> <span class="pre">when</span> <span class="pre">done\n</span>&#160;&#160;&#160; <span class="pre">--entropy=gmm|mvn|wnn|llf\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">compute</span> <span class="pre">entropy</span> <span class="pre">on</span> <span class="pre">posterior</span> <span class="pre">distribution</span> <span class="pre">[dream</span> <span class="pre">only]\n</span>&#160;&#160;&#160; <span class="pre">--staj\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">output</span> <span class="pre">staj</span> <span class="pre">file</span> <span class="pre">when</span> <span class="pre">done</span> <span class="pre">[Refl1D</span> <span class="pre">only]\n</span>&#160;&#160;&#160; <span class="pre">--edit\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">start</span> <span class="pre">the</span> <span class="pre">gui\n</span>&#160;&#160;&#160; <span class="pre">--view=linear|log\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">one</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">predefined</span> <span class="pre">problem</span> <span class="pre">views;</span> <span class="pre">reflectometry</span> <span class="pre">also</span> <span class="pre">has</span> <span class="pre">fresnel,\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">logfresnel,</span> <span class="pre">q4</span> <span class="pre">and</span> <span class="pre">residuals\n\n</span>&#160;&#160;&#160; <span class="pre">--store=path\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">output</span> <span class="pre">directory</span> <span class="pre">for</span> <span class="pre">plots</span> <span class="pre">and</span> <span class="pre">models\n</span>&#160;&#160;&#160; <span class="pre">--overwrite\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">if</span> <span class="pre">store</span> <span class="pre">already</span> <span class="pre">exists,</span> <span class="pre">replace</span> <span class="pre">it\n</span>&#160;&#160;&#160; <span class="pre">--resume=path</span>&#160;&#160;&#160; <span class="pre">[dream]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">resume</span> <span class="pre">a</span> <span class="pre">fit</span> <span class="pre">from</span> <span class="pre">previous</span> <span class="pre">stored</span> <span class="pre">state;</span> <span class="pre">if</span> <span class="pre">path</span> <span class="pre">is</span> <span class="pre">\'-\'</span> <span class="pre">then</span> <span class="pre">use</span> <span class="pre">the\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">path</span> <span class="pre">given</span> <span class="pre">by</span> <span class="pre">--store,</span> <span class="pre">if</span> <span class="pre">it</span> <span class="pre">exists\n</span>&#160;&#160;&#160; <span class="pre">--parallel=n\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">fit</span> <span class="pre">using</span> <span class="pre">multiprocessing</span> <span class="pre">for</span> <span class="pre">parallelism;</span> <span class="pre">use</span> <span class="pre">--parallel=0</span> <span class="pre">for</span> <span class="pre">all</span> <span class="pre">cpus\n</span>&#160;&#160;&#160; <span class="pre">--mpi\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">fit</span> <span class="pre">using</span> <span class="pre">MPI</span> <span class="pre">for</span> <span class="pre">parallelism</span> <span class="pre">(use</span> <span class="pre">command</span> <span class="pre">&quot;mpirun</span> <span class="pre">-n</span> <span class="pre">cpus</span> <span class="pre">...&quot;)\n</span>&#160;&#160;&#160; <span class="pre">--batch\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">batch</span> <span class="pre">mode;</span> <span class="pre">save</span> <span class="pre">output</span> <span class="pre">in</span> <span class="pre">.mon</span> <span class="pre">file</span> <span class="pre">and</span> <span class="pre">don\'t</span> <span class="pre">show</span> <span class="pre">plots</span> <span class="pre">after</span> <span class="pre">fit\n</span>&#160;&#160;&#160; <span class="pre">--noshow\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">semi-batch;</span> <span class="pre">send</span> <span class="pre">output</span> <span class="pre">to</span> <span class="pre">console</span> <span class="pre">but</span> <span class="pre">don\'t</span> <span class="pre">show</span> <span class="pre">plots</span> <span class="pre">after</span> <span class="pre">fit\n</span>&#160;&#160;&#160; <span class="pre">--time=inf\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">hours\n</span>&#160;&#160;&#160; <span class="pre">--checkpoint=0\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">save</span> <span class="pre">fit</span> <span class="pre">state</span> <span class="pre">every</span> <span class="pre">n</span> <span class="pre">hours,</span> <span class="pre">or</span> <span class="pre">0</span> <span class="pre">for</span> <span class="pre">no</span> <span class="pre">checkpoints\n\n</span>&#160;&#160;&#160; <span class="pre">--fit=amoeba</span>&#160;&#160;&#160; <span class="pre">[amoeba|de|dream|lm|newton|pt|scipy.leastsq]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">fitting</span> <span class="pre">engine</span> <span class="pre">to</span> <span class="pre">use;</span> <span class="pre">see</span> <span class="pre">manual</span> <span class="pre">for</span> <span class="pre">details\n</span>&#160;&#160;&#160; <span class="pre">--steps=0</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[amoeba|de|dream|lm|newton|pt|scipy.leastsq]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">number</span> <span class="pre">of</span> <span class="pre">fit</span> <span class="pre">iterations</span> <span class="pre">after</span> <span class="pre">any</span> <span class="pre">burn-in</span> <span class="pre">time;</span> <span class="pre">use</span> <span class="pre">samples</span> <span class="pre">if</span> <span class="pre">steps=0\n</span>&#160;&#160;&#160; <span class="pre">--samples=1e4</span>&#160;&#160; <span class="pre">[dream]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">set</span> <span class="pre">steps=samples/(pop*#pars)</span> <span class="pre">so</span> <span class="pre">the</span> <span class="pre">target</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">samples</span> <span class="pre">is</span> <span class="pre">drawn\n</span>&#160;&#160;&#160; <span class="pre">--xtol=1e-4</span>&#160;&#160;&#160;&#160; <span class="pre">[de,</span> <span class="pre">amoeba]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">minimum</span> <span class="pre">population</span> <span class="pre">diameter\n</span>&#160;&#160;&#160; <span class="pre">--ftol=1e-4</span>&#160;&#160;&#160;&#160; <span class="pre">[de,</span> <span class="pre">amoeba]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">minimum</span> <span class="pre">population</span> <span class="pre">flatness\n</span>&#160;&#160;&#160; <span class="pre">--alpha=0.0</span>&#160;&#160;&#160;&#160; <span class="pre">[dream]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">p-level</span> <span class="pre">for</span> <span class="pre">rejecting</span> <span class="pre">convergence;</span> <span class="pre">with</span> <span class="pre">fewer</span> <span class="pre">samples</span> <span class="pre">use</span> <span class="pre">a</span> <span class="pre">stricter\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">stopping</span> <span class="pre">condition,</span> <span class="pre">such</span> <span class="pre">as</span> <span class="pre">--alpha=0.01</span> <span class="pre">--samples=20000\n</span>&#160;&#160;&#160; <span class="pre">--outliers=none</span> <span class="pre">[dream]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">name</span> <span class="pre">of</span> <span class="pre">test</span> <span class="pre">used</span> <span class="pre">for</span> <span class="pre">removing</span> <span class="pre">outlier</span> <span class="pre">chains</span> <span class="pre">every</span> <span class="pre">N</span> <span class="pre">samples:\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">none:</span>&#160;&#160; <span class="pre">no</span> <span class="pre">outlier</span> <span class="pre">removal\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">iqr:</span>&#160;&#160;&#160; <span class="pre">use</span> <span class="pre">interquartile</span> <span class="pre">range</span> <span class="pre">on</span> <span class="pre">likelihood\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">grubbs:</span> <span class="pre">use</span> <span class="pre">t-test</span> <span class="pre">on</span> <span class="pre">likelihood\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">mahal:</span>&#160; <span class="pre">use</span> <span class="pre">distance</span> <span class="pre">from</span> <span class="pre">parameter</span> <span class="pre">values</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">best</span> <span class="pre">chain\n</span>&#160;&#160;&#160; <span class="pre">--pop=10</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[dream,</span> <span class="pre">de,</span> <span class="pre">rl,</span> <span class="pre">ps]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">population</span> <span class="pre">size</span> <span class="pre">is</span> <span class="pre">pop</span> <span class="pre">times</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">fitted</span> <span class="pre">parameters;</span> <span class="pre">if</span> <span class="pre">pop</span> <span class="pre">is\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">negative,</span> <span class="pre">then</span> <span class="pre">set</span> <span class="pre">population</span> <span class="pre">size</span> <span class="pre">to</span> <span class="pre">-pop.\n</span>&#160;&#160;&#160; <span class="pre">--burn=100</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[dream,</span> <span class="pre">pt]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">number</span> <span class="pre">of</span> <span class="pre">burn-in</span> <span class="pre">iterations</span> <span class="pre">before</span> <span class="pre">accumulating</span> <span class="pre">stats\n</span>&#160;&#160;&#160; <span class="pre">--thin=1</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[dream]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">number</span> <span class="pre">of</span> <span class="pre">fit</span> <span class="pre">iterations</span> <span class="pre">between</span> <span class="pre">steps\n</span>&#160;&#160;&#160; <span class="pre">--nT=25\n</span>&#160;&#160;&#160; <span class="pre">--Tmin=0.1\n</span>&#160;&#160;&#160; <span class="pre">--Tmax=10</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[pt]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">temperatures</span> <span class="pre">vector;</span> <span class="pre">use</span> <span class="pre">a</span> <span class="pre">higher</span> <span class="pre">maximum</span> <span class="pre">temperature</span> <span class="pre">and</span> <span class="pre">a</span> <span class="pre">larger\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">nT</span> <span class="pre">if</span> <span class="pre">your</span> <span class="pre">fit</span> <span class="pre">is</span> <span class="pre">getting</span> <span class="pre">stuck</span> <span class="pre">in</span> <span class="pre">local</span> <span class="pre">minima\n</span>&#160;&#160;&#160; <span class="pre">--CR=0.9</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[de,</span> <span class="pre">rl,</span> <span class="pre">pt]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">crossover</span> <span class="pre">ratio</span> <span class="pre">for</span> <span class="pre">population</span> <span class="pre">mixing\n</span>&#160;&#160;&#160; <span class="pre">--starts=1</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[newton,</span> <span class="pre">rl,</span> <span class="pre">amoeba]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">number</span> <span class="pre">of</span> <span class="pre">times</span> <span class="pre">to</span> <span class="pre">run</span> <span class="pre">the</span> <span class="pre">fit</span> <span class="pre">from</span> <span class="pre">random</span> <span class="pre">starting</span> <span class="pre">points.\n</span>&#160;&#160;&#160; <span class="pre">--keep_best\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">when</span> <span class="pre">running</span> <span class="pre">with</span> <span class="pre">multiple</span> <span class="pre">starts,</span> <span class="pre">restart</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">point</span> <span class="pre">near</span> <span class="pre">the\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">last</span> <span class="pre">minimum</span> <span class="pre">rather</span> <span class="pre">than</span> <span class="pre">using</span> <span class="pre">a</span> <span class="pre">completely</span> <span class="pre">random</span> <span class="pre">starting</span> <span class="pre">point.\n</span>&#160;&#160;&#160; <span class="pre">--init=eps</span>&#160;&#160;&#160;&#160;&#160; <span class="pre">[dream]\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">population</span> <span class="pre">initialization</span> <span class="pre">method:\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">eps:</span>&#160;&#160;&#160; <span class="pre">ball</span> <span class="pre">around</span> <span class="pre">initial</span> <span class="pre">parameter</span> <span class="pre">set\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">lhs:</span>&#160;&#160;&#160; <span class="pre">latin</span> <span class="pre">hypercube</span> <span class="pre">sampling\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">cov:</span>&#160;&#160;&#160; <span class="pre">normally</span> <span class="pre">distributed</span> <span class="pre">according</span> <span class="pre">to</span> <span class="pre">covariance</span> <span class="pre">matrix\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">random:</span> <span class="pre">uniformly</span> <span class="pre">distributed</span> <span class="pre">within</span> <span class="pre">parameter</span> <span class="pre">ranges\n</span>&#160;&#160;&#160; <span class="pre">--stepmon\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">show</span> <span class="pre">details</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">step\n</span>&#160;&#160;&#160; <span class="pre">--resynth=0\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">resynthesis</span> <span class="pre">error</span> <span class="pre">analysis</span> <span class="pre">for</span> <span class="pre">n</span> <span class="pre">generations\n\n</span>&#160;&#160;&#160; <span class="pre">--time_model\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">the</span> <span class="pre">model</span> <span class="pre">--steps</span> <span class="pre">times</span> <span class="pre">in</span> <span class="pre">order</span> <span class="pre">to</span> <span class="pre">estimate</span> <span class="pre">total</span> <span class="pre">run</span> <span class="pre">time.\n</span>&#160;&#160;&#160; <span class="pre">--profile\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">the</span> <span class="pre">python</span> <span class="pre">profiler</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">model;</span> <span class="pre">use</span> <span class="pre">--steps</span> <span class="pre">to</span> <span class="pre">run</span> <span class="pre">multiple\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">models</span> <span class="pre">for</span> <span class="pre">better</span> <span class="pre">statistics\n</span>&#160;&#160;&#160; <span class="pre">--chisq\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">print</span> <span class="pre">the</span> <span class="pre">model</span> <span class="pre">description</span> <span class="pre">and</span> <span class="pre">chisq</span> <span class="pre">value</span> <span class="pre">and</span> <span class="pre">exit\n</span>&#160;&#160;&#160; <span class="pre">-m/-c/-p</span> <span class="pre">command\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">run</span> <span class="pre">the</span> <span class="pre">python</span> <span class="pre">interpreter</span> <span class="pre">with</span> <span class="pre">bumps</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">path:\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">m:</span> <span class="pre">command</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">module</span> <span class="pre">such</span> <span class="pre">as</span> <span class="pre">bumps.cli,</span> <span class="pre">run</span> <span class="pre">as</span> <span class="pre">__main__\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">c:</span> <span class="pre">command</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">python</span> <span class="pre">one-line</span> <span class="pre">command\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">p:</span> <span class="pre">command</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">name</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">python</span> <span class="pre">script\n</span>&#160;&#160;&#160; <span class="pre">-i\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">start</span> <span class="pre">the</span> <span class="pre">interactive</span> <span class="pre">interpreter\n</span>&#160;&#160;&#160; <span class="pre">-?/-h/--help\n</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">display</span> <span class="pre">this</span> <span class="pre">help\n'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.USAGE" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.VALUES">
+<span class="sig-name descname"><span class="pre">VALUES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CR',</span> <span class="pre">'F',</span> <span class="pre">'Tmax',</span> <span class="pre">'Tmin',</span> <span class="pre">'alpha',</span> <span class="pre">'burn',</span> <span class="pre">'c',</span> <span class="pre">'checkpoint',</span> <span class="pre">'entropy',</span> <span class="pre">'fit',</span> <span class="pre">'ftol',</span> <span class="pre">'init',</span> <span class="pre">'m',</span> <span class="pre">'nT',</span> <span class="pre">'noise',</span> <span class="pre">'notify',</span> <span class="pre">'outliers',</span> <span class="pre">'p',</span> <span class="pre">'parallel',</span> <span class="pre">'pars',</span> <span class="pre">'plot',</span> <span class="pre">'pop',</span> <span class="pre">'queue',</span> <span class="pre">'radius',</span> <span class="pre">'resume',</span> <span class="pre">'resynth',</span> <span class="pre">'samples',</span> <span class="pre">'seed',</span> <span class="pre">'starts',</span> <span class="pre">'steps',</span> <span class="pre">'stop',</span> <span class="pre">'store',</span> <span class="pre">'thin',</span> <span class="pre">'time',</span> <span class="pre">'transport',</span> <span class="pre">'trim',</span> <span class="pre">'view',</span> <span class="pre">'xtol'}</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.VALUES" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.alpha">
+<span class="sig-name descname"><span class="pre">alpha</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.alpha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.checkpoint">
+<span class="sig-name descname"><span class="pre">checkpoint</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.checkpoint" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.entropy">
+<span class="sig-name descname"><span class="pre">entropy</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.entropy" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.fit">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><a class="headerlink" href="#bumps.options.BumpsOpts.fit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.fit_config">
+<span class="sig-name descname"><span class="pre">fit_config</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;bumps.options.FitConfig</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.fit_config" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.meshsteps">
+<span class="sig-name descname"><span class="pre">meshsteps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">40</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.meshsteps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.noise">
+<span class="sig-name descname"><span class="pre">noise</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'5'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.noise" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.notify">
+<span class="sig-name descname"><span class="pre">notify</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.notify" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.parallel">
+<span class="sig-name descname"><span class="pre">parallel</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.parallel" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.pars">
+<span class="sig-name descname"><span class="pre">pars</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.pars" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.plot">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><a class="headerlink" href="#bumps.options.BumpsOpts.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.queue">
+<span class="sig-name descname"><span class="pre">queue</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.queue" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.resume">
+<span class="sig-name descname"><span class="pre">resume</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.resume" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.resynth">
+<span class="sig-name descname"><span class="pre">resynth</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.resynth" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.seed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.starts">
+<span class="sig-name descname"><span class="pre">starts</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'1'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.starts" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.store">
+<span class="sig-name descname"><span class="pre">store</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.store" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.time">
+<span class="sig-name descname"><span class="pre">time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'inf'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.time" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.transport">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transport</span></span><a class="headerlink" href="#bumps.options.BumpsOpts.transport" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.trim">
+<span class="sig-name descname"><span class="pre">trim</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'true'</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.trim" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.BumpsOpts.view">
+<span class="sig-name descname"><span class="pre">view</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.options.BumpsOpts.view" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.options.ChoiceList">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">ChoiceList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">choices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#ChoiceList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.ChoiceList" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="bumps.options.FIT_CONFIG">
+<span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">FIT_CONFIG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;bumps.options.FitConfig</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#bumps.options.FIT_CONFIG" title="Link to this definition">¶</a></dt>
+<dd><p>FitConfig singleton for the common case in which only one config is needed.
+There may be other use cases, such as saving the fit config along with the
+rest of the state so that on resume the fit options are restored, but in that
+case the application will not be using the singleton.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.options.FitConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">FitConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'amoeba'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['amoeba',</span> <span class="pre">'de',</span> <span class="pre">'dream',</span> <span class="pre">'newton',</span> <span class="pre">'scipy.leastsq',</span> <span class="pre">'lm']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#FitConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.FitConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Fit settings configuration object.</p>
+<p>The command line parser will define a FitConfig object which contains
+the fitter that was given on the command line and all its options.  For
+embedded bumps, which does not use the bumps command line parser, a
+new FitConfig object can be created with its own selected options.</p>
+<p><strong>Attributes</strong></p>
+<p><em>ids = [id, id, …]</em> is a list available fitters in “preferred” order.
+Depending on usage, you may want to sort them, or alternatively, sort
+by long name with <em>[id for _,id in sorted((v,k) for k,v in self.names]</em></p>
+<p><em>fitters = {id: fitclasss}</em> maps ids to fitters.</p>
+<p><em>names</em> = {id: name}* maps ids to long names</p>
+<p><em>settings = {id: [(option, default), …]}</em> maps ids to default settings.
+The order of the settings is the preferred order to present the settings
+to the user in a GUI dialog for example.</p>
+<p><em>values = {id: {option: value, …}}</em> maps ids to the settings for
+each fitter.  Note that in the GUI, different fitters may have there
+settings recorded and preserved even when not selected.</p>
+<p><em>active_ids = [id, id, …]</em> is the list of fitters to show the user in
+a GUI dialog for example.  The other fitters should still be available from
+the command line.</p>
+<p><em>default_id = id</em> is the fitter to use by default.</p>
+<p><em>selected_id = id</em> is the fitter that was selected, either by command line
+or by GUI.</p>
+<p><em>selected_values = {option: value}</em> returns the settings for the current
+fitter.</p>
+<p><em>selected_name = name</em> returns the name of the selected fitter.</p>
+<p><em>selected_fitter = FitClass</em> returns the class of the selected fitter.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.options.FitConfig.selected_fitter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">selected_fitter</span></span><a class="headerlink" href="#bumps.options.FitConfig.selected_fitter" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.options.FitConfig.selected_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">selected_name</span></span><a class="headerlink" href="#bumps.options.FitConfig.selected_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.options.FitConfig.selected_values">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">selected_values</span></span><a class="headerlink" href="#bumps.options.FitConfig.selected_values" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.options.FitConfig.set_from_cli">
+<span class="sig-name descname"><span class="pre">set_from_cli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#FitConfig.set_from_cli"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.FitConfig.set_from_cli" title="Link to this definition">¶</a></dt>
+<dd><p>Use the BumpsOpts command line parser values to set the selected
+fitter and its configuration options.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.options.ParseOpts">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">ParseOpts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#ParseOpts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.ParseOpts" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Options parser.</p>
+<p>Subclass should define <em>MINARGS</em>, <em>FLAGS</em>, <em>VALUES</em> and <em>USAGE</em>.</p>
+<p><em>MINARGS</em> is the minimum number of positional arguments.</p>
+<p><em>FLAGS</em> is a set of arguments that may be present or absent.</p>
+<p><em>VALUES</em> is a set of arguments that take values.  Value checking
+can be done in the setter for each argument in the set.  Default
+values should be set in the corresponding object attribute.</p>
+<p><em>USAGE</em> is the help string to display for option “help”.</p>
+<p>The constructor will invoke the command line parser, leaving the
+values set by the command line as attribute values.   Flag options
+will be True or False.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.ParseOpts.FLAGS">
+<span class="sig-name descname"><span class="pre">FLAGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#bumps.options.ParseOpts.FLAGS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.ParseOpts.IMPLICIT_VALUES">
+<span class="sig-name descname"><span class="pre">IMPLICIT_VALUES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#bumps.options.ParseOpts.IMPLICIT_VALUES" title="Link to this definition">¶</a></dt>
+<dd><p>Value to use if a value flag is is present without ‘=’.  This is
+different from the default value if the flag is not present, which
+is the default value set in the calling class.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.ParseOpts.MINARGS">
+<span class="sig-name descname"><span class="pre">MINARGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#bumps.options.ParseOpts.MINARGS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.ParseOpts.USAGE">
+<span class="sig-name descname"><span class="pre">USAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#bumps.options.ParseOpts.USAGE" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.options.ParseOpts.VALUES">
+<span class="sig-name descname"><span class="pre">VALUES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#bumps.options.ParseOpts.VALUES" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.options.getopts">
+<span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">getopts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#getopts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.getopts" title="Link to this definition">¶</a></dt>
+<dd><p>Process command line options.</p>
+<p>Option values will be stored as attributes in the returned object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.options.parse_int">
+<span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">parse_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#parse_int"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.parse_int" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.options.yesno">
+<span class="sig-prename descclassname"><span class="pre">bumps.options.</span></span><span class="sig-name descname"><span class="pre">yesno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/options.html#yesno"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.options.yesno" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">options - Command line options processor</a><ul>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts"><code class="docutils literal notranslate"><span class="pre">BumpsOpts</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.FLAGS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.FLAGS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.IMPLICIT_VALUES"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.IMPLICIT_VALUES</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.MINARGS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.MINARGS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.PLOTTERS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.PLOTTERS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.TRANSPORTS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.TRANSPORTS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.USAGE"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.USAGE</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.VALUES"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.VALUES</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.alpha"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.alpha</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.checkpoint"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.checkpoint</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.entropy"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.entropy</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.fit"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.fit</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.fit_config"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.fit_config</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.meshsteps"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.meshsteps</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.noise"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.noise</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.notify"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.notify</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.parallel"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.parallel</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.pars"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.pars</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.plot"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.plot</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.queue"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.queue</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.resume"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.resume</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.resynth"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.resynth</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.seed"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.seed</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.starts"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.starts</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.store"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.store</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.time"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.time</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.transport"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.transport</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.trim"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.trim</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.BumpsOpts.view"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.view</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.options.ChoiceList"><code class="docutils literal notranslate"><span class="pre">ChoiceList</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.FIT_CONFIG"><code class="docutils literal notranslate"><span class="pre">FIT_CONFIG</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.FitConfig"><code class="docutils literal notranslate"><span class="pre">FitConfig</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.options.FitConfig.selected_fitter"><code class="docutils literal notranslate"><span class="pre">FitConfig.selected_fitter</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.FitConfig.selected_name"><code class="docutils literal notranslate"><span class="pre">FitConfig.selected_name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.FitConfig.selected_values"><code class="docutils literal notranslate"><span class="pre">FitConfig.selected_values</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.FitConfig.set_from_cli"><code class="docutils literal notranslate"><span class="pre">FitConfig.set_from_cli()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.options.ParseOpts"><code class="docutils literal notranslate"><span class="pre">ParseOpts</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.options.ParseOpts.FLAGS"><code class="docutils literal notranslate"><span class="pre">ParseOpts.FLAGS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.ParseOpts.IMPLICIT_VALUES"><code class="docutils literal notranslate"><span class="pre">ParseOpts.IMPLICIT_VALUES</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.ParseOpts.MINARGS"><code class="docutils literal notranslate"><span class="pre">ParseOpts.MINARGS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.ParseOpts.USAGE"><code class="docutils literal notranslate"><span class="pre">ParseOpts.USAGE</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.ParseOpts.VALUES"><code class="docutils literal notranslate"><span class="pre">ParseOpts.VALUES</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.options.getopts"><code class="docutils literal notranslate"><span class="pre">getopts()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.parse_int"><code class="docutils literal notranslate"><span class="pre">parse_int()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.options.yesno"><code class="docutils literal notranslate"><span class="pre">yesno()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="names.html"
+                          title="previous chapter">names - External interface</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="parameter.html"
+                          title="next chapter">parameter - Optimization parameter definition</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/options.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="parameter.html" title="parameter - Optimization parameter definition"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="names.html" title="names - External interface"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">options - Command line options processor</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

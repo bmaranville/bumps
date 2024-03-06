@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.quasinewton module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.quasinewton module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.quasinewton">
+<span id="bumps-quasinewton-module"></span><h1>bumps.quasinewton module<a class="headerlink" href="#module-bumps.quasinewton" title="Link to this heading">¶</a></h1>
+<p>BFGS quasi-newton optimizer.</p>
+<p>All modules in this file are implemented from the book
+“Numerical Methods for Unconstrained Optimization and Nonlinear Equations” by
+J.E. Dennis and Robert B. Schnabel (Only a few minor modifications are done).</p>
+<p>The interface is through the <a class="reference internal" href="#bumps.quasinewton.quasinewton" title="bumps.quasinewton.quasinewton"><code class="xref py py-func docutils literal notranslate"><span class="pre">quasinewton()</span></code></a> function.  Here is an
+example call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.9</span> <span class="mf">0.9</span><span class="p">]</span><span class="s1">&#39;</span>
+<span class="n">fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">grad</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">400</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">200</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+<span class="n">Sx</span> <span class="o">=</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">typf</span> <span class="o">=</span> <span class="mi">1</span>                       <span class="c1"># todo. see what default value is the best</span>
+<span class="n">macheps</span> <span class="o">=</span> <span class="n">eps</span>
+<span class="n">eta</span> <span class="o">=</span> <span class="n">eps</span>
+<span class="n">maxstep</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">gradtol</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="n">steptol</span> <span class="o">=</span> <span class="mf">1e-12</span>                <span class="c1"># do not let steptol larger than 1e-9</span>
+<span class="n">itnlimit</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">quasinewton</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span>
+                     <span class="n">macheps</span><span class="p">,</span> <span class="n">eta</span><span class="p">,</span> <span class="n">maxstep</span><span class="p">,</span> <span class="n">gradtola</span><span class="p">,</span> <span class="n">steptol</span><span class="p">,</span> <span class="n">itnlimit</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;status code </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x_min=</span><span class="si">%s</span><span class="s2">, f(x_min)=</span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]),</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;fx&#39;</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;iterations, function calls, linesearch function calls&quot;</span><span class="p">,</span>
+      <span class="n">result</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">],</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;evals&#39;</span><span class="p">],</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;linesearch_evals&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.quasinewton.quasinewton">
+<span class="sig-prename descclassname"><span class="pre">bumps.quasinewton.</span></span><span class="sig-name descname"><span class="pre">quasinewton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sx=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typf=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macheps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxstep=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradtol=1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steptol=1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itnlimit=2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor=&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/quasinewton.html#quasinewton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.quasinewton.quasinewton" title="Link to this definition">¶</a></dt>
+<dd><p>Run a quasinewton optimization on the problem.</p>
+<p><em>fn(x)</em> is the cost function, which takes a point x and returns a scalar fx.</p>
+<p><em>x0</em> is the initial point</p>
+<p><em>grad</em> is the analytic gradient (if available)</p>
+<p><em>Sx</em> is a scale vector indicating the typical values for parameters in
+the fitted result. This is used for a variety of things such as setting
+the step size in the finite difference approximation to the gradient, and
+controlling numerical accuracy in calculating the Hessian matrix.  If for
+example some of your model parameters are in the order of 1e-6, then Sx
+for those parameters should be set to 1e-6. Default: [1, …]</p>
+<p><em>typf</em> is the typical value for f(x) near the minimum.  This is used along
+with gradtol to check the gradient stopping condition.  Default: 1</p>
+<p><em>macheps</em> is the minimum value that can be added to 1 to produce a number
+not equal to 1.  Default: numpy.finfo(float).eps</p>
+<p><em>eta</em> adapts the numerical gradient calculations to machine precision.
+Default: <em>macheps</em></p>
+<p><em>maxstep</em> is the maximum step size in any gradient step, after normalizing
+by <em>Sx</em>. Default: 100</p>
+<p><em>gradtol</em> is a stopping condition for the fit based on the amount of
+improvement expected at the next step.  Default: 1e-6</p>
+<p><em>steptol</em> is a stopping condition for the fit based on the size
+of the step. Default: 1e-12</p>
+<p><em>itnlimit</em> is the maximum number of steps to take before stopping.
+Default: 2000</p>
+<p><em>abort_test</em> is a function which tests whether the user has requested
+abort. Default: None.</p>
+<p><em>monitor(x,fx,step)</em> is called every iteration so that a user interface
+function can monitor the progress of the fit.  Default: lambda **kw: True</p>
+<p>Returns the fit result as a dictionary:</p>
+<p><em>status</em> is a status code indicating why the fit terminated.  Turn the
+status code into a string with <em>STATUS[result.status]</em>.  Status values
+vary from 1 to 9, with 1 and 2 indicating convergence and the remaining
+codes indicating some form of premature termination.</p>
+<p><em>x</em> is the minimum point</p>
+<p><em>fx</em> is the value fn(x) at the minimum</p>
+<p><em>H</em> is the approximate Hessian matrix, which is the inverse of the
+covariance matrix</p>
+<p><em>L</em> is the cholesky decomposition of H+D, where D is a small correction
+to force H+D to be positive definite.  To compute parameter uncertainty</p>
+<p><em>iterations</em> is the number of iterations</p>
+<p><em>evals</em> is the number of function evaluations</p>
+<p><em>linesearch_evals</em> is the number of function evaluations for line search</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.quasinewton module</a><ul>
+<li><a class="reference internal" href="#bumps.quasinewton.quasinewton"><code class="docutils literal notranslate"><span class="pre">quasinewton()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.quasinewton.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.quasinewton module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

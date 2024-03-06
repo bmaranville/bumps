@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Cross-shaped anti-correlation &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Check the entropy calculator" href="../entropy/check_entropy.html" />
+    <link rel="prev" title="Boundary check" href="bounded.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../entropy/check_entropy.html" title="Check the entropy calculator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bounded.html" title="Boundary check"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="readme.html" accesskey="U">Test functions</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Cross-shaped anti-correlation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="cross-shaped-anti-correlation">
+<h1>Cross-shaped anti-correlation<a class="headerlink" href="#cross-shaped-anti-correlation" title="Link to this heading">¶</a></h1>
+<p>Example model with strong correlations between the fitted parameters.</p>
+<p>In this case we define the probability density function (PDF) directly
+as an ‘X’ pattern, with width sigma.</p>
+<p>Ideally, the a-b correlation plot will show the ‘X’ completely filled
+within the bounds.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Adjust scale from 1e-150 to 1e+150 and you will see that DREAM is equally
+adept at filling the cross. However, if sigma gets too small relative to
+scale the fit will get stuck on one of the arms, and if sigma gets too
+large, then the whole space will be filled and the x will not form.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scale</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">scale</span>
+<span class="c1">#sigma = 0.001*scale  # Too small</span>
+<span class="c1">#sigma = 10*scale   # Too large</span>
+</pre></div>
+</div>
+<p>Simple gaussian cost function based on the distance to the closest ridge
+<em>x=y</em> or <em>x=-y</em>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">0.5</span><span class="o">*</span><span class="nb">min</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">),</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">b</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>Wrap it in a PDF object which turns an arbitrary probability density into
+a fitting function.  Give it an initial value away from the cross.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">3</span><span class="o">*</span><span class="n">scale</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">1.2</span><span class="o">*</span><span class="n">scale</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Set the range of values to include the cross.  You can skip the center of
+the cross by setting b.range to (1,3), and for reasonable values of sigma
+both arms will still be covered.  Extend the range too far (e.g.,
+a.range(-3000,3000), b.range(-1000,3000)), and like a value of sigma
+that is too small, only one arm of the cross will be filled.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">scale</span><span class="p">,</span><span class="mi">3</span><span class="o">*</span><span class="n">scale</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">scale</span><span class="p">,</span><span class="mi">3</span><span class="o">*</span><span class="n">scale</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Make the PDF a fit problem that bumps can process.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download: <a class="reference download internal" download="" href="../../_downloads/e8d521bcf7f1ccaa368d5eb370ec4952/cross.py"><code class="xref download docutils literal notranslate"><span class="pre">cross.py</span></code></a>.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="bounded.html"
+                          title="previous chapter">Boundary check</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="../entropy/check_entropy.html"
+                          title="next chapter">Check the entropy calculator</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tutorial/test_functions/cross.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../entropy/check_entropy.html" title="Check the entropy calculator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bounded.html" title="Boundary check"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="readme.html" >Test functions</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Cross-shaped anti-correlation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.initpop &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.initpop</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.initpop</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Population initialization strategies.</span>
+
+<span class="sd">To start the analysis an initial population is required.  This will be</span>
+<span class="sd">an array of size M x N, where M is the number of dimensions in the fitting</span>
+<span class="sd">problem and N is the number of individuals in the population.</span>
+
+<span class="sd">Normally the initialization will use a call to :func:`generate` with</span>
+<span class="sd">key-value pairs from the command line options.  This will include the</span>
+<span class="sd">&#39;init&#39; option, with the name of the strategy used to initialize the</span>
+<span class="sd">population.</span>
+
+<span class="sd">Additional strategies like uniform box in [0,1] or standard norm</span>
+<span class="sd">(rand(m,n) and randn(m,n) respectively), may also be useful.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Note: borrowed from DREAM and extended.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;generate&#39;</span><span class="p">,</span> <span class="s1">&#39;cov_init&#39;</span><span class="p">,</span> <span class="s1">&#39;eps_init&#39;</span><span class="p">,</span> <span class="s1">&#39;lhs_init&#39;</span><span class="p">,</span> <span class="s1">&#39;random_init&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">diag</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">isinf</span><span class="p">,</span> <span class="n">isfinite</span><span class="p">,</span> <span class="n">clip</span><span class="p">,</span> <span class="n">inf</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="generate">
+<a class="viewcode-back" href="../../bumps.initpop.html#bumps.initpop.generate">[docs]</a>
+<span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;eps&#39;</span><span class="p">,</span> <span class="n">pop</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="c1"># type: (Any, str, int, bool, ...) -&gt; np.ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Population initializer.</span>
+
+<span class="sd">    *problem* is a fit problem with *getp* and *bounds* methods.</span>
+
+<span class="sd">    *init* is &#39;eps&#39;, &#39;cov&#39;, &#39;lhs&#39; or &#39;random&#39;, indicating which</span>
+<span class="sd">    initializer should be used.</span>
+
+<span class="sd">    *pop* is the population scale factor, generating *pop* individuals</span>
+<span class="sd">    for each parameter in the fit. If *pop &lt; 0*, generate a total of</span>
+<span class="sd">    *-pop* individuals regardless of the number of parameters.</span>
+
+<span class="sd">    *use_point* is True if the initial value should be a member of the</span>
+<span class="sd">    population.</span>
+
+<span class="sd">    Additional options are ignored so that generate can be called using</span>
+<span class="sd">    all command line options.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">initial</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+    <span class="n">initial</span><span class="p">[</span><span class="o">~</span><span class="n">isfinite</span><span class="p">(</span><span class="n">initial</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.</span>
+    <span class="n">pop_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">pop</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">initial</span><span class="p">)))</span> <span class="k">if</span> <span class="n">pop</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">pop</span><span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">bounds</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">init</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+        <span class="n">population</span> <span class="o">=</span> <span class="n">random_init</span><span class="p">(</span>
+            <span class="n">pop_size</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="n">use_point</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">init</span> <span class="o">==</span> <span class="s1">&#39;cov&#39;</span><span class="p">:</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">cov</span><span class="p">()</span>
+        <span class="n">population</span> <span class="o">=</span> <span class="n">cov_init</span><span class="p">(</span>
+            <span class="n">pop_size</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="n">use_point</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">init</span> <span class="o">==</span> <span class="s1">&#39;lhs&#39;</span><span class="p">:</span>
+        <span class="n">population</span> <span class="o">=</span> <span class="n">lhs_init</span><span class="p">(</span>
+            <span class="n">pop_size</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="n">use_point</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">init</span> <span class="o">==</span> <span class="s1">&#39;eps&#39;</span><span class="p">:</span>
+        <span class="n">population</span> <span class="o">=</span> <span class="n">eps_init</span><span class="p">(</span>
+            <span class="n">pop_size</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="n">use_point</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Unknown population initializer &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">init</span><span class="p">)</span>
+
+    <span class="c1"># Use LHS to initialize any &quot;free&quot; parameters</span>
+    <span class="c1"># TODO: find a better way to &quot;free&quot; parameters on --resume/--pars</span>
+    <span class="n">undefined</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s1">&#39;undefined&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">undefined</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">problem</span><span class="o">.</span><span class="n">undefined</span>
+        <span class="n">population</span><span class="p">[:,</span> <span class="n">undefined</span><span class="p">]</span> <span class="o">=</span> <span class="n">lhs_init</span><span class="p">(</span>
+            <span class="n">pop_size</span><span class="p">,</span> <span class="n">initial</span><span class="p">[</span><span class="n">undefined</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="n">undefined</span><span class="p">],</span>
+            <span class="n">use_point</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">population</span></div>
+
+
+
+<div class="viewcode-block" id="lhs_init">
+<a class="viewcode-back" href="../../bumps.initpop.html#bumps.initpop.lhs_init">[docs]</a>
+<span class="k">def</span> <span class="nf">lhs_init</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># type: (int, np.ndarray, np.ndarray, bool, float) -&gt; np.ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Latin hypercube sampling.</span>
+
+<span class="sd">    Returns an array whose columns and rows each have *n* samples from</span>
+<span class="sd">    equally spaced bins between *bounds=(xmin, xmax)* for the column.</span>
+<span class="sd">    Unlike random, this method guarantees a certain amount of coverage</span>
+<span class="sd">    of the parameter space.  Consider, though that the diagonal matrix</span>
+<span class="sd">    satisfies the LHS condition, and you can see that the guarantees are</span>
+<span class="sd">    not very strong.  A better methods, similar to sudoku puzzles, would</span>
+<span class="sd">    guarantee coverage in each block of the matrix, but this is not</span>
+<span class="sd">    yet implmeneted.</span>
+
+<span class="sd">    If *use_point* is True, then the current value of the parameters</span>
+<span class="sd">    is returned as the first point in the population, preserving the the</span>
+<span class="sd">    LHS property.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">bounds</span>
+
+    <span class="c1"># Define the size of xmin</span>
+    <span class="n">nvar</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+
+    <span class="c1"># Initialize array ran with random numbers</span>
+    <span class="n">ran</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">nvar</span><span class="p">)</span>
+
+    <span class="c1"># Initialize array s with zeros</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">nvar</span><span class="p">))</span>
+
+    <span class="c1"># Now fill s</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvar</span><span class="p">):</span>
+        <span class="c1"># Indefinite and semidefinite ranges need to be constrained.  Use</span>
+        <span class="c1"># the initial value of the parameter as a hint.</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">xmin</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">xmax</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">low</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">high</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="mf">0.0</span>
+            <span class="k">elif</span> <span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">low</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="n">high</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">high</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">high</span><span class="o">-</span><span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span> <span class="n">high</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">high</span> <span class="o">-</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">high</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">high</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="n">high</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">low</span><span class="p">,</span> <span class="n">low</span> <span class="o">+</span> <span class="mf">2.0</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">low</span><span class="p">,</span> <span class="n">low</span> <span class="o">+</span> <span class="mf">2.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>   <span class="c1"># low, high = low, high</span>
+
+        <span class="k">if</span> <span class="n">use_point</span><span class="p">:</span>
+            <span class="c1"># Put current value at position 0 in population</span>
+            <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="n">initial</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+            <span class="c1"># Find which bin the current value belongs in</span>
+            <span class="n">xidx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">))</span>
+            <span class="c1"># Generate random permutation of remaining bins</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">perm</span> <span class="o">&gt;=</span> <span class="n">xidx</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># exclude current value bin</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Random permutation of bins</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+        <span class="c1"># Assign random value within each bin</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">perm</span> <span class="o">+</span> <span class="n">ran</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">low</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">s</span></div>
+
+
+
+<div class="viewcode-block" id="cov_init">
+<a class="viewcode-back" href="../../bumps.initpop.html#bumps.initpop.cov_init">[docs]</a>
+<span class="k">def</span> <span class="nf">cov_init</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># type: (int, np.ndarray, np.ndarray, bool, Optional[np.ndarray], Optional[np.ndarray]) -&gt; np.ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize *n* sets of random variables from a gaussian model.</span>
+
+<span class="sd">    The center is at *x* with an uncertainty ellipse specified by the</span>
+<span class="sd">    1-sigma independent uncertainty values *dx* or the full covariance</span>
+<span class="sd">    matrix uncertainty *cov*.</span>
+
+<span class="sd">    For example, create an initial population for 20 sequences for a</span>
+<span class="sd">    model with local minimum x with covariance matrix C::</span>
+
+<span class="sd">        pop = cov_init(cov=C, pars=p, n=20)</span>
+
+<span class="sd">    If *use_point* is True, then the current value of the parameters</span>
+<span class="sd">    is returned as the first point in the population.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># return mean + dot(RNG.randn(n,len(mean)), chol(cov))</span>
+    <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">_get_scale_factor</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">initial</span><span class="p">)</span>
+            <span class="c1">#print(&quot;= dx&quot;,dx)</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">bounds</span>
+    <span class="n">initial</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">initial</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">reflect</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_point</span><span class="p">:</span>
+        <span class="n">population</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial</span>
+    <span class="k">return</span> <span class="n">population</span></div>
+
+
+
+<div class="viewcode-block" id="random_init">
+<a class="viewcode-back" href="../../bumps.initpop.html#bumps.initpop.random_init">[docs]</a>
+<span class="k">def</span> <span class="nf">random_init</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a random population from the problem parameters.</span>
+
+<span class="sd">    Values are selected at random from the bounds of the problem according</span>
+<span class="sd">    to the underlying probability density of each parameter.  Uniform</span>
+<span class="sd">    semi-definite and indefinite bounds use the standard normal distribution</span>
+<span class="sd">    for the underlying probability, with a scale factor determined by the</span>
+<span class="sd">    initial value of the parameter.</span>
+
+<span class="sd">    If *use_point* is True, then the current value of the parameters</span>
+<span class="sd">    is returned as the first point in the population.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">randomize</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">use_point</span><span class="p">:</span>
+        <span class="n">population</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="o">*</span><span class="n">bounds</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">population</span></div>
+
+
+
+<div class="viewcode-block" id="eps_init">
+<a class="viewcode-back" href="../../bumps.initpop.html#bumps.initpop.eps_init">[docs]</a>
+<span class="k">def</span> <span class="nf">eps_init</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">use_point</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+    <span class="c1"># type: (int, np.ndarray, np.ndarray, bool, float) -&gt; np.ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a random population using an epsilon ball around the current</span>
+<span class="sd">    value.</span>
+
+<span class="sd">    Since the initial population is contained in a small volume, this</span>
+<span class="sd">    method is useful for exploring a local minimum around a point.  Over</span>
+<span class="sd">    time the ball will expand to fill the minimum, and perhaps tunnel</span>
+<span class="sd">    through barriers to nearby minima given enough burn-in time.</span>
+
+<span class="sd">    eps is in proportion to the bounds on the parameter, or the current</span>
+<span class="sd">    value of the parameter if the parameter is unbounded.  This gives the</span>
+<span class="sd">    initialization a bit of scale independence.</span>
+
+<span class="sd">    If *use_point* is True, then the current value of the parameters</span>
+<span class="sd">    is returned as the first point in the population.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Set the scale from the bounds, or from the initial value if the value</span>
+    <span class="c1"># is unbounded.</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">bounds</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">_get_scale_factor</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">initial</span><span class="p">)</span>
+    <span class="c1">#print(&quot;= scale&quot;, scale)</span>
+    <span class="n">initial</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">initial</span> <span class="o">+</span> <span class="n">scale</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xmin</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">reflect</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_point</span><span class="p">:</span>
+        <span class="n">population</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial</span>
+    <span class="k">return</span> <span class="n">population</span></div>
+
+
+<span class="k">def</span> <span class="nf">reflect</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reflect v off the boundary, then clip to be sure it is within bounds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">low</span>
+    <span class="n">v</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">low</span> <span class="o">-</span> <span class="n">v</span><span class="p">)[</span><span class="n">index</span><span class="p">]</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="n">high</span>
+    <span class="n">v</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">high</span> <span class="o">-</span> <span class="n">v</span><span class="p">)[</span><span class="n">index</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">clip</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_get_scale_factor</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">initial</span><span class="p">):</span>
+    <span class="c1"># type: (float, np.ndarray, np.ndarray) -&gt; np.ndarray</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">bounds</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span>  <span class="c1"># type: np.ndarray</span>
+    <span class="n">dx</span><span class="p">[</span><span class="n">isinf</span><span class="p">(</span><span class="n">dx</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">initial</span><span class="p">[</span><span class="n">isinf</span><span class="p">(</span><span class="n">dx</span><span class="p">)])</span> <span class="o">*</span> <span class="n">scale</span>
+    <span class="n">dx</span><span class="p">[</span><span class="o">~</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dx</span><span class="p">)]</span> <span class="o">=</span> <span class="n">scale</span>
+    <span class="n">dx</span><span class="p">[</span><span class="n">dx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale</span>
+    <span class="c1">#print(&quot;min,max,dx&quot;,xmin,xmax,dx)</span>
+    <span class="k">return</span> <span class="n">dx</span>
+
+<span class="k">def</span> <span class="nf">demo_init</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="c1"># type: (Optional[int]) -&gt; None</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+    <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">init_bounds</span>
+    <span class="k">class</span> <span class="nc">Problem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initial</span> <span class="o">=</span> <span class="n">initial</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="k">def</span> <span class="nf">getp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial</span>
+        <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span>
+        <span class="k">def</span> <span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">target</span><span class="p">[</span><span class="o">~</span><span class="n">isfinite</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">init_bounds</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="o">.</span><span class="n">T</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mf">2.</span><span class="p">,</span> <span class="n">inf</span><span class="p">),</span>
+                       <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span><span class="p">),</span>
+                       <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)])</span><span class="o">.</span><span class="n">T</span>
+    <span class="c1"># generate takes care of bad values</span>
+    <span class="c1">#low = np.array([-inf]*5)</span>
+    <span class="c1">#high = np.array([inf]*5)</span>
+    <span class="c1">#bad = np.array([np.nan]*5)</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">below</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.</span><span class="p">])</span>
+    <span class="n">above</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">8.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">])</span>
+    <span class="n">small</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.000001</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.000001</span><span class="p">,</span> <span class="mf">0.000001</span><span class="p">,</span> <span class="mf">5.000001</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.000001</span><span class="p">])</span>
+    <span class="n">large</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2000001.</span><span class="p">,</span> <span class="o">-</span><span class="mf">2000001.</span><span class="p">,</span> <span class="mf">2000001.</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.000001</span><span class="p">])</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">100.</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+    <span class="n">starting_points</span> <span class="o">=</span> <span class="s1">&#39;zero below above small large middle&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">100000</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">util</span><span class="o">.</span><span class="n">push_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">init_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;cov&#39;</span><span class="p">,</span> <span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="s1">&#39;eps&#39;</span><span class="p">,</span> <span class="s1">&#39;lhs&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;bounds:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">starting_points</span><span class="p">:</span>
+                <span class="n">initial</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">M</span> <span class="o">=</span> <span class="n">Problem</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
+                <span class="n">pop</span> <span class="o">=</span> <span class="n">generate</span><span class="p">(</span><span class="n">problem</span><span class="o">=</span><span class="n">M</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="n">init_type</span><span class="p">,</span> <span class="n">pop</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> init from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">init_type</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">initial</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">demo_init</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.initpop</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

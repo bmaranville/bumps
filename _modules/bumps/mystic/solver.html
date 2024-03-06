@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.mystic.solver &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.solver</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.mystic.solver</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generic minimizers</span>
+
+<span class="sd">The general optimization algorithm is as follows::</span>
+
+<span class="sd">    fit = Minimizer(problem=Problem(),</span>
+<span class="sd">                 strategy=Strategy(),</span>
+<span class="sd">                 monitors=[],</span>
+<span class="sd">                 success=Df(1e-5) &amp; Dx(1e-5),</span>
+<span class="sd">                 failure=Calls(10000) | Steps(100))</span>
+<span class="sd">    population = fit.start()</span>
+<span class="sd">    while True:</span>
+<span class="sd">        result = list(map(fit.problem, population))</span>
+<span class="sd">        fit.update(population, result)</span>
+<span class="sd">        if fit.isdone(): break</span>
+<span class="sd">        population = fit.step()</span>
+
+<span class="sd">    if fit.successful:</span>
+<span class="sd">        print &quot;Converged&quot;</span>
+<span class="sd">    else:</span>
+<span class="sd">        print &quot;Stopped with&quot;,&quot;, &quot;.join(str(c) for c in fit.failure_cond)</span>
+
+<span class="sd">Variations are possible, such as the multistep process where the</span>
+<span class="sd">program first generates an initial population, then each time it</span>
+<span class="sd">is run generates an updated population based on the results of</span>
+<span class="sd">submitting the previous population to a batch queue.</span>
+
+<span class="sd">History traces</span>
+<span class="sd">==============</span>
+
+<span class="sd">Stopping conditions use history traces to evaluate whether the program</span>
+<span class="sd">should continue.  When adding new stopping conditions, the programmer</span>
+<span class="sd">must define a config_history method to indicate which values are needed.</span>
+<span class="sd">For example::</span>
+
+<span class="sd">    def config_history(self, history):</span>
+<span class="sd">        history.requires(points=3)</span>
+
+<span class="sd">When checking convergence, the programmer must still check that enough</span>
+<span class="sd">history is available for the test. For example,</span>
+<span class="sd">::</span>
+
+<span class="sd">    def __call__(self, history):</span>
+<span class="sd">        from numpy.linalg import norm</span>
+<span class="sd">        if len(history.value) &lt; 3: return False</span>
+<span class="sd">        return norm(history.value[0] - history.value[2]) &lt; 0.001</span>
+
+<span class="sd">The optimizer will make sure that config_history is called for each</span>
+<span class="sd">condition before the fit starts::</span>
+
+<span class="sd">    for t in success.primitives()|failure.primitives():</span>
+<span class="sd">        t.config_history()</span>
+
+<span class="sd">Each optimizer can control which values it wants to monitor.  For</span>
+<span class="sd">consistency and ease of use, monitor names should be chosen from</span>
+<span class="sd">the standard names below.  As new optimizers are created, the</span>
+<span class="sd">list of standard names may expand.</span>
+
+<span class="sd">Fixed properties of history::</span>
+
+<span class="sd">    *ndim* (int)</span>
+<span class="sd">         problem dimension</span>
+<span class="sd">    *lower_bound*, *upper_bound* ([float])</span>
+<span class="sd">         bounds constraints</span>
+
+<span class="sd">Accumulated properties::</span>
+
+<span class="sd">    *step* (int)</span>
+<span class="sd">         iteration number</span>
+<span class="sd">    *calls* (int)</span>
+<span class="sd">        cumulative number of function evaluations</span>
+<span class="sd">    *time* (seconds)</span>
+<span class="sd">        cumulative wall clock time</span>
+<span class="sd">    *cpu_time* (seconds)</span>
+<span class="sd">        cumulative CPU time</span>
+<span class="sd">    *value* (float)</span>
+<span class="sd">        best function value</span>
+<span class="sd">    *point* (vector)</span>
+<span class="sd">        parameter values for the best function value</span>
+<span class="sd">    *gradient* (vector)</span>
+<span class="sd">        del f: gradient at best point (if available)</span>
+<span class="sd">    *hessian* (matrix)</span>
+<span class="sd">        del**2 F: Hessian at best point (if available)</span>
+<span class="sd">    *population_values* (vector)</span>
+<span class="sd">        function values of the current population (if available)</span>
+<span class="sd">    *population_points* (matrix)</span>
+<span class="sd">        parameter values for the current population (if available)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># TODO: Ordered fits</span>
+<span class="c1">#</span>
+<span class="c1"># Want a list of strategies and a parameter subset associated with each</span>
+<span class="c1"># strategy.  The fit is nested, with the outermost parameters are set</span>
+<span class="c1"># to a particular value, then the inner parameters are optimized for</span>
+<span class="c1"># those values before an alternative set of outer parameters is considered.</span>
+<span class="c1">#</span>
+<span class="c1"># Will probably want the inner strategy to be some sort of basin hopping</span>
+<span class="c1"># method with the new value jumping around based on the best value for</span>
+<span class="c1"># those parameters.  This is complicated because the first fit should be</span>
+<span class="c1"># done using a more global method.</span>
+<span class="c1">#</span>
+<span class="c1"># In the context of simultaneous fitting, it would be natural to partition</span>
+<span class="c1"># the parameters so that the dependent parameters of the slowest models</span>
+<span class="c1"># are varied last.  This can be done automatically if each model has</span>
+<span class="c1"># a cost estimate associated with it.</span>
+<span class="c1">#</span>
+<span class="c1"># TODO: Surrogate models</span>
+<span class="c1">#</span>
+<span class="c1"># Want to use surrogate models for the expensive models when far from the</span>
+<span class="c1"># minimum, only calculating the real model when near the minimum.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="default_mapper">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.default_mapper">[docs]</a>
+<span class="k">def</span> <span class="nf">default_mapper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="cpu_time">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.cpu_time">[docs]</a>
+<span class="k">def</span> <span class="nf">cpu_time</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Current cpu time for this process&quot;&quot;&quot;</span>
+    <span class="n">user_time</span><span class="p">,</span><span class="n">sys_time</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">times</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">user_time</span><span class="o">+</span><span class="n">sys_time</span></div>
+
+
+<div class="viewcode-block" id="Minimizer">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer">[docs]</a>
+<span class="k">class</span> <span class="nc">Minimizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a minimization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitors</span><span class="o">=</span><span class="p">[],</span>
+                 <span class="n">history</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">failure</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">strategy</span>
+        <span class="c1"># Ask strategy to fill in the default termination conditions</span>
+        <span class="c1"># in case the user doesn&#39;t supply them.</span>
+        <span class="n">defsucc</span><span class="p">,</span> <span class="n">deffail</span> <span class="o">=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">default_termination_conditions</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="n">success</span> <span class="k">if</span> <span class="n">success</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">defsucc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failure</span> <span class="o">=</span> <span class="n">failure</span> <span class="k">if</span> <span class="n">failure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">deffail</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitors</span> <span class="o">=</span> <span class="n">monitors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Minimizer.minimize">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.minimize">[docs]</a>
+    <span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapper</span><span class="o">=</span><span class="n">default_mapper</span><span class="p">,</span> <span class="n">abort_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the solver to completion, returning the best point.</span>
+
+<span class="sd">        Note: only used stand-alone, not within fit service</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remote_time</span> <span class="o">=</span> <span class="o">-</span><span class="n">cpu_time</span><span class="p">()</span>
+        <span class="n">population</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">()</span> <span class="k">if</span> <span class="n">resume</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span>
+                <span class="c1">#print &quot;map result&quot;,result</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="c1">#print self.history.step, self.history.value</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdone</span><span class="p">():</span> <span class="k">break</span>         <span class="c1">#STOPHERE combine</span>
+                <span class="k">if</span> <span class="n">abort_test</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">abort_test</span><span class="p">():</span> <span class="k">break</span>
+                <span class="n">population</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+    <span class="fm">__call__</span> <span class="o">=</span> <span class="n">minimize</span>
+
+<div class="viewcode-block" id="Minimizer.reset">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear the solver history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="n">calls</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cpu_time</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="n">point</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="n">population_points</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">population_values</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span><span class="o">|</span><span class="bp">self</span><span class="o">.</span><span class="n">failure</span><span class="o">.</span><span class="n">primitives</span><span class="p">():</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">config_history</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitors</span><span class="p">:</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">config_history</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">config_history</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Minimizer.start">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.start">[docs]</a>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start the optimization but generating an initial population.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Reset the timers so we know how long the fit takes.</span>
+        <span class="c1"># We are cheating by initializing remote_time to -cpu_time, then</span>
+        <span class="c1"># later adding cpu_time back to remote_time to get the total cost</span>
+        <span class="c1"># of local and remote computation.</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Problem has no fittable parameters&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Minimizer.update">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect statistics on time and resources</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="s1">&#39;__cpu_time__&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remote_time</span> <span class="o">+=</span> <span class="n">values</span><span class="o">.</span><span class="n">__cpu_time__</span>
+
+        <span class="c1"># Locate the best member of the population</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="c1">#print(&quot;values&quot;,values,file=sys.stderr)</span>
+
+        <span class="c1"># Update the history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+            <span class="n">cpu_time</span> <span class="o">=</span> <span class="n">cpu_time</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">remote_time</span><span class="p">,</span>
+            <span class="n">population_points</span> <span class="o">=</span> <span class="n">points</span><span class="p">,</span>
+            <span class="n">population_values</span> <span class="o">=</span> <span class="n">values</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">calls</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+
+        <span class="n">minidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">minidx</span><span class="p">],</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">minidx</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Tell all the monitors that the history has been updated</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitors</span><span class="p">:</span>
+            <span class="n">m</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Minimizer.step">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the next population to evaluate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Minimizer.isdone">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.isdone">[docs]</a>
+    <span class="k">def</span> <span class="nf">isdone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the fit has converged according to the criteria proposed</span>
+<span class="sd">        by the user and/or the optimizer.</span>
+
+<span class="sd">        Returns True if either the fit converged or is forced to stop for</span>
+<span class="sd">        some other reason.</span>
+
+<span class="sd">        Sets the following attributes::</span>
+
+<span class="sd">            *successful* (boolean)</span>
+<span class="sd">                True if the fit converged</span>
+<span class="sd">            *success_cond* ([Condition])</span>
+<span class="sd">                Reasons for success or lack of success</span>
+<span class="sd">            *failed* (boolean)</span>
+<span class="sd">                True if the fit should stop</span>
+<span class="sd">            *failure_cond* ([Condition])</span>
+<span class="sd">                Reasons for failure or lack of failure</span>
+
+<span class="sd">        Note that success and failure can occur at the same time if</span>
+<span class="sd">        for example the convergence criteria are met but the resource</span>
+<span class="sd">        limits were exceeded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">successful</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">success_cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">successful</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">failed</span></div>
+
+
+<div class="viewcode-block" id="Minimizer.termination_condition">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Minimizer.termination_condition">[docs]</a>
+    <span class="k">def</span> <span class="nf">termination_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">successful</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;succeeded with &quot;</span><span class="o">+</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">success_cond</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;failed with &quot;</span><span class="o">+</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_cond</span><span class="p">)</span>
+                    <span class="o">+</span><span class="s2">&quot; and &quot;</span><span class="o">+</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">success_cond</span><span class="p">))</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Strategy">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Strategy">[docs]</a>
+<span class="k">class</span> <span class="nc">Strategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optimization strategy to use.</span>
+
+<span class="sd">    The doc string for the strategy will be used in the construction of</span>
+<span class="sd">    the doc strings for the simple optimizer interfaces, with a description</span>
+<span class="sd">    of the standard optimizer options at the end.   The following template</span>
+<span class="sd">    works well::</span>
+
+<span class="sd">        Name of optimization strategy</span>
+
+<span class="sd">        Brief description of the strategy</span>
+
+<span class="sd">        Optimizer parameters::</span>
+
+<span class="sd">            *argument* is the description of the argument</span>
+
+<span class="sd">        Additional details about the solver.</span>
+
+<span class="sd">    The __init__ arguments for the strategy will be passed in through</span>
+<span class="sd">    the simple optimizer interface.  Be sure to make them all keyword</span>
+<span class="sd">    arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Strategy.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Strategy.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify which information needs to be preserved in history.</span>
+
+<span class="sd">        For example, parallel tempering needs to save its level values::</span>
+
+<span class="sd">            history.requires(levels=2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Strategy.update">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Strategy.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update history with optimizer specific state information.</span>
+
+<span class="sd">        Note: standard history items (step, calls, value, point,</span>
+<span class="sd">        population_values, population_points, time, cpu_time) are</span>
+<span class="sd">        already recorded.  Additional items should be recorded</span>
+<span class="sd">        directly in the trace.  For example::</span>
+
+<span class="sd">            history.levels.put([1,2,3])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Strategy.start">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Strategy.start">[docs]</a>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the initial population.</span>
+
+<span class="sd">        Returns a matrix *P* of points to be evaluated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="Strategy.step">
+<a class="viewcode-back" href="../../../bumps.mystic.solver.html#bumps.mystic.solver.Strategy.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the next population.</span>
+
+<span class="sd">        Returns a matrix *P* of points to be evaluated.</span>
+
+<span class="sd">        *history* contains the previous history of the computation,</span>
+<span class="sd">        including any fields placed by :meth:`update`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.solver</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

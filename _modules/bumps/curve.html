@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.curve &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.curve</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.curve</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Build a bumps model from a function and data.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+
+<span class="sd">Given a function *sin_model* which computes a sine wave at times *t*::</span>
+
+<span class="sd">    from numpy import sin</span>
+<span class="sd">    def sin_model(t, freq, phase):</span>
+<span class="sd">        return sin(2*pi*(freq*t + phase))</span>
+
+<span class="sd">and given data *(y,dy)* measured at times *t*, we can define the fit</span>
+<span class="sd">problem as follows::</span>
+
+<span class="sd">    from bumps.names import *</span>
+<span class="sd">    M = Curve(sin_model, t, y, dy, freq=20)</span>
+
+<span class="sd">The *freq* and *phase* keywords are optional initial values for the model</span>
+<span class="sd">parameters which otherwise default to zero.  The model parameters can be</span>
+<span class="sd">accessed as attributes on the model to set fit range::</span>
+
+<span class="sd">    M.freq.range(2, 100)</span>
+<span class="sd">    M.phase.range(0, 1)</span>
+
+<span class="sd">As usual, you can initialize or assign parameter expressions to the the</span>
+<span class="sd">parameters if you want to tie parameters together within or between models.</span>
+
+<span class="sd">Note: there is sometimes difficulty getting bumps to recognize the function</span>
+<span class="sd">during fits, which can be addressed by putting the definition in a separate</span>
+<span class="sd">file on the python path.  With the windows binary distribution of bumps,</span>
+<span class="sd">this can be done in the problem definition file with the following code::</span>
+
+<span class="sd">    import os</span>
+<span class="sd">    from bumps.names import *</span>
+<span class="sd">    sys.path.insert(0, os.getcwd())</span>
+
+<span class="sd">The model function can then be imported from the external module as usual::</span>
+
+<span class="sd">    from sin_model import sin_model</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Curve&quot;</span><span class="p">,</span> <span class="s2">&quot;PoissonCurve&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_err&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">sqrt</span>
+
+<span class="kn">from</span> <span class="nn">.parameter</span> <span class="kn">import</span> <span class="n">Parameter</span>
+
+<span class="k">def</span> <span class="nf">_parse_pars</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract parameter names from function definition.</span>
+
+<span class="sd">    *fn* is the function definition.  This could be declared as</span>
+<span class="sd">    *fn(p1, p2, p3, ...)* where *p1*, etc. are the fittable parameters.</span>
+
+<span class="sd">    *init* is a dictionary of initial values for the parameters,</span>
+<span class="sd">    overriding any default values.  If called from a constructor with</span>
+<span class="sd">    **kwargs representing unknown named arguments, use *init=kwargs*.</span>
+
+<span class="sd">    *skip* is the number of parameters to skip.  This will be *skip=0*</span>
+<span class="sd">    for a function which defines the log likelihood directly or one</span>
+<span class="sd">    that returns a set of residuals. For parameterized curves such as</span>
+<span class="sd">    *fn(x, p1, p2, ...)* use *skip=1*.  For surfaces with</span>
+<span class="sd">    *fn(x, y, p1, p2, ...)* use *skip=2*.</span>
+
+<span class="sd">    *name* is added to each parameter name to differentiate it from other</span>
+<span class="sd">    parameters in the same fit.</span>
+
+<span class="sd">    A default value in the function definition such as *pk=value* will</span>
+<span class="sd">    be set as the default value for the parameter.  If the default is</span>
+<span class="sd">    *pk=None* then the parameter will be non-fittable, and instead set</span>
+<span class="sd">    through *init*.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="n">pnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>
+    
+    <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_ONLY</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">valid</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only positional and keyword arguments allowed for </span><span class="si">{</span><span class="n">fn</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># TODO: need &quot;self&quot; handling for passed methods</span>
+    <span class="c1"># Skip the first argument if it is x or maybe skip x, y.</span>
+    <span class="n">pnames</span> <span class="o">=</span> <span class="n">pnames</span><span class="p">[</span><span class="n">skip</span><span class="p">:]</span>
+
+    <span class="c1"># Parameters default to zero</span>
+    <span class="n">defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pnames</span><span class="p">)</span>
+
+    <span class="c1"># If the function provides default values, use those.</span>
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)[</span><span class="n">skip</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">defaults</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>
+
+    <span class="c1"># Non-fittable parameters need to be sent in as None</span>
+    <span class="n">state_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Regardless, use any values specified in the constructor, but first</span>
+    <span class="c1"># check that they exist as function parameters.</span>
+    <span class="n">invalid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">init</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">pnames</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">invalid</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid initializers: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                        <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">invalid</span><span class="p">)))</span>
+    <span class="n">defaults</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">init</span><span class="p">)</span>
+
+    <span class="c1"># Build parameters out of ranges and initial values</span>
+    <span class="c1"># maybe:  name=(p+name if name.startswith(&#39;_&#39;) else name+p)</span>
+    <span class="n">pars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">defaults</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="n">p</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pnames</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state_vars</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">state_vars</span><span class="p">)</span>
+
+    <span class="c1">#print(&quot;pars&quot;, pars)</span>
+    <span class="c1">#print(&quot;state&quot;, state)</span>
+    <span class="k">return</span> <span class="n">pars</span><span class="p">,</span> <span class="n">state</span>
+
+<span class="k">def</span> <span class="nf">_assign_pars</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+    <span class="c1"># Make parameters accessible as model attributes</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter cannot be named </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Curve">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve">[docs]</a>
+<span class="k">class</span> <span class="nc">Curve</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Model a measurement with a user defined function.</span>
+
+<span class="sd">    The function *fn(x,p1,p2,...)* should return the expected value *y* for</span>
+<span class="sd">    each point *x* given the parameters *p1*, *p2*, etc.  *dy* is the</span>
+<span class="sd">    uncertainty for each measured value *y*.  If not specified, it defaults</span>
+<span class="sd">    to 1. Multi-valued functions, which return multiple *y* values for each</span>
+<span class="sd">    *x* value, should have *x* as a vector of length *n* and *y*, *dy* as</span>
+<span class="sd">    arrays of size *[n, k]*.</span>
+
+<span class="sd">    Initial values for the parameters can be set as *p=value* arguments to</span>
+<span class="sd">    *Curve*. If no value is set, then the initial value will be taken from</span>
+<span class="sd">    the default value given in the definition of *fn*, or set to 0 if the</span>
+<span class="sd">    parameter is not defined with an initial value.  Arbitrary non-fittable</span>
+<span class="sd">    data can be passed to the function as parameters, but only if the</span>
+<span class="sd">    parameter is given a default value of *None* in the function definition,</span>
+<span class="sd">    and has the initial value set as an argument to *Curve*.  Defining</span>
+<span class="sd">    *state=dict(key=value, ...)* before *Curve*, and calling *Curve* as</span>
+<span class="sd">    *Curve(..., \*\*state)* works pretty well.</span>
+
+<span class="sd">    *Curve* takes the following special keyword arguments:</span>
+
+<span class="sd">    * *name* is added to each parameter name when the parameter is defined.</span>
+<span class="sd">      The filename for the data is a good choice, since this allows you to keep</span>
+<span class="sd">      the parameters straight when fitting multiple datasets simultaneously.</span>
+
+<span class="sd">    * *plot* is an alternative plotting function. The function should be</span>
+<span class="sd">      defined as *plot(x,y,dy,fy,\*\*kw)*. The keyword arguments will be</span>
+<span class="sd">      filled with the values of the parameters used to compute *fy*.  It</span>
+<span class="sd">      will be easiest to list the parameters you need to make your plot</span>
+<span class="sd">      as positional arguments after *x,y,dy,fy* in the plot function</span>
+<span class="sd">      declaration.  For example, *plot(x,y,dy,fy,p3,\*\*kw)* will make the</span>
+<span class="sd">      value of parameter *p3* available as a variable in your function.  The</span>
+<span class="sd">      special keyword *view* will be a string containing *linear*, *log*,</span>
+<span class="sd">      *logx*, or *loglog*.  If only showing the residuals, the string</span>
+<span class="sd">      will be *residual*.</span>
+
+<span class="sd">    * *plot_x* is an array giving the sample points to use when plotting</span>
+<span class="sd">      the theory function, if different from the *x* values at which the</span>
+<span class="sd">      function is sampled.  Use this to draw a smooth curve between the</span>
+<span class="sd">      fitted points.  This value is ignored if you provide your own plot</span>
+<span class="sd">      function.</span>
+
+<span class="sd">    * *labels* are the axis labels for the plot.  This should include</span>
+<span class="sd">      units in parentheses. If the function is multi-valued then</span>
+<span class="sd">      use *[&#39;x axis&#39;, &#39;y axis&#39;, &#39;line 1&#39;, &#39;line 2&#39;, ...]*.</span>
+
+<span class="sd">    The data uncertainty is assumed to follow a gaussian distribution.</span>
+<span class="sd">    If measurements draw from some other uncertainty distribution, then</span>
+<span class="sd">    subclass Curve and replace nllf with the correct probability given the</span>
+<span class="sd">    residuals.  See the implementation of :class:`PoissonCurve` for an example.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">plot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dy</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dy</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dy</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;measurement uncertainty must be positive&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">num_curves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_curves</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_curves</span> <span class="o">=</span> <span class="n">num_curves</span>  <span class="c1"># use same value everywhere</span>
+
+        <span class="c1"># interpret labels parameter</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_curves</span><span class="o">+</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_curves</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="s2">&quot;line1, ..., line</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">num_curves</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="s2">&quot;line&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;labels should be [x, y, </span><span class="si">%s</span><span class="s2">]&quot;</span><span class="o">%</span><span class="n">lines</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_curves</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">line_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;y</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_curves</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">+</span> <span class="n">line_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+
+        <span class="c1"># TODO: self.fn is a duplicate of self._function below. Deprecated?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="c1"># if name else fn.__name__ + &quot; &quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_x</span> <span class="o">=</span> <span class="n">plot_x</span>
+
+        <span class="n">pars</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">_parse_pars</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># Make parameters accessible as model attributes</span>
+        <span class="n">_assign_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
+        <span class="c1">#_assign_pars(state, self)  # ... and state variables as well</span>
+
+        <span class="c1"># Remember the function, parameters, and number of parameters</span>
+        <span class="c1"># Note: we are remembering the parameter names and not the</span>
+        <span class="c1"># parameters themselves so that the caller can tie parameters</span>
+        <span class="c1"># together using model1.par = model2.par.  Otherwise we would</span>
+        <span class="c1"># need to override __setattr__ to intercept assignment to the</span>
+        <span class="c1"># parameter attributes and redirect them to the a _pars dictionary.</span>
+        <span class="c1"># ... and similarly for state if we decide to make them attributes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pnames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span> <span class="o">=</span> <span class="n">plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_theory</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Curve.update">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_theory</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Curve.parameters">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pnames</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Curve.numpoints">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.numpoints">[docs]</a>
+    <span class="k">def</span> <span class="nf">numpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Curve.theory">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.theory">[docs]</a>
+    <span class="k">def</span> <span class="nf">theory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Use cache if x is None, otherwise compute theory with x.</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_theory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cached_theory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_theory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_theory</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_theory</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_compute_theory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_pars</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_fetch_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pnames</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kw</span>
+
+<div class="viewcode-block" id="Curve.simulate_data">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.simulate_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">theory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">noise</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">noise</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dy</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.01</span><span class="o">*</span><span class="n">noise</span><span class="o">*</span><span class="n">theory</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dy</span> <span class="o">=</span> <span class="n">noise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">theory</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">theory</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dy</span></div>
+
+
+<div class="viewcode-block" id="Curve.residuals">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dy</span></div>
+
+
+<div class="viewcode-block" id="Curve.nllf">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">r</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Curve.save">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+        <span class="c1"># TODO: need header line with state vars as json</span>
+        <span class="c1"># TODO: need to support nD x,y,dy</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Save not supported for nD x values&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">theory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_curves</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Multivalued y, dy for single valued x.</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">fx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">theory</span><span class="p">)):</span>
+                <span class="n">columns</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">fx</span><span class="p">))</span>
+                <span class="n">headers</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="s2">&quot;y[</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;dy[</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;fx[</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Single-valued y, dy for single valued x.</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;dy&quot;</span><span class="p">,</span> <span class="s2">&quot;fy&quot;</span><span class="p">]</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">theory</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.dat&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Curve.plot">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.Curve.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_pars</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">(),</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="kn">import</span> <span class="nn">pylab</span>
+        <span class="kn">from</span> <span class="nn">.plotutil</span> <span class="kn">import</span> <span class="n">coordinated_colors</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">theory_x</span><span class="p">,</span> <span class="n">theory_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">theory_x</span><span class="p">,</span> <span class="n">theory_y</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">()</span>
+        <span class="n">resid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_curves</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">theory_y</span><span class="p">,</span> <span class="n">resid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dy</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">theory_y</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">resid</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">theory_y</span><span class="p">,</span> <span class="n">resid</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+                                      <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">theory_y</span><span class="p">,</span> <span class="n">resid</span><span class="p">))</span>
+
+        <span class="n">colors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">coordinated_colors</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_curves</span><span class="p">))</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span>
+
+        <span class="c1">#print &quot;kw_plot&quot;,kw</span>
+        <span class="k">if</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;residual&#39;</span><span class="p">:</span>
+            <span class="n">_plot_resids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plot_ratio</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="n">plot_ratio</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rowspan</span><span class="o">=</span><span class="n">plot_ratio</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">tick_label</span> <span class="ow">in</span> <span class="n">h</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">():</span>
+                <span class="n">tick_label</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">_plot_fits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">),</span> <span class="n">theory</span><span class="o">=</span><span class="p">(</span><span class="n">theory_x</span><span class="p">,</span> <span class="n">theory_y</span><span class="p">),</span>
+                       <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+            <span class="c1">#pylab.gca().xaxis.set_visible(False)</span>
+            <span class="c1">#pylab.gca().spines[&#39;bottom&#39;].set_visible(False)</span>
+            <span class="c1">#pylab.gca().set_xticks([])</span>
+
+            <span class="n">pylab</span><span class="o">.</span><span class="n">subplot2grid</span><span class="p">((</span><span class="n">plot_ratio</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">plot_ratio</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="n">h</span><span class="p">)</span>
+            <span class="n">_plot_resids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span></div>
+</div>
+
+
+<span class="k">def</span> <span class="nf">_plot_resids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">colors</span><span class="p">):</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resid</span><span class="p">[:,</span> <span class="n">k</span><span class="p">],</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">[</span><span class="s1">&#39;base&#39;</span><span class="p">])</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">locator_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;(f(x)-y)/dy&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;logx&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;loglog&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_plot_fits</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">theory</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="n">theory_x</span><span class="p">,</span> <span class="n">theory_y</span> <span class="o">=</span> <span class="n">theory</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">colors</span><span class="p">):</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">k</span><span class="p">],</span> <span class="n">yerr</span><span class="o">=</span><span class="n">dy</span><span class="p">[:,</span> <span class="n">k</span><span class="p">],</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+                       <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">[</span><span class="s1">&#39;base&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theory_x</span><span class="p">,</span> <span class="n">theory_y</span><span class="p">[:,</span> <span class="n">k</span><span class="p">],</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span>
+                   <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">[</span><span class="s1">&#39;dark&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
+    <span class="c1"># Note: no xlabel since it is supplied by the residual plot below this plot</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;logx&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;logy&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;loglog&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># view == &#39;linear&#39;</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">plot_resid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resid</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    **DEPRECATED**</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">locator_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Residuals&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="plot_err">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.plot_err">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_err</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    **DEPRECATED**: subclass Curve and override the plot function.</span>
+
+<span class="sd">    Plot data *y* and error *dy* against *x*.</span>
+
+<span class="sd">    *view* is one of linear, log, logx or loglog.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">dy</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;logx&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">view</span> <span class="o">==</span> <span class="s1">&#39;loglog&#39;</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># view == &#39;linear&#39;</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span></div>
+
+
+
+<span class="n">_LOGFACTORIAL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+                          <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])</span>
+
+
+<span class="k">def</span> <span class="nf">logfactorial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the log factorial for each element of an array&quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">_LOGFACTORIAL</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s1">&#39;int32&#39;</span><span class="p">)]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">[</span><span class="o">~</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">result</span><span class="p">[</span><span class="o">~</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> \
+        <span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="PoissonCurve">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.PoissonCurve">[docs]</a>
+<span class="k">class</span> <span class="nc">PoissonCurve</span><span class="p">(</span><span class="n">Curve</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Model a measurement with Poisson uncertainty.</span>
+
+<span class="sd">    The nllf is calculated using Poisson probabilities, but the curve itself</span>
+<span class="sd">    is displayed using the approximation that $\sigma_y \approx \sqrt(y)$.</span>
+
+<span class="sd">    See :class:`Curve` for details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">fnkw</span><span class="p">):</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">Curve</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">fnkw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logfacty</span> <span class="o">=</span> <span class="n">logfactorial</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logfactysum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logfacty</span><span class="p">)</span>
+
+    <span class="c1">## Assume gaussian residuals for now</span>
+    <span class="c1">#def residuals(self):</span>
+    <span class="c1">#    # TODO: provide individual probabilities as residuals</span>
+    <span class="c1">#    # or perhaps the square roots --- whatever gives a better feel for</span>
+    <span class="c1">#    # which points are driving the fit</span>
+    <span class="c1">#    theory = self.theory()</span>
+    <span class="c1">#    return np.sqrt(self.y * log(theory) - theory - self._logfacty)</span>
+
+<div class="viewcode-block" id="PoissonCurve.nllf">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.PoissonCurve.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">theory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">theory</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="mf">1e308</span>
+        <span class="k">return</span> <span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">theory</span><span class="p">)</span> <span class="o">-</span> <span class="n">theory</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logfactysum</span></div>
+
+
+<div class="viewcode-block" id="PoissonCurve.simulate_data">
+<a class="viewcode-back" href="../../bumps.curve.html#bumps.curve.PoissonCurve.simulate_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">theory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">theory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dy</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logfacty</span> <span class="o">=</span> <span class="n">logfactorial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logfactysum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logfacty</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.curve</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

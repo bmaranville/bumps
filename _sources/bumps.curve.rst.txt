@@ -1,0 +1,7 @@
+bumps.curve module
+==================
+
+.. automodule:: bumps.curve
+   :members:
+   :undoc-members:
+   :show-inheritance:

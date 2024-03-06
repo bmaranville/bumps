@@ -1,0 +1,7 @@
+bumps.fitproblem module
+=======================
+
+.. automodule:: bumps.fitproblem
+   :members:
+   :undoc-members:
+   :show-inheritance:

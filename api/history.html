@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>history - Optimizer evaluation trace &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="initpop - Population initialization strategies" href="initpop.html" />
+    <link rel="prev" title="formatnum - Format numbers and uncertainties" href="formatnum.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="initpop.html" title="initpop - Population initialization strategies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="formatnum.html" title="formatnum - Format numbers and uncertainties"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">history - Optimizer evaluation trace</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="history-optimizer-evaluation-trace">
+<h1>history - Optimizer evaluation trace<a class="headerlink" href="#history-optimizer-evaluation-trace" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.history.html#bumps.history.History" title="bumps.history.History"><code class="xref py py-obj docutils literal notranslate"><span class="pre">History</span></code></a></p></td>
+<td><p>Collection of traces.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.history.html#bumps.history.Trace" title="bumps.history.Trace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Trace</span></code></a></p></td>
+<td><p>Value trace.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.history">Log of progress through a computation.</p>
+<p>Each cycle through a computation, a process can update its history,
+adding information about the number of function evaluations, the
+total time taken, the set of points evaluated and their values, the
+current best value and so on.  The process can use this history
+when computing the next set of points to evaluate and when checking
+if the termination conditions are met.  Any values that may be
+useful outside the computation, e.g., for logging or for updating
+the user, should be recorded.  In the ideal case, the history
+is all that is needed to restart the process in case of a system
+crash.</p>
+<p>History consists of a set of traces.  The content of the traces
+themselves is provided by the computation, but various stake holders
+can use them.  For example, the user may wish to log the set of points
+that have been evaluated and their values using the system logger
+and an optimizer may require a certain amount of history to calculate
+the next set of values.</p>
+<p>New traces are defined using <a class="reference internal" href="../bumps.history.html#bumps.history.History.provides" title="bumps.history.History.provides"><code class="xref py py-meth docutils literal notranslate"><span class="pre">History.provides()</span></code></a>.  For example,
+the following adds traces for ‘value’ and ‘point’ to the history, and
+requires the value on the two previous cycles in order to do its work:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bumps.history</span> <span class="kn">import</span> <span class="n">History</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">History</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># keep two values and zero points</span>
+</pre></div>
+</div>
+<p>Initially the history is empty:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>After three updates we see that only two values are kept.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">2.6</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.9</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="go">Trace value: 0.5, 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>Since the required length of ‘point’ is zero no values are kept:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">IndexError</span>: <span class="n">point has not accumulated enough history</span>
+</pre></div>
+</div>
+<p>A history consumer can override this, and require a certain length of a trace.
+Then future values will be preserved:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">point</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.92</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">[1, 0.5, 0.92]</span>
+</pre></div>
+</div>
+<p>Traces are independent of each other. A new trace can be added to the history
+and updated separately from the existing traces. This can be handy if there
+are separate sources of history though it may be difficult to keep the in sync.
+The following adds a ‘step’ to the existing history, initialized to 15, without
+changing ‘value’ or ‘point’:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># keep two steps</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span> <span class="c1"># initialize step to 15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+<span class="go">Trace step: 15</span>
+</pre></div>
+</div>
+<p>Traces may be used as accumulators, with the delta added to the existing value
+before being stored in the trace. For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+<span class="go">Trace step: 16, 15</span>
+</pre></div>
+</div>
+<p>Within bumps, history is used by monitors, with bumps.fitters.MonitorRunner
+managing updates to history and feeding them to the fit progress monitors.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.history.History">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.history.</span></span><span class="sig-name descname"><span class="pre">History</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Collection of traces.</p>
+<p>Provided traces can be specified as key word arguments, name=length.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.accumulate">
+<span class="sig-name descname"><span class="pre">accumulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.accumulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.accumulate" title="Link to this definition">¶</a></dt>
+<dd><p>Extend the given traces with the provided values.  The traced
+value will be the old value plus the new value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.clear" title="Link to this definition">¶</a></dt>
+<dd><p>Clear history, removing all traces</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.provides">
+<span class="sig-name descname"><span class="pre">provides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.provides"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.provides" title="Link to this definition">¶</a></dt>
+<dd><p>Specify additional provided fields.</p>
+<p>Raises AttributeError if trace is already provided or if the trace
+name matches the name of one of the history methods.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.requires">
+<span class="sig-name descname"><span class="pre">requires</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.requires"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.requires" title="Link to this definition">¶</a></dt>
+<dd><p>Specify required fields, and their history length.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.restore">
+<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.restore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.restore" title="Link to this definition">¶</a></dt>
+<dd><p>Restore history to the state returned by a call to snapshot</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.snapshot">
+<span class="sig-name descname"><span class="pre">snapshot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.snapshot" title="Link to this definition">¶</a></dt>
+<dd><p>Return a dictionary of traces { ‘name’:  [v[n], v[n-1], …, v[0]] }</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.History.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#History.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.History.update" title="Link to this definition">¶</a></dt>
+<dd><p>Extend the given traces with the provided values.  The traced
+values are independent.  Use accumulate if you want to add the
+new value to the previous value in the trace.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.history.Trace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.history.</span></span><span class="sig-name descname"><span class="pre">Trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'trace'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#Trace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.Trace" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Value trace.</p>
+<p>This is a stack-like object with items inserted at the beginning, and
+removed from the end once the maximum length <em>keep</em> is reached.</p>
+<p>len(trace) returns the number of items in the trace
+trace[i] returns the ith previous element in the history
+trace.requires(n) says how much history to keep
+trace.put(value) stores value
+trace.accumulate(value) adds value to the previous value before storing
+state = trace.snapeshot() returns the values as a stack, most recent last
+trace.restore(state) restores a snapshot</p>
+<p>Note that snapshot/restore uses lists to represent numpy arrays, which
+may cause problems if the trace is capturing lists.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.Trace.accumulate">
+<span class="sig-name descname"><span class="pre">accumulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#Trace.accumulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.Trace.accumulate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.Trace.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#Trace.put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.Trace.put" title="Link to this definition">¶</a></dt>
+<dd><p>Add an item to the trace, shifting off from the beginning
+when the trace is full.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.Trace.requires">
+<span class="sig-name descname"><span class="pre">requires</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#Trace.requires"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.Trace.requires" title="Link to this definition">¶</a></dt>
+<dd><p>Set the trace length to be at least n.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.Trace.restore">
+<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#Trace.restore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.Trace.restore" title="Link to this definition">¶</a></dt>
+<dd><p>Restore a trace from a captured snapshot.</p>
+<p>Lists are converted to numpy arrays.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.history.Trace.snapshot">
+<span class="sig-name descname"><span class="pre">snapshot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/history.html#Trace.snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.history.Trace.snapshot" title="Link to this definition">¶</a></dt>
+<dd><p>Capture state of the trace.</p>
+<p>Numpy arrays are converted to lists so that the trace can be easily
+converted to json.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">history - Optimizer evaluation trace</a><ul>
+<li><a class="reference internal" href="#bumps.history.History"><code class="docutils literal notranslate"><span class="pre">History</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.history.History.accumulate"><code class="docutils literal notranslate"><span class="pre">History.accumulate()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.History.clear"><code class="docutils literal notranslate"><span class="pre">History.clear()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.History.provides"><code class="docutils literal notranslate"><span class="pre">History.provides()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.History.requires"><code class="docutils literal notranslate"><span class="pre">History.requires()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.History.restore"><code class="docutils literal notranslate"><span class="pre">History.restore()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.History.snapshot"><code class="docutils literal notranslate"><span class="pre">History.snapshot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.History.update"><code class="docutils literal notranslate"><span class="pre">History.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.history.Trace"><code class="docutils literal notranslate"><span class="pre">Trace</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.history.Trace.accumulate"><code class="docutils literal notranslate"><span class="pre">Trace.accumulate()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.Trace.put"><code class="docutils literal notranslate"><span class="pre">Trace.put()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.Trace.requires"><code class="docutils literal notranslate"><span class="pre">Trace.requires()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.Trace.restore"><code class="docutils literal notranslate"><span class="pre">Trace.restore()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.history.Trace.snapshot"><code class="docutils literal notranslate"><span class="pre">Trace.snapshot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="formatnum.html"
+                          title="previous chapter">formatnum - Format numbers and uncertainties</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="initpop.html"
+                          title="next chapter">initpop - Population initialization strategies</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/history.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="initpop.html" title="initpop - Population initialization strategies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="formatnum.html" title="formatnum - Format numbers and uncertainties"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">history - Optimizer evaluation trace</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>fitservice - Remote job plugin for fit jobs &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="fitters - Wrappers for various optimization algorithms" href="fitters.html" />
+    <link rel="prev" title="fitproblem - Interface between models and fitters" href="fitproblem.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitters.html" title="fitters - Wrappers for various optimization algorithms"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fitproblem.html" title="fitproblem - Interface between models and fitters"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fitservice - Remote job plugin for fit jobs</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitservice-remote-job-plugin-for-fit-jobs">
+<h1>fitservice - Remote job plugin for fit jobs<a class="headerlink" href="#fitservice-remote-job-plugin-for-fit-jobs" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitservice.html#bumps.fitservice.ServiceMonitor" title="bumps.fitservice.ServiceMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ServiceMonitor</span></code></a></p></td>
+<td><p>Display fit progress on the console</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitservice.html#bumps.fitservice.fitservice" title="bumps.fitservice.fitservice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fitservice</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.fitservice">Fit job definition for the distributed job queue.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitservice.ServiceMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitservice.</span></span><span class="sig-name descname"><span class="pre">ServiceMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">improvement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitservice.html#ServiceMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitservice.ServiceMonitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.monitor.html#bumps.monitor.TimedUpdate" title="bumps.monitor.TimedUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimedUpdate</span></code></a></p>
+<p>Display fit progress on the console</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitservice.ServiceMonitor.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitservice.ServiceMonitor.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate which fields are needed by the monitor and for what duration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitservice.ServiceMonitor.show_improvement">
+<span class="sig-name descname"><span class="pre">show_improvement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitservice.html#ServiceMonitor.show_improvement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitservice.ServiceMonitor.show_improvement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitservice.ServiceMonitor.show_progress">
+<span class="sig-name descname"><span class="pre">show_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitservice.html#ServiceMonitor.show_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitservice.ServiceMonitor.show_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitservice.fitservice">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitservice.</span></span><span class="sig-name descname"><span class="pre">fitservice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitservice.html#fitservice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitservice.fitservice" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">fitservice - Remote job plugin for fit jobs</a><ul>
+<li><a class="reference internal" href="#bumps.fitservice.ServiceMonitor"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitservice.ServiceMonitor.config_history"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor.config_history()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitservice.ServiceMonitor.show_improvement"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor.show_improvement()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitservice.ServiceMonitor.show_progress"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor.show_progress()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitservice.fitservice"><code class="docutils literal notranslate"><span class="pre">fitservice()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="fitproblem.html"
+                          title="previous chapter">fitproblem - Interface between models and fitters</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="fitters.html"
+                          title="next chapter">fitters - Wrappers for various optimization algorithms</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/fitservice.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitters.html" title="fitters - Wrappers for various optimization algorithms"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fitproblem.html" title="fitproblem - Interface between models and fitters"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fitservice - Remote job plugin for fit jobs</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

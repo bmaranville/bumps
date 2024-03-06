@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>entropy - Entropy calculation &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="exppow - Exponential power density parameter calculator" href="exppow.html" />
+    <link rel="prev" title="diffev - Differential evolution MCMC stepper" href="diffev.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="exppow.html" title="exppow - Exponential power density parameter calculator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="diffev.html" title="diffev - Differential evolution MCMC stepper"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">entropy - Entropy calculation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="entropy-entropy-calculation">
+<h1>entropy - Entropy calculation<a class="headerlink" href="#entropy-entropy-calculation" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.entropy.entropy" title="bumps.dream.entropy.entropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">entropy</span></code></a></p></td>
+<td><p>Return entropy estimate and uncertainty from a random sample.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.entropy.gmm_entropy" title="bumps.dream.entropy.gmm_entropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmm_entropy</span></code></a></p></td>
+<td><p>Use sklearn.mixture.BayesianGaussianMixture to estimate entropy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.entropy.cov_entropy" title="bumps.dream.entropy.cov_entropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov_entropy</span></code></a></p></td>
+<td><p>Entropy estimate from covariance matrix C</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.entropy.wnn_entropy" title="bumps.dream.entropy.wnn_entropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wnn_entropy</span></code></a></p></td>
+<td><p>Weighted Kozachenko-Leonenko nearest-neighbour entropy calculation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.entropy.MVNEntropy" title="bumps.dream.entropy.MVNEntropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MVNEntropy</span></code></a></p></td>
+<td><p>Multivariate normal entropy approximation.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.entropy">Estimate entropy after a fit.</p>
+<p>The <a class="reference internal" href="#bumps.dream.entropy.gmm_entropy" title="bumps.dream.entropy.gmm_entropy"><code class="xref py py-func docutils literal notranslate"><span class="pre">gmm_entropy()</span></code></a> function computes the entropy from a Gaussian mixture
+model. This provides a reasonable estimate even for non-Gaussian distributions.
+This is the recommended method for estimating the entropy of a sample.</p>
+<p>The <a class="reference internal" href="#bumps.dream.entropy.cov_entropy" title="bumps.dream.entropy.cov_entropy"><code class="xref py py-func docutils literal notranslate"><span class="pre">cov_entropy()</span></code></a> method computes the entropy associated with the
+covariance matrix.  This covariance matrix can be estimated during the
+fitting procedure (BFGS updates an estimate of the Hessian matrix for example),
+or computed by estimating derivatives when the fit is complete.</p>
+<p>The <a class="reference internal" href="#bumps.dream.entropy.MVNEntropy" title="bumps.dream.entropy.MVNEntropy"><code class="xref py py-class docutils literal notranslate"><span class="pre">MVNEntropy</span></code></a> class estimates the covariance from an MCMC sample and
+uses this covariance to estimate the entropy.  This gives a better
+estimate of the entropy than the equivalent direct calculation, which requires
+many more samples for a good kernel density estimate.  The <em>reject_normal</em>
+attribute is <em>True</em> if the MCMC sample is significantly different from normal.
+Unfortunately, this almost always the case for any reasonable sample size that
+isn’t strictly gaussian.</p>
+<p>The <a class="reference internal" href="#bumps.dream.entropy.entropy" title="bumps.dream.entropy.entropy"><code class="xref py py-func docutils literal notranslate"><span class="pre">entropy()</span></code></a> function computes the entropy directly from a set
+of MCMC samples, normalized by a scale factor computed from the kernel density
+estimate at a subset of the points.<a class="footnote-reference brackets" href="#kramer" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
+<p>There are many other entropy calculations implemented within this file, as
+well as a number of sampling distributions for which the true entropy is known.
+Furthermore, entropy was computed against dream output and checked for
+consistency. None of the methods is truly excellent in terms of minimum
+sample size, maximum dimensions and speed, but many of them are pretty
+good.</p>
+<p>The following is an informal summary of the results from different algorithms
+applied to DREAM output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.entropy</span> <span class="kn">import</span> <span class="n">Timer</span> <span class="k">as</span> <span class="n">T</span>
+
+<span class="c1"># Try MVN ... only good for normal distributions, but very fast</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">M</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">MVNEntropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from MVN: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">M</span><span class="p">))</span>
+
+<span class="c1"># Try wnn ... no good.</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_wnn</span><span class="p">,</span> <span class="n">Serr_wnn</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">wnn_entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">20000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from wnn: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_wnn</span><span class="p">))</span>
+
+<span class="c1"># Try wnn with bootstrap ... still no good.</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_wnn</span><span class="p">,</span> <span class="n">Serr_wnn</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">wnn_bootstrap</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from wnn bootstrap: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_wnn</span><span class="p">))</span>
+
+<span class="c1"># Try wnn entropy with thinning ... still no good.</span>
+<span class="c1">#drawn = self.draw(portion=portion, vars=vars,</span>
+<span class="c1">#                  selection=selection, thin=10)</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_wnn</span><span class="p">,</span> <span class="n">Serr_wnn</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">wnn_entropy</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from wnn: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_wnn</span><span class="p">))</span>
+
+<span class="c1"># Try wnn with gmm ... still no good</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_wnn</span><span class="p">,</span> <span class="n">Serr_wnn</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">wnn_entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">gmm</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from wnn with gmm: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_wnn</span><span class="p">))</span>
+
+<span class="c1"># Try pure gmm ... pretty good</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_gmm</span><span class="p">,</span> <span class="n">Serr_gmm</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">gmm_entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from gmm: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_gmm</span><span class="p">))</span>
+
+<span class="c1"># Try kde from statsmodels ... pretty good</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_kde_stats</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">kde_entropy_statsmodels</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from kde statsmodels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_kde_stats</span><span class="p">))</span>
+
+<span class="c1"># Try kde from sklearn ... pretty good</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_kde</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">kde_entropy_sklearn</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from kde sklearn: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_kde</span><span class="p">))</span>
+
+<span class="c1"># Try kde from sklearn at points from gmm ... pretty good</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S_kde_gmm</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">kde_entropy_sklearn_gmm</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from kde+gmm: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S_kde_gmm</span><span class="p">))</span>
+
+<span class="c1"># Try Kramer ... pretty good, but doesn&#39;t support marginal entropy</span>
+<span class="k">with</span> <span class="n">T</span><span class="p">():</span> <span class="n">S</span><span class="p">,</span> <span class="n">Serr</span> <span class="o">=</span> <span class="n">entropy</span><span class="o">.</span><span class="n">entropy</span><span class="p">(</span><span class="n">drawn</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">drawn</span><span class="o">.</span><span class="n">logp</span><span class="p">,</span> <span class="n">N_entropy</span><span class="o">=</span><span class="n">n_est</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entropy from Kramer: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+</pre></div>
+</div>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="kramer" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Kramer, A., Hasenauer, J., Allgower, F., Radde, N., 2010.
+Computation of the posterior entropy in a Bayesian framework
+for parameter estimation in biological networks,
+in: 2010 IEEE International Conference on Control Applications (CCA).
+Presented at the 2010 IEEE International Conference on
+Control Applications (CCA), pp. 493-498.
+doi:10.1109/CCA.2010.5611198</p>
+</aside>
+<aside class="footnote brackets" id="turjillo-ortiz" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<dl class="simple">
+<dt>Trujillo-Ortiz, A. and R. Hernandez-Walls. (2003). Mskekur: Mardia’s</dt><dd><p>multivariate skewness and kurtosis coefficients and its hypotheses
+testing. A MATLAB file. [WWW document].
+<a class="reference external" href="http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=3519">http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=3519</a></p>
+</dd>
+</dl>
+</aside>
+<aside class="footnote brackets" id="mardia1970" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
+<dl class="simple">
+<dt>Mardia, K. V. (1970), Measures of multivariate skewnees and kurtosis with</dt><dd><p>applications. Biometrika, 57(3):519-530.</p>
+</dd>
+</dl>
+</aside>
+<aside class="footnote brackets" id="mardia1974" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
+<dl class="simple">
+<dt>Mardia, K. V. (1974), Applications of some measures of multivariate skewness</dt><dd><p>and kurtosis for testing normality and robustness studies. Sankhy A,
+36:115-128</p>
+</dd>
+</dl>
+</aside>
+<aside class="footnote brackets" id="stevens" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></span>
+<dl class="simple">
+<dt>Stevens, J. (1992), Applied Multivariate Statistics for Social Sciences.</dt><dd><p>2nd. ed. New-Jersey:Lawrance Erlbaum Associates Publishers. pp. 247-248.</p>
+</dd>
+</dl>
+</aside>
+</aside>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.entropy.MVNEntropy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.entropy.</span></span><span class="sig-name descname"><span class="pre">MVNEntropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/entropy.html#MVNEntropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.entropy.MVNEntropy" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Multivariate normal entropy approximation.</p>
+<p>Uses Mardia’s multivariate skewness and kurtosis test to estimate normality.</p>
+<p><em>x</em> is a set of points</p>
+<p><em>alpha</em> is the cutoff for the normality test.</p>
+<p><em>max_points</em> is the maximum number of points to use when checking
+normality.  Since the normality test is <span class="math notranslate nohighlight">\(O(n^2)\)</span> in memory and time,
+where <span class="math notranslate nohighlight">\(n\)</span> is the number of points, <em>max_points</em> defaults to 1000. The
+entropy is computed from the full dataset.</p>
+<p>The returned object has the following attributes:</p>
+<blockquote>
+<div><p><em>p_kurtosis</em> is the p-value for the kurtosis normality test</p>
+<p><em>p_skewness</em> is the p-value for the skewness normality test</p>
+<p><em>reject_normal</em> is True if either the the kurtosis or the skew test
+fails</p>
+<p><em>entropy</em> is the estimated entropy of the best normal approximation
+to the distribution</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.entropy.cov_entropy">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.entropy.</span></span><span class="sig-name descname"><span class="pre">cov_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/entropy.html#cov_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.entropy.cov_entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Entropy estimate from covariance matrix C</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.entropy.entropy">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.entropy.</span></span><span class="sig-name descname"><span class="pre">entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/entropy.html#entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.entropy.entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Return entropy estimate and uncertainty from a random sample.</p>
+<p><em>points</em> is a set of draws from an underlying distribution, as returned
+by a Markov chain Monte Carlo process for example.</p>
+<p><em>logp</em> is the log-likelihood for each draw.</p>
+<p><em>N_norm</em> is the number of points <span class="math notranslate nohighlight">\(k\)</span> to use to estimate the posterior
+density normalization factor <span class="math notranslate nohighlight">\(P(D) = \hat N\)</span>, converting
+from <span class="math notranslate nohighlight">\(\log( P(D|M) P(M) )\)</span> to <span class="math notranslate nohighlight">\(\log( P(D|M)P(M)/P(D) )\)</span>. The relative
+uncertainty <span class="math notranslate nohighlight">\(\Delta\hat S/\hat S\)</span> scales with <span class="math notranslate nohighlight">\(\sqrt{k}\)</span>, with the
+default <em>N_norm=2500</em> corresponding to 2% relative uncertainty.
+Computation cost is <span class="math notranslate nohighlight">\(O(nk)\)</span> where <span class="math notranslate nohighlight">\(n\)</span> is number of points in the draw.</p>
+<p><em>N_entropy</em> is the number of points used to estimate the entropy
+<span class="math notranslate nohighlight">\(\hat S = - \int P(M|D) \log P(M|D)\)</span> from the normalized log likelihood
+values.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.entropy.gmm_entropy">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.entropy.</span></span><span class="sig-name descname"><span class="pre">gmm_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_est</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/entropy.html#gmm_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.entropy.gmm_entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Use sklearn.mixture.BayesianGaussianMixture to estimate entropy.</p>
+<p><em>points</em> are the data points in the sample.</p>
+<p><em>n_est</em> are the number of points to use in the estimation; default is
+10,000 points, or 0 for all the points.</p>
+<p><em>n_components</em> are the number of Gaussians in the mixture. Default is
+<span class="math notranslate nohighlight">\(5 \sqrt{d}\)</span> where <span class="math notranslate nohighlight">\(d\)</span> is the number of dimensions.</p>
+<p>Returns estimated entropy and uncertainty in the estimate.</p>
+<p>This method uses BayesianGaussianMixture from scikit-learn to build a
+model of the point distribution, then uses Monte Carlo sampling to
+determine the entropy of that distribution. The entropy uncertainty is
+computed from the variance in the MC sample scaled by the number of
+samples. This does not incorporate any uncertainty in the sampling that
+generated the point distribution or the uncertainty in the GMM used to
+model that distribution.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.entropy.wnn_entropy">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.entropy.</span></span><span class="sig-name descname"><span class="pre">wnn_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_est</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gmm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/entropy.html#wnn_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.entropy.wnn_entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Weighted Kozachenko-Leonenko nearest-neighbour entropy calculation.</p>
+<p><em>k</em> is the number of neighbours to consider, with default <span class="math notranslate nohighlight">\(k=n^{1/3}\)</span></p>
+<p><em>n_est</em> is the number of points to use for estimating the entropy,
+with default <span class="math notranslate nohighlight">\(n_\rm{est} = n\)</span></p>
+<p><em>weights</em> is True for default weights, False for unweighted (using the
+distance to the kth neighbour only), or a vector of weights of length <em>k</em>.</p>
+<p><em>gmm</em> is the number of gaussians to use to model the distribution using
+a gaussian mixture model.  Default is 0, and the points represent an
+empirical distribution.</p>
+<p>Returns entropy H in bits and its uncertainty.</p>
+<p>Berrett, T. B., Samworth, R.J., Yuan, M., 2016. Efficient multivariate
+entropy estimation via k-nearest neighbour distances.
+DOI:10.1214/18-AOS1688 https://arxiv.org/abs/1606.00304</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">entropy - Entropy calculation</a><ul>
+<li><a class="reference internal" href="#bumps.dream.entropy.MVNEntropy"><code class="docutils literal notranslate"><span class="pre">MVNEntropy</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.entropy.cov_entropy"><code class="docutils literal notranslate"><span class="pre">cov_entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.entropy.entropy"><code class="docutils literal notranslate"><span class="pre">entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.entropy.gmm_entropy"><code class="docutils literal notranslate"><span class="pre">gmm_entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.entropy.wnn_entropy"><code class="docutils literal notranslate"><span class="pre">wnn_entropy()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="diffev.html"
+                          title="previous chapter">diffev - Differential evolution MCMC stepper</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="exppow.html"
+                          title="next chapter">exppow - Exponential power density parameter calculator</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/entropy.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="exppow.html" title="exppow - Exponential power density parameter calculator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="diffev.html" title="diffev - Differential evolution MCMC stepper"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">entropy - Entropy calculation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

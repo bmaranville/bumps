@@ -1,0 +1,7 @@
+bumps.dream.convergence module
+==============================
+
+.. automodule:: bumps.dream.convergence
+   :members:
+   :undoc-members:
+   :show-inheritance:

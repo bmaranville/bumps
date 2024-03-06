@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.mystic.stop &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.stop</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.mystic.stop</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is in the public domain</span>
+<span class="c1"># Author: Paul Kienzle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Termination conditions for solvers.</span>
+
+<span class="sd">In order to decide when to stop fitting, the user needs to specify</span>
+<span class="sd">stop conditions based on the optimizer history.  The test can use</span>
+<span class="sd">the most recent value, the last n values or the entire computation.</span>
+<span class="sd">See :mod:`monitor` for details.</span>
+
+<span class="sd">Conditions can be composed, creating complicated criterion for</span>
+<span class="sd">termination.  We may want to stop when we have found a minimum</span>
+<span class="sd">and know its location.  We may be content just knowing the</span>
+<span class="sd">minimum, and not worrying about the uncertainty in its location.</span>
+<span class="sd">For some searches we want to be sure we that we are examining a</span>
+<span class="sd">broad range of search space.  Here are some examples::</span>
+
+<span class="sd">    import mystic.termination as stop</span>
+
+<span class="sd">    # Stop when we know the location of the minimum; fail if run too long</span>
+<span class="sd">    success = stop.Dx(0.001) &amp; stop.Df(5)</span>
+<span class="sd">    failure = stop.Steps(100)</span>
+
+
+<span class="sd">    # Stop when we know the value of the minimum; fail if run too long</span>
+<span class="sd">    success = stop.Dx(0.001) | stop.Df(5)</span>
+<span class="sd">    failure = stop.Steps(100)</span>
+
+<span class="sd">    # GA may want to run for a while, but only with a diverse population</span>
+<span class="sd">    success = stop.Df(0.001,n=5) &amp; stop.Steps(15)</span>
+<span class="sd">    failure = stop.Steps(100) | stop.Dx(0.001)</span>
+
+<span class="sd">When testing a conditional expression, a list of all conditions which</span>
+<span class="sd">match is returned, or [] if no conditions match.</span>
+
+
+<span class="sd">Predefined Conditions</span>
+<span class="sd">---------------------</span>
+
+<span class="sd">Dx: difference in x for step size test</span>
+
+<span class="sd">    || (x_k - x_{k-1})/scale || &lt; tolerance</span>
+
+<span class="sd">Df: difference in f for improvement rate test</span>
+
+<span class="sd">    | (f_k - f_{k-1})/scale | &lt; tolerance</span>
+
+<span class="sd">Rx: range in x for population distribution test</span>
+
+<span class="sd">    max || (y - &lt;y&gt;)/ scale || &lt; tolerance</span>
+<span class="sd">    for y in population</span>
+
+<span class="sd">Rf: range in f for value distribution test</span>
+
+<span class="sd">    (max f(y) - min f(y))/scale &lt; tolerance</span>
+<span class="sd">    for y in population</span>
+
+<span class="sd">Cx: constant x for target point</span>
+
+<span class="sd">    ||(x_k - Z)/scale|| &lt; tolerance</span>
+
+<span class="sd">Cf: constant f for target value</span>
+
+<span class="sd">    |f_k - A|/scale &lt; tolerance</span>
+
+<span class="sd">Steps: specific number of iterations</span>
+
+<span class="sd">    k &gt;= steps</span>
+
+<span class="sd">Calls: specific number of function calls</span>
+
+<span class="sd">    n &gt;= calls</span>
+
+<span class="sd">Time: wall clock time</span>
+
+<span class="sd">    t_k &gt;= time</span>
+
+<span class="sd">CPU: CPU time</span>
+
+<span class="sd">    t(CPU)_k &gt;= time</span>
+
+<span class="sd">Worse: fit is diverging</span>
+
+<span class="sd">    (f_k - f_{k-1})/scale &lt; -tolerance</span>
+
+<span class="sd">Grad: fit is flat</span>
+
+<span class="sd">    || del f_k || &lt; tolerance</span>
+
+<span class="sd">Feasible: value is in the feasible region ** Not implemented **</span>
+
+<span class="sd">    f_k satisfies soft constraints</span>
+
+<span class="sd">Invalid: values are not well defined ** Not implemented **</span>
+
+<span class="sd">    isinf(y) or isinf(f(y)) or isnan(y) or isnan(f(y))</span>
+<span class="sd">    for y in population</span>
+
+
+<span class="sd">Distances and scaling</span>
+<span class="sd">=====================</span>
+
+<span class="sd">The following distance functions are predefined:</span>
+
+<span class="sd">    norm_p(p): (sum |x_i|^p )^(1/p)  (generalized p-norm)</span>
+<span class="sd">    norm_1:    sum |x_i|             (Manahattan distance)</span>
+<span class="sd">    norm_2:    sqrt sum |x_i|^2      (Euclidian distance)</span>
+<span class="sd">    norm_inf:  max |x_i|             (Chebychev distance)</span>
+<span class="sd">    norm_min:  min |x_i|             (not a true norm)</span>
+
+
+<span class="sd">The predefined scale factors in essence test for</span>
+<span class="sd">percentage changes rather than absolute changes.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">isinf</span>
+
+<span class="kn">from</span> <span class="nn">.condition</span> <span class="kn">import</span> <span class="n">Condition</span>
+
+<span class="c1"># ==== Norms ====</span>
+<div class="viewcode-block" id="norm_1">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.norm_1">[docs]</a>
+<span class="k">def</span> <span class="nf">norm_1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;1-norm: sum(|x_i|)&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="norm_2">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.norm_2">[docs]</a>
+<span class="k">def</span> <span class="nf">norm_2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;2-norm: sqrt(sum(|x_i|^2))&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="norm_inf">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.norm_inf">[docs]</a>
+<span class="k">def</span> <span class="nf">norm_inf</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;inf-norm: max(|x_i|)&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="norm_min">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.norm_min">[docs]</a>
+<span class="k">def</span> <span class="nf">norm_min</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;min-norm: min(|x_i|); this is not a true norm&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="norm_p">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.norm_p">[docs]</a>
+<span class="k">def</span> <span class="nf">norm_p</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;p-norm: sum(|x_i|^p)^(1/p)&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">isinf</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">norm_min</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">norm_inf</span>
+    <span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">norm_1</span>
+    <span class="k">elif</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">norm_2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">p</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">p</span><span class="p">)</span></div>
+
+
+<span class="c1"># ==== Conditions ====</span>
+<div class="viewcode-block" id="Dx">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Dx">[docs]</a>
+<span class="k">class</span> <span class="nc">Dx</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Improvement in x.</span>
+
+<span class="sd">    This condition measures the improvement over the last n iterations</span>
+<span class="sd">    in terms of how much the value of x has changed::</span>
+
+<span class="sd">        norm((x[k]- x[k-n])/scale) &lt; tol</span>
+
+<span class="sd">    where x[k] is the best parameter set for iteration step k.</span>
+
+<span class="sd">    The scale factor to use if scaled is upper bound - lower bound</span>
+<span class="sd">    if the parameter is bounded, or 1/2 (|x[k]| + |x[k-n]|)</span>
+<span class="sd">    if the parameter is unbounded, with protection against a scale</span>
+<span class="sd">    factor of zero.</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *norm* ( f(vector): float  =  norm_2)</span>
+<span class="sd">            norm to use to measure the size of x.  Predefined norms</span>
+<span class="sd">            include norm_1, norm_2, norm_info, norm_min and norm_p(p)</span>
+<span class="sd">        *n* (int = 1)</span>
+<span class="sd">            number of steps back in history to compare</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm_2</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">x1</span><span class="p">,</span><span class="n">x2</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="n">history</span><span class="o">.</span><span class="n">lower_bound</span>
+        <span class="n">scale</span><span class="p">[</span><span class="n">isinf</span><span class="p">(</span><span class="n">scale</span><span class="p">)]</span> <span class="o">=</span> <span class="p">((</span><span class="nb">abs</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">x2</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span><span class="p">)[</span><span class="n">isinf</span><span class="p">(</span><span class="n">scale</span><span class="p">)]</span>
+        <span class="n">scale</span><span class="p">[</span><span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">((</span><span class="n">x2</span><span class="o">-</span><span class="n">x1</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">x1</span><span class="p">,</span><span class="n">x2</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x2</span><span class="o">-</span><span class="n">x1</span><span class="p">)</span>
+<div class="viewcode-block" id="Dx.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Dx.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous n points from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">point</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_subcall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Cannot succeed until at least n generations</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subcall</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+<div class="viewcode-block" id="Dx.completeness">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Dx.completeness">[docs]</a>
+    <span class="k">def</span> <span class="nf">completeness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subcall</span><span class="p">(</span><span class="n">history</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;||(x[k] - x[k-</span><span class="si">%d</span><span class="s2">])/range|| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;||x[k] - x[k-</span><span class="si">%d</span><span class="s2">]|| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Df">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Df">[docs]</a>
+<span class="k">class</span> <span class="nc">Df</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Improvement in F(x)</span>
+
+<span class="sd">    This condition measures the improvement over the last n iterations</span>
+<span class="sd">    in terms of how much the value of the function has changed::</span>
+
+<span class="sd">        | (F[k] - F[k-1])/scale | &lt; tol</span>
+
+<span class="sd">    where F[k] is the value for the best parameter set for iteration step k.</span>
+
+<span class="sd">    The scale factor to use is 1/2 (|F(k)| + |F(k-n)|) with protection</span>
+<span class="sd">    against zero.</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *n* (int = 1)</span>
+<span class="sd">            number of steps back in history to compare</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">f1</span><span class="p">,</span><span class="n">f2</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">f2</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1">#print &quot;Df&quot;,f1,f2,abs(float(f2-f1)/scale),self.tol</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">f2</span><span class="o">-</span><span class="n">f1</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">f1</span><span class="p">,</span><span class="n">f2</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">f2</span><span class="o">-</span><span class="n">f1</span><span class="p">)</span>
+<div class="viewcode-block" id="Df.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Df.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous n points from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Cannot succeed until at least n generations</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;|F[k]-F[k-</span><span class="si">%d</span><span class="s2">]| / (|F[k]|+|F[k-</span><span class="si">%d</span><span class="s2">]|)/2 &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;|F[k]-F[k-</span><span class="si">%d</span><span class="s2">]| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Worse">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Worse">[docs]</a>
+<span class="k">class</span> <span class="nc">Worse</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Worsening of F(x)</span>
+
+<span class="sd">    This condition measures whether the fit is diverging.  You may want</span>
+<span class="sd">    to use this for non-greedy optimizers which can get worse over time::</span>
+
+<span class="sd">        (F[k] - F[k-1])/scale &lt; -tol</span>
+
+<span class="sd">    where F[k] is the value for the best parameter set for iteration step k.</span>
+
+<span class="sd">    The scale factor to use is 1/2 (|F(k)| + |F(k-n)|) with protection</span>
+<span class="sd">    against zero.</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *tol* (float = 0)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *n* (int = 1)</span>
+<span class="sd">            number of steps back in history to compare</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">f1</span><span class="p">,</span><span class="n">f2</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="n">f2</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">f2</span><span class="o">-</span><span class="n">f1</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">f1</span><span class="p">,</span><span class="n">f2</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">f2</span><span class="o">-</span><span class="n">f1</span>
+<div class="viewcode-block" id="Worse.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Worse.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous n points from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Cannot succeed until at least n generations</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;F[k]-F[k-</span><span class="si">%d</span><span class="s2">] / (|F[k]|+|F[k-</span><span class="si">%d</span><span class="s2">]|)/2 &lt; -</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;F[k]-F[k-</span><span class="si">%d</span><span class="s2">] &lt; -</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Grad">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Grad">[docs]</a>
+<span class="k">class</span> <span class="nc">Grad</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flat function value</span>
+
+<span class="sd">    This condition measures whether the fit surface is flat near the best</span>
+<span class="sd">    value.  This only works for fits which compute the gradient.</span>
+
+<span class="sd">        || del F[k]/scale || &lt; tol</span>
+
+<span class="sd">    where F[k] is the value for the best parameter set for iteration step k.</span>
+
+<span class="sd">    The scale factor to use is |F(k)| with protection against zero.</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *norm* ( f(vector): float  =  norm_2)</span>
+<span class="sd">            norm to use to measure the size of x.  Predefined norms</span>
+<span class="sd">            include norm_1, norm_2, norm_info, norm_min and norm_p(p)</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm_2</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">gradient</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">df</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">gradient</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<div class="viewcode-block" id="Grad.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Grad.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous n points from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">gradient</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">gradient</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Cannot succeed until at least n generations</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;|| del F[k]/F[k] || &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;|| del F[k] || &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="r_best">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.r_best">[docs]</a>
+<span class="k">class</span> <span class="nc">r_best</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure of population radius based on distance from the best.</span>
+
+<span class="sd">        max ||(y - x[k])/scale|| for y in population</span>
+
+<span class="sd">    scipy.optimize.fmin uses r_best(norm_inf) as its measure of radius.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norm</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">best</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">best</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
+
+<div class="viewcode-block" id="r_centroid">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.r_centroid">[docs]</a>
+<span class="k">class</span> <span class="nc">r_centroid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure of population radius based on distance from the centroid.</span>
+
+<span class="sd">        max ||(y - &lt;y&gt;)/scale|| for y in population</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norm</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">best</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+        <span class="n">c_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">c_i</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
+
+<div class="viewcode-block" id="r_boundingbox">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.r_boundingbox">[docs]</a>
+<span class="k">def</span> <span class="nf">r_boundingbox</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">best</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure of population radius based on the volume of the bounding box.</span>
+
+<span class="sd">        (product (max(y_i) - min(y_i))/scale)**1/k  for i in dimensions-k</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+    <span class="n">lo</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">hi</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">((</span><span class="n">hi</span><span class="o">-</span><span class="n">lo</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">hi</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">r</span></div>
+
+
+<div class="viewcode-block" id="r_hull">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.r_hull">[docs]</a>
+<span class="k">class</span> <span class="nc">r_hull</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure of population radius based on maximum diameter in convex hull.</span>
+
+<span class="sd">        1/2 max || (y1 - y2)/scale || for y1,y2 in population</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norm</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">best</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">y1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">population</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">y2</span> <span class="ow">in</span> <span class="n">population</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">y1</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span>
+                <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">/</span><span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="Rx">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Rx">[docs]</a>
+<span class="k">class</span> <span class="nc">Rx</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Domain size</span>
+
+<span class="sd">    This condition measures the size of the population domain.  Some</span>
+<span class="sd">    algorithms are done when the domain size shrinks while others have</span>
+<span class="sd">    failed if the domain size shrinks.</span>
+
+<span class="sd">    There are a number of ways of measuring the domain size::</span>
+
+<span class="sd">        r_best(norm) : radius from best point</span>
+
+<span class="sd">            max ||(y - x[k])/scale|| for y in population</span>
+
+<span class="sd">        r_centroid(norm) : radius from centroid</span>
+
+<span class="sd">            max ||(y - &lt;y&gt;)/scale|| for y in population</span>
+
+<span class="sd">        r_boundingbox : radius from bounding box</span>
+
+<span class="sd">            (product (max(y_i) - min(y_i))/scale)**1/k  for i in dimensions-k</span>
+
+<span class="sd">        r_hull(norm) : radius from convex hull</span>
+
+<span class="sd">            1/2 max || (y1 - y2)/scale || for y1,y2 in population</span>
+
+<span class="sd">    scale is determined from the fit bounds (max-min) or the</span>
+<span class="sd">    values sum(|y_i|)/n, with protection against zero values.</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *radius* (function(history,best,scale): float = r_centroid(norm_2))</span>
+<span class="sd">            measure of domain size</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r_centroid</span><span class="p">(</span><span class="n">norm_2</span><span class="p">),</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">population_points</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="n">history</span><span class="o">.</span><span class="n">lower_bound</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">isinf</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+            <span class="nb">range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">P</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">scale</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">scale</span><span class="p">[</span><span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scale</span><span class="p">)</span>
+        <span class="c1">#print &quot;Rx=%g, scale=%g&quot;%(r,scale)</span>
+        <span class="k">return</span> <span class="n">r</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">population_points</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="c1">#print &quot;Rx=%g&quot;%r</span>
+        <span class="k">return</span> <span class="n">r</span>
+<div class="viewcode-block" id="Rx.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Rx.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous n points from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">population_points</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">point</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">population_points</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;radius(population/scale) &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;radius(population) &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Rf">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Rf">[docs]</a>
+<span class="k">class</span> <span class="nc">Rf</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Range size</span>
+
+<span class="sd">    This condition measures the size of the population range::</span>
+
+<span class="sd">        (max f(y) - min f(y))/scale &lt; tol</span>
+
+<span class="sd">    for y in the current population</span>
+<span class="sd">    scale is mean(|f(y)|)</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">Pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">population_values</span><span class="p">)</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">Pf</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">Pf</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">Pf</span><span class="p">))</span><span class="o">/</span><span class="n">scale</span>
+        <span class="c1">#print &quot;Rf = %g, scale=%g&quot;%(r,scale)</span>
+        <span class="k">return</span> <span class="n">r</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">population_values</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="c1">#print &quot;Rf = %g&quot;%r</span>
+        <span class="k">return</span> <span class="n">r</span>
+<div class="viewcode-block" id="Rf.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Rf.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous n points from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">population_values</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">population_values</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;(max(F(p)) - min(F(p))/mean(|F(p)|) &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;max(F(p)) - min(F(p)) &lt; </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Cx">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Cx">[docs]</a>
+<span class="k">class</span> <span class="nc">Cx</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Target point</span>
+
+<span class="sd">    This condition measures the distance from the best point</span>
+<span class="sd">    to some target point::</span>
+
+<span class="sd">       ||(x_k - Z)/scale|| &lt; tol</span>
+
+<span class="sd">    scale is fit range if given,  |Z_i|, or 1 if Z_i=0</span>
+
+<span class="sd">    Paramaters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *point* (array = 0)</span>
+<span class="sd">            target point</span>
+<span class="sd">        *norm* ( f(vector): float  =  norm_2)</span>
+<span class="sd">            norm to use to measure the size of x.  Predefined norms</span>
+<span class="sd">            include norm_1, norm_2, norm_info, norm_min and norm_p(p)</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm_2</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point</span> <span class="o">=</span> <span class="n">point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm_2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">-</span> <span class="n">history</span><span class="o">.</span><span class="n">lower_bound</span>
+        <span class="n">scale</span><span class="p">[</span><span class="n">isinf</span><span class="p">(</span><span class="n">scale</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">)[</span><span class="n">isinf</span><span class="p">(</span><span class="n">scale</span><span class="p">)]</span>
+        <span class="n">scale</span><span class="p">[</span><span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">)</span><span class="o">/</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
+<div class="viewcode-block" id="Cx.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Cx.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous point from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">point</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;||(x[k] - Z)/range|| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;||x[k] - Z|| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Cf">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Cf">[docs]</a>
+<span class="k">class</span> <span class="nc">Cf</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Target value</span>
+
+<span class="sd">    This condition measures the distance from the best value</span>
+<span class="sd">    to some target value::</span>
+
+<span class="sd">       |(f_k - A)/scale| &lt; tol</span>
+
+<span class="sd">    scale is |A| or 1 if A=0</span>
+
+<span class="sd">    Paramaters::</span>
+
+<span class="sd">        *tol* (float = 0.001)</span>
+<span class="sd">            tolerance to test against</span>
+<span class="sd">        *value* (float = 0)</span>
+<span class="sd">            target value</span>
+<span class="sd">        *scaled* (boolean = True)</span>
+<span class="sd">            whether to use raw or scaled differences in the norm</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scaled</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">scaled</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span> <span class="o">=</span> <span class="n">scaled</span>
+    <span class="k">def</span> <span class="nf">_scaled_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_raw_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">value</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<div class="viewcode-block" id="Cf.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Cf.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Needs the previous point from history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if the tolerance is met.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_condition</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;|(F[k] - A)/A| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;|F[k] - A| &lt; </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="Steps">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Steps">[docs]</a>
+<span class="k">class</span> <span class="nc">Steps</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Specific number of iterations</span>
+
+<span class="sd">    This condition test the number of iterations of a fit::</span>
+
+<span class="sd">        k &gt;= steps</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *steps* int (1000)</span>
+<span class="sd">            total number of steps</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="n">steps</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">step</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">history</span><span class="o">.</span><span class="n">step</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span>
+<div class="viewcode-block" id="Steps.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Steps.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;steps &gt;= </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span></div>
+
+
+<div class="viewcode-block" id="Calls">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Calls">[docs]</a>
+<span class="k">class</span> <span class="nc">Calls</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Specific number of function calls</span>
+
+<span class="sd">    This condition tests the number of function evaluations::</span>
+
+<span class="sd">        n_k &gt;= calls</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *calls* int (inf)</span>
+<span class="sd">            total number of function calls</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calls</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calls</span> <span class="o">=</span> <span class="n">calls</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">calls</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">history</span><span class="o">.</span><span class="n">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calls</span>
+<div class="viewcode-block" id="Calls.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Calls.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">calls</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;calls &gt;= </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">calls</span></div>
+
+
+<div class="viewcode-block" id="Time">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Time">[docs]</a>
+<span class="k">class</span> <span class="nc">Time</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wall clock time.</span>
+
+<span class="sd">    This condition tests wall clock time::</span>
+
+<span class="sd">        t_k &gt;= time</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *time* float (inf)</span>
+<span class="sd">            Time since start of job in seconds</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">inf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">history</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span>
+<div class="viewcode-block" id="Time.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.Time.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;time &gt;= </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span></div>
+
+
+
+<div class="viewcode-block" id="CPU">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.CPU">[docs]</a>
+<span class="k">class</span> <span class="nc">CPU</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    CPU time.</span>
+
+<span class="sd">    This condition tests CPU time::</span>
+
+<span class="sd">        t(CPU)_k &gt;= time</span>
+
+<span class="sd">    Parameters::</span>
+
+<span class="sd">        *time* float (inf)</span>
+<span class="sd">            time since start of job in seconds</span>
+
+<span class="sd">    Returns::</span>
+
+<span class="sd">        *condition* (f(history) : boolean)</span>
+<span class="sd">            a callable returning true if the condition is met</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">cpu_time</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">history</span><span class="o">.</span><span class="n">cpu_time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span>
+<div class="viewcode-block" id="CPU.config_history">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.CPU.config_history">[docs]</a>
+    <span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">cpu_time</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;cpu_time &gt;= </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span></div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">class Feasible: value can be used ** Not implemented **</span>
+
+<span class="sd">    f_k satisfies soft constraints</span>
+
+<span class="sd">class Invalid: values are well defined</span>
+
+<span class="sd">    isinf(y) or isinf(f(y)) or isnan(y) or isnan(f(y))</span>
+
+<span class="sd">    for y in population</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="parse_condition">
+<a class="viewcode-back" href="../../../bumps.mystic.stop.html#bumps.mystic.stop.parse_condition">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_condition</span><span class="p">(</span><span class="n">cond</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">math</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">stop</span> 
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">stop</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span></div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.stop</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

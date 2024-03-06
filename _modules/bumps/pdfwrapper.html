@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.pdfwrapper &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pdfwrapper</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.pdfwrapper</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Build a bumps model from a function.</span>
+
+<span class="sd">The :class:`PDF` class uses introspection to convert a negative log</span>
+<span class="sd">likelihood function nllf(m1,m2,...) into a :class:`bumps.fitproblem.Fitness`</span>
+<span class="sd">class that has fittable parameters m1, m2, ....</span>
+
+<span class="sd">There is no attempt to manage data or uncertainties, except that an</span>
+<span class="sd">additional plot function can be provided to display the current value</span>
+<span class="sd">of the function in whatever way is meaningful.</span>
+
+<span class="sd">The note regarding user defined functions in :mod:`bumps.curve` apply</span>
+<span class="sd">here as well.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.parameter</span> <span class="kn">import</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">.fitproblem</span> <span class="kn">import</span> <span class="n">Fitness</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">init_bounds</span>
+
+
+<div class="viewcode-block" id="PDF">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF">[docs]</a>
+<span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a model from a function.</span>
+
+<span class="sd">    This model can be fitted with any of the bumps optimizers.</span>
+
+<span class="sd">    *fn* is a function that returns the negative log likelihood of seeing</span>
+<span class="sd">    its input parameters.</span>
+
+<span class="sd">    The fittable parameters are derived from the parameter names in the</span>
+<span class="sd">    function definition, with *name* prepended to each parameter.</span>
+
+<span class="sd">    The optional *plot* function takes the same arguments as *fn*, with an</span>
+<span class="sd">    additional *view* argument which may be set from the bumps command</span>
+<span class="sd">    line.  If provide, it should provide a visual indication of the</span>
+<span class="sd">    function value and uncertainty on the current matplotlib.pyplot figure.</span>
+
+<span class="sd">    Additional keyword arguments are treated as the initial values for</span>
+<span class="sd">    the parameters, or initial ranges if par=(min,max).  Otherwise, the</span>
+<span class="sd">    default is taken from the function definition (if the function uses</span>
+<span class="sd">    par=value to define the parameter) or is set to zero if no default is</span>
+<span class="sd">    given in the function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">has_residuals</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Don&#39;t have true residuals</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dof</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="n">dof</span>
+        <span class="c1"># Make every name a parameter; initialize the parameters</span>
+        <span class="c1"># with the default value if function is defined with keyword</span>
+        <span class="c1"># initializers; override the initializers with any keyword</span>
+        <span class="c1"># arguments specified in the fit function constructor.</span>
+        <span class="n">labels</span><span class="p">,</span> <span class="n">vararg</span><span class="p">,</span> <span class="n">varkw</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vararg</span> <span class="ow">or</span> <span class="n">varkw</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Function cannot have *args or **kwargs in declaration&quot;</span><span class="p">)</span>
+        <span class="c1"># Parameters default to zero</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="c1"># If the function provides default values, use those</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">init</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):],</span> <span class="n">values</span><span class="p">))</span>
+        <span class="c1"># Regardless, use any values specified in the constructor, but first</span>
+        <span class="c1"># check that they exist as function parameters.</span>
+        <span class="n">invalid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">invalid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid initializers: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">invalid</span><span class="p">)))</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="c1"># Build parameters out of ranges and initial values</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">init</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="n">p</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">)</span>
+
+        <span class="c1"># Make parameters accessible as model attributes</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter cannot be named </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Remember the function, parameters, and number of parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span> <span class="o">=</span> <span class="n">plot</span>
+
+<div class="viewcode-block" id="PDF.parameters">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span></div>
+
+    <span class="n">parameters</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="PDF.nllf">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_function</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+    <span class="n">nllf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="fm">__call__</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="PDF.chisq">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.chisq">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dof</span></div>
+
+    <span class="c1">#chisq.__doc__ = Fitness.chisq.__doc__</span>
+
+<div class="viewcode-block" id="PDF.chisq_str">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.chisq_str">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">()</span></div>
+
+    <span class="c1">#chisq_str.__doc__ = Fitness.chisq_str.__doc__</span>
+
+    <span class="fm">__call__</span> <span class="o">=</span> <span class="n">chisq</span>
+
+<div class="viewcode-block" id="PDF.plot">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">:</span>
+            <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">(</span><span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+    <span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="PDF.numpoints">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.numpoints">[docs]</a>
+    <span class="k">def</span> <span class="nf">numpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+    <span class="n">numpoints</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">numpoints</span><span class="o">.</span><span class="vm">__doc__</span></div>
+
+
+
+<div class="viewcode-block" id="VectorPDF">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF">[docs]</a>
+<span class="k">class</span> <span class="nc">VectorPDF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a model from a function.</span>
+
+<span class="sd">    This model can be fitted with any of the bumps optimizers.</span>
+
+<span class="sd">    *fn* is a function that returns the negative log likelihood of seeing</span>
+<span class="sd">    its input parameters.</span>
+
+<span class="sd">    Vector *p* of length *n* defines the initial value. Unlike :class:`PDF`,</span>
+<span class="sd">    *VectorPDF* operates on a parameter vector *p* rather than individual</span>
+<span class="sd">    parameters *p1*, *p2*, etc.  Default parameter values *p* must be</span>
+<span class="sd">    provided in order to determine the number of parameters.</span>
+
+<span class="sd">    *labels* are the names of the individual parameters.  If not present,</span>
+<span class="sd">    the name for parameter *k* defaults to *pk*.  Each label is prefixed by</span>
+<span class="sd">    *name*.</span>
+
+<span class="sd">    The optional *plot* function takes the same arguments as *fn*, with an</span>
+<span class="sd">    additional *view* argument which may be set from the bumps command</span>
+<span class="sd">    line.  If provide, it should provide a visual indication of the</span>
+<span class="sd">    function value and uncertainty on the current matplotlib.pyplot figure.</span>
+
+<span class="sd">    Additional keyword arguments are treated as the initial values for</span>
+<span class="sd">    the parameters, or initial ranges if par=(min,max).  Otherwise, the</span>
+<span class="sd">    default is taken from the function definition (if the function uses</span>
+<span class="sd">    par=value to define the parameter) or is set to zero if no default is</span>
+<span class="sd">    given in the function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">has_residuals</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Don&#39;t have true residuals</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dof</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="n">dof</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="c1"># Build parameters out of ranges and initial values</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">init</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="n">k</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">)</span>
+
+        <span class="c1"># Make parameters accessible as model attributes</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter cannot be named </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Remember the function, parameters, and number of parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span> <span class="o">=</span> <span class="n">plot</span>
+
+<div class="viewcode-block" id="VectorPDF.parameters">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span></div>
+
+    <span class="n">parameters</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="VectorPDF.nllf">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_function</span><span class="p">(</span><span class="n">pvec</span><span class="p">)</span></div>
+
+    <span class="n">nllf</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="fm">__call__</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="VectorPDF.chisq">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.chisq">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dof</span></div>
+
+    <span class="c1">#chisq.__doc__ = Fitness.chisq.__doc__</span>
+
+<div class="viewcode-block" id="VectorPDF.chisq_str">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.chisq_str">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">()</span></div>
+
+    <span class="c1">#chisq_str.__doc__ = Fitness.chisq_str.__doc__</span>
+
+    <span class="fm">__call__</span> <span class="o">=</span> <span class="n">chisq</span>
+
+<div class="viewcode-block" id="VectorPDF.plot">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span></div>
+
+    <span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="VectorPDF.numpoints">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.numpoints">[docs]</a>
+    <span class="k">def</span> <span class="nf">numpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+    <span class="n">numpoints</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">numpoints</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="VectorPDF.residuals">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">()])</span></div>
+
+    <span class="n">residuals</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">residuals</span><span class="o">.</span><span class="vm">__doc__</span></div>
+
+
+
+
+<div class="viewcode-block" id="DirectProblem">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem">[docs]</a>
+<span class="k">class</span> <span class="nc">DirectProblem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build model from negative log likelihood function *f(p)*.</span>
+
+<span class="sd">    Vector *p* of length *n* defines the initial value.</span>
+
+<span class="sd">    *bounds* defines limiting values for *p* as</span>
+<span class="sd">    *[(p1_low, p1_high), (p2_low, p2_high), ...]*.  If all parameters are</span>
+<span class="sd">    have the same bounds, use *bounds=np.tile([low,high],[n,1])*.</span>
+
+<span class="sd">    Unlike :class:`PDF`, no parameter objects are defined for the elements</span>
+<span class="sd">    of *p*, so all are fitting parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">has_residuals</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Don&#39;t have true residuals</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dof</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="n">dof</span>
+        <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">((</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="k">if</span> <span class="n">labels</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;p</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p0</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span> <span class="o">=</span> <span class="n">plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_reset</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DirectProblem.nllf">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Nllf is the primary interface from the fitters.  We are going to</span>
+        <span class="c1"># make it as cheap as possible by not having to marshall values</span>
+        <span class="c1"># through parameter boxes.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">pvec</span><span class="p">)</span> <span class="k">if</span> <span class="n">pvec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.model_reset">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.model_reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
+                                      <span class="n">bounds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="p">[:,</span> <span class="n">k</span><span class="p">],</span>
+                                      <span class="n">labels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">))]</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.model_update">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.model_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.model_parameters">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.model_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.chisq">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.chisq">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dof</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.chisq_str">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.chisq_str">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">()</span></div>
+
+    <span class="fm">__call__</span> <span class="o">=</span> <span class="n">chisq</span>
+
+<div class="viewcode-block" id="DirectProblem.setp">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.setp">[docs]</a>
+    <span class="k">def</span> <span class="nf">setp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="c1"># Note: setp is called</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">):</span>
+            <span class="n">parameter</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.getp">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.getp">[docs]</a>
+    <span class="k">def</span> <span class="nf">getp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.show">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.show">[docs]</a>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[nllf=</span><span class="si">%g</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summarize</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.summarize">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.summarize">[docs]</a>
+    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%40s</span><span class="s2"> </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">getp</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.labels">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.labels">[docs]</a>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.randomize">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.randomize">[docs]</a>
+    <span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">init_bounds</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="o">.</span><span class="n">T</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Need to go through setp when updating model.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.bounds">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span></div>
+
+
+<div class="viewcode-block" id="DirectProblem.plot">
+<a class="viewcode-back" href="../../bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fignum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span></div>
+
+    <span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Fitness</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="vm">__doc__</span></div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pdfwrapper</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

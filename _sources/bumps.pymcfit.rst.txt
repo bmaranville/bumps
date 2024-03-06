@@ -1,0 +1,7 @@
+bumps.pymcfit module
+====================
+
+.. automodule:: bumps.pymcfit
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>outliers - Chain outlier tests &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="parcoord - Parallel coordinates plot" href="parcoord.html" />
+    <link rel="prev" title="model - MCMC model types" href="model.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="parcoord.html" title="parcoord - Parallel coordinates plot"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="model - MCMC model types"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">outliers - Chain outlier tests</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="outliers-chain-outlier-tests">
+<h1>outliers - Chain outlier tests<a class="headerlink" href="#outliers-chain-outlier-tests" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.outliers.identify_outliers" title="bumps.dream.outliers.identify_outliers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">identify_outliers</span></code></a></p></td>
+<td><p>Determine which chains have converged on a local maximum much lower than the maximum likelihood.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.outliers">Chain outlier tests.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.outliers.identify_outliers">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.outliers.</span></span><span class="sig-name descname"><span class="pre">identify_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">llf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/outliers.html#identify_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.outliers.identify_outliers" title="Link to this definition">¶</a></dt>
+<dd><p>Determine which chains have converged on a local maximum much lower than
+the maximum likelihood.</p>
+<p><em>test</em> is the name of the test to use (one of IQR, Grubbs, Mahal or none).
+IQR rejects any chains with mean log likelihood more than than twice the
+inter-quartile range below the value of the 25% quartile.  The Grubbs
+method uses a t-test to determine which chains have a mean log likelihood
+extremely far below the mean across all the chains.  The Mahal test looks
+at the head of the chain with the worst mean log likelihood and marks
+it as an outlier if it is far from the centroid of the population.  This
+assumes that the posterior is approximately gaussian, which is not true
+in general.</p>
+<p><em>llf</em> is a set of log likelihood values for all chains, which is
+an array of shape (chain len, num chains)</p>
+<p><em>x</em> is the current population with one point for each each, which is
+an array of shape (num chains, num vars).  This is only used for the
+Mahal test.</p>
+<p>Returns an integer array of outlier indices.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">outliers - Chain outlier tests</a><ul>
+<li><a class="reference internal" href="#bumps.dream.outliers.identify_outliers"><code class="docutils literal notranslate"><span class="pre">identify_outliers()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="model.html"
+                          title="previous chapter">model - MCMC model types</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="parcoord.html"
+                          title="next chapter">parcoord - Parallel coordinates plot</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/outliers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="parcoord.html" title="parcoord - Parallel coordinates plot"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="model - MCMC model types"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">outliers - Chain outlier tests</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

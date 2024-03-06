@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.plotutil &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plotutil</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.plotutil</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Pylab plotting utilities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;auto_shift&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;coordinated_colors&quot;</span><span class="p">,</span> <span class="s2">&quot;dhsv&quot;</span><span class="p">,</span> <span class="s2">&quot;next_color&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;plot_quantiles&quot;</span><span class="p">,</span> <span class="s2">&quot;form_quantiles&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="auto_shift">
+<a class="viewcode-back" href="../../bumps.plotutil.html#bumps.plotutil.auto_shift">[docs]</a>
+<span class="k">def</span> <span class="nf">auto_shift</span><span class="p">(</span><span class="n">offset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a y-offset coordinate transform for the current axes.</span>
+
+<span class="sd">    Each call to auto_shift increases the y-offset for the next line by</span>
+<span class="sd">    the given number of points (with 72 points per inch).</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        from matplotlib import pyplot as plt</span>
+<span class="sd">        from bumps.plotutil import auto_shift</span>
+<span class="sd">        trans = auto_shift(plt.gca())</span>
+<span class="sd">        plot(x, y, trans=trans)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.transforms</span> <span class="kn">import</span> <span class="n">ScaledTranslation</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">lines</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="s1">&#39;_auto_shift&#39;</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">_auto_shift</span> <span class="o">+=</span> <span class="n">offset</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">_auto_shift</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">trans</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transData</span>
+    <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">_auto_shift</span><span class="p">:</span>
+        <span class="n">trans</span> <span class="o">+=</span> <span class="n">ScaledTranslation</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">_auto_shift</span><span class="o">/</span><span class="mf">72.</span><span class="p">,</span>
+                                   <span class="n">pylab</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span><span class="o">.</span><span class="n">dpi_scale_trans</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">trans</span></div>
+
+
+
+<span class="c1"># ======== Color functions ========</span>
+
+<div class="viewcode-block" id="next_color">
+<a class="viewcode-back" href="../../bumps.plotutil.html#bumps.plotutil.next_color">[docs]</a>
+<span class="k">def</span> <span class="nf">next_color</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the next color in the plot color cycle.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        from matplotlib import pyplot as plt</span>
+<span class="sd">        from bumps.plotutil import next_color, dhsv</span>
+<span class="sd">        color = next_color()</span>
+<span class="sd">        plt.errorbar(x, y, yerr=dy, fmt=&#39;.&#39;, color=color)</span>
+<span class="sd">        # Draw the theory line with the same color as the data, but darker</span>
+<span class="sd">        plt.plot(x, y, &#39;-&#39;, color=dhsv(color, dv=-0.2))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">_get_lines</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="n">get_next_color</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span> <span class="c1"># Cruft 1.7 - 3.7?</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">prop_cycler</span><span class="p">)[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> <span class="c1"># Cruft 1.4-1.6?</span>
+                <span class="n">base</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">color_cycle</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># Cruft 1.3 and earlier</span>
+                <span class="n">base</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="n">_get_next_cycle_color</span><span class="p">()</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">prop_cycler</span><span class="p">)[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span> <span class="c1"># Cruft 1.4-1.6?</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">color_cycle</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># Cruft 1.3 and earlier</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="n">_get_next_cycle_color</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">base</span></div>
+
+
+
+<div class="viewcode-block" id="coordinated_colors">
+<a class="viewcode-back" href="../../bumps.plotutil.html#bumps.plotutil.coordinated_colors">[docs]</a>
+<span class="k">def</span> <span class="nf">coordinated_colors</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a set of coordinated colors as c[&#39;base|light|dark&#39;].</span>
+
+<span class="sd">    If *base* is not provided, use the next color in the color cycle as</span>
+<span class="sd">    the base.  Light is bright and pale, dark is dull and saturated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">next_color</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span>
+                <span class="n">light</span><span class="o">=</span><span class="n">dhsv</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">dv</span><span class="o">=+</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">ds</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">),</span>
+                <span class="n">dark</span><span class="o">=</span><span class="n">dhsv</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">dv</span><span class="o">=-</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">ds</span><span class="o">=+</span><span class="mf">0.35</span><span class="p">),</span>
+               <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="dhsv">
+<a class="viewcode-back" href="../../bumps.plotutil.html#bumps.plotutil.dhsv">[docs]</a>
+<span class="k">def</span> <span class="nf">dhsv</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">dh</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">ds</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">dv</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">da</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modify color on hsv scale.</span>
+
+<span class="sd">    *dv* change intensity, e.g., +0.1 to brighten, -0.1 to darken.</span>
+<span class="sd">    *dh* change hue</span>
+<span class="sd">    *ds* change saturation</span>
+<span class="sd">    *da* change transparency</span>
+
+<span class="sd">    Color can be any valid matplotlib color.  The hsv scale is [0,1] in</span>
+<span class="sd">    each dimension.  Saturation, value and alpha scales are clipped to [0,1]</span>
+<span class="sd">    after changing.  The hue scale wraps between red to violet.</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    Make sea green 10% darker:</span>
+
+<span class="sd">        &gt;&gt;&gt; from bumps.plotutil import dhsv</span>
+<span class="sd">        &gt;&gt;&gt; darker = dhsv(&#39;seagreen&#39;, dv=-0.1)</span>
+<span class="sd">        &gt;&gt;&gt; print([int(v*255) for v in darker])</span>
+<span class="sd">        [37, 113, 71, 255]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">colorConverter</span>
+    <span class="kn">from</span> <span class="nn">colorsys</span> <span class="kn">import</span> <span class="n">rgb_to_hsv</span><span class="p">,</span> <span class="n">hsv_to_rgb</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">clip</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">fmod</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">colorConverter</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+    <span class="c1"># print &quot;from color&quot;,r,g,b,a</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">rgb_to_hsv</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="n">clip</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="n">ds</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">dv</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">da</span><span class="p">)]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">fmod</span><span class="p">(</span><span class="n">h</span> <span class="o">+</span> <span class="n">dh</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">hsv_to_rgb</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="c1"># print &quot;to color&quot;,r,g,b,a</span>
+    <span class="k">return</span> <span class="n">array</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># ==== Specialized plotters =====</span>
+
+<div class="viewcode-block" id="plot_quantiles">
+<a class="viewcode-back" href="../../bumps.plotutil.html#bumps.plotutil.plot_quantiles">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_quantiles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">contours</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot quantile curves for a set of lines.</span>
+
+<span class="sd">    *x* is the x coordinates for all lines.</span>
+
+<span class="sd">    *y* is the y coordinates, one row for each line.</span>
+
+<span class="sd">    *contours* is a list of confidence intervals expressed as percents.</span>
+
+<span class="sd">    *color* is the color to use for the quantiles.  Quantiles are draw as</span>
+<span class="sd">    a filled region with alpha transparency.  Higher probability regions</span>
+<span class="sd">    will be covered with multiple contours, which will make them lighter</span>
+<span class="sd">    and more saturated.</span>
+
+<span class="sd">    *alpha* is the transparency level to use for all fill regions.  The</span>
+<span class="sd">    default value, alpha=2./(#contours+1), works pretty well.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">form_quantiles</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">contours</span><span class="p">)</span>
+    <span class="n">_plot_quantiles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_plot_quantiles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="c1"># print &quot;p&quot;,p</span>
+    <span class="c1"># print &quot;q&quot;,q[:,:,0]</span>
+    <span class="c1"># print &quot;y&quot;,y[:,0]</span>
+    <span class="k">if</span> <span class="n">alpha</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">edgecolor</span> <span class="o">=</span> <span class="n">dhsv</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">ds</span><span class="o">=-</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">),</span> <span class="n">dv</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="ow">in</span> <span class="n">q</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span><span class="p">,</span>
+                           <span class="n">facecolor</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span>
+                           <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+<div class="viewcode-block" id="form_quantiles">
+<a class="viewcode-back" href="../../bumps.plotutil.html#bumps.plotutil.form_quantiles">[docs]</a>
+<span class="k">def</span> <span class="nf">form_quantiles</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">contours</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return quantiles and values for a list of confidence intervals.</span>
+
+<span class="sd">    *contours* is a list of confidence interfaces [a, b,...] expressed as</span>
+<span class="sd">    percents.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">    *quantiles* is a list of intervals [[a_low, a_high], [b_low, b_high], ...]</span>
+<span class="sd">    in [0,1].</span>
+
+<span class="sd">    *values* is a list of intervals [[A_low, A_high], ...] with one entry in</span>
+<span class="sd">    A for each row in y.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">reshape</span>
+    <span class="kn">from</span> <span class="nn">scipy.stats.mstats</span> <span class="kn">import</span> <span class="n">mquantiles</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">_convert_contours_to_probabilities</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">contours</span><span class="p">)))</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">mquantiles</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">prob</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span></div>
+
+
+<span class="k">def</span> <span class="nf">_convert_contours_to_probabilities</span><span class="p">(</span><span class="n">contours</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given confidence intervals [a, b,...] as percents, return probability</span>
+<span class="sd">    in [0,1] for each interval as [a_low, a_high, b_low, b_high, ...].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">hstack</span>
+    <span class="c1"># lower quantile for ci in percent = (100 - ci)/2</span>
+    <span class="c1"># upper quantile = 100 - lower quantile = 100 - (100-ci)/2 = (100 + ci)/2</span>
+    <span class="c1"># divide by an additional 100 to get proportion from 0 to 1</span>
+    <span class="k">return</span> <span class="n">hstack</span><span class="p">([(</span><span class="mf">100.0</span> <span class="o">-</span> <span class="n">p</span><span class="p">,</span> <span class="mf">100.0</span> <span class="o">+</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">contours</span><span class="p">])</span> <span class="o">/</span> <span class="mf">200.0</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plotutil</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

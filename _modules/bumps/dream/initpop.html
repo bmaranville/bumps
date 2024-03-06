@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.initpop &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.initpop</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.initpop</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Population initialization routines.</span>
+
+<span class="sd">To start the analysis an initial population is required.  This will be</span>
+<span class="sd">an array of size M x N, where M is the number of dimensions in the fitting</span>
+<span class="sd">problem and N is the number of Markov chains.</span>
+
+<span class="sd">Two functions are provided:</span>
+
+<span class="sd">1. lhs_init(N, bounds) returns a latin hypercube sampling, which tests every</span>
+<span class="sd">parameter at each of N levels.</span>
+
+<span class="sd">2. cov_init(N, x, cov) returns a Gaussian sample along the ellipse</span>
+<span class="sd">defined by the covariance matrix, cov.  Covariance defaults to</span>
+<span class="sd">diag(dx) if dx is provided as a parameter, or to I if it is not.</span>
+
+<span class="sd">Additional options are random box: rand(M, N) or random scatter: randn(M, N).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lhs_init&#39;</span><span class="p">,</span> <span class="s1">&#39;cov_init&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">eye</span><span class="p">,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">empty</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+
+
+<div class="viewcode-block" id="lhs_init">
+<a class="viewcode-back" href="../../../dream/initpop.html#bumps.dream.initpop.lhs_init">[docs]</a>
+<span class="k">def</span> <span class="nf">lhs_init</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Latin Hypercube Sampling</span>
+
+<span class="sd">    Returns an array whose columns each have *N* samples from equally spaced</span>
+<span class="sd">    bins between *bounds=(xmin, xmax)* for the column.  DREAM bounds</span>
+<span class="sd">    objects, with bounds.low and bounds.high can be used as well.</span>
+
+<span class="sd">    Note: Indefinite ranges are not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">bounds</span><span class="o">.</span><span class="n">high</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">bounds</span>
+
+    <span class="c1"># Define the size of xmin</span>
+    <span class="n">nvar</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+    <span class="c1"># Initialize array ran with random numbers</span>
+    <span class="n">ran</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">nvar</span><span class="p">)</span>
+
+    <span class="c1"># Initialize array s with zeros</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">nvar</span><span class="p">))</span>
+
+    <span class="c1"># Now fill s</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvar</span><span class="p">):</span>
+        <span class="c1"># Random permutation</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span><span class="o">-</span><span class="n">ran</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">/</span><span class="n">N</span>
+        <span class="n">s</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">xmin</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="o">*</span><span class="p">(</span><span class="n">xmax</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">xmin</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">s</span></div>
+
+
+
+<div class="viewcode-block" id="cov_init">
+<a class="viewcode-back" href="../../../dream/initpop.html#bumps.dream.initpop.cov_init">[docs]</a>
+<span class="k">def</span> <span class="nf">cov_init</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize *N* sets of random variables from a gaussian model.</span>
+
+<span class="sd">    The center is at *x* with an uncertainty ellipse specified by the</span>
+<span class="sd">    1-sigma independent uncertainty values *dx* or the full covariance</span>
+<span class="sd">    matrix uncertainty *cov*.</span>
+
+<span class="sd">    For example, create an initial population for 20 sequences for a</span>
+<span class="sd">    model with local minimum x with covariance matrix C::</span>
+
+<span class="sd">        pop = cov_init(cov=C, x=x, N=20)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#return mean + dot(util.rng.randn(N, len(mean)), chol(cov))</span>
+    <span class="k">if</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">cov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">asarray</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cov</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">N</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">demo</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">arange</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Three ways of calling cov_init:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;with cov&quot;</span><span class="p">,</span> <span class="n">cov_init</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="n">diag</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">])))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;with dx&quot;</span><span class="p">,</span> <span class="n">cov_init</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;with nothing&quot;</span><span class="p">,</span> <span class="n">cov_init</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">The following array should have four columns.  Column 1 should have the</span>
+<span class="s2">numbers from 10 to 19, column 2 from 20 to 29, etc.  The columns are in</span>
+<span class="s2">random order with a random fractional part.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">pop</span> <span class="o">=</span> <span class="n">lhs_init</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span><span class="o">*</span><span class="mi">10</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">demo</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.initpop</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

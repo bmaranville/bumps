@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.data &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.data</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data handling utilities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">nan</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;indfloat&quot;</span><span class="p">,</span> <span class="s2">&quot;parse_file&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">parse_multi</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">keysep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a multi-part file.</span>
+
+<span class="sd">    Return a list of (header, data) pairs, where header is a key: value</span>
+<span class="sd">    dictionary and data is a numpy array.</span>
+
+<span class="sd">    The header section is list of key value pairs, with the *comment* character</span>
+<span class="sd">    at the start of each line.  Key and value will be separated by *keysep*,</span>
+<span class="sd">    or by spaces if *keysep = None*.  The data section is a sequence of</span>
+<span class="sd">    floating point numbers separated by *sep*, or by spaces if *sep* is None.</span>
+<span class="sd">    inf and nan are parsed as inf and nan.  Comments at the end of the data</span>
+<span class="sd">    line will be ignored.  Data points can be commented out by including</span>
+<span class="sd">    a comment character at the start of the data line, assuming the next</span>
+<span class="sd">    character is a digit, plus, or decimal separator.</span>
+
+<span class="sd">    Quotes around keys are removed, but not around values.  Use</span>
+<span class="sd">    :func:`strip_quotes` to remove them if they are present.  This is different</span>
+<span class="sd">    from the :func:`parse_file` interface, which strips quotes around values.</span>
+<span class="sd">    The new interface allows *json.loads()* calls on values if values are</span>
+<span class="sd">    stored as *key: json.dumps(value)*.</span>
+
+<span class="sd">    Special hack for binned data: if the first column contains bin edges, then</span>
+<span class="sd">    the last row will only have the bin edge.  To make the array square,</span>
+<span class="sd">    we replace the bin edges with bin centers.  The original bins can be</span>
+<span class="sd">    found in the header using the &#39;bins&#39; key (unless that key already exists</span>
+<span class="sd">    in the header, in which case the key will be ignored).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">maybe_open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">_read_part</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">,</span> <span class="n">multi_part</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                            <span class="n">col_sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span> <span class="n">key_sep</span><span class="o">=</span><span class="n">keysep</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">header</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;bins&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">parts</span>
+
+<div class="viewcode-block" id="parse_file">
+<a class="viewcode-back" href="../../bumps.data.html#bumps.data.parse_file">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">keysep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a file into a header and data.</span>
+
+<span class="sd">    Return a (header, data) pair, where header is a key: value</span>
+<span class="sd">    dictionary and data is a numpy array.</span>
+
+<span class="sd">    The header section is list of key value pairs, with the *comment* character</span>
+<span class="sd">    at the start of each line.  Key and value will be separated by *keysep*,</span>
+<span class="sd">    or by spaces if *keysep = None*.  The data section is a sequence of</span>
+<span class="sd">    floating point numbers separated by *sep*, or by spaces if *sep* is None.</span>
+<span class="sd">    inf and nan are parsed as inf and nan.  Comments at the end of the data</span>
+<span class="sd">    line will be ignored.  Data points can be commented out by including</span>
+<span class="sd">    a comment character at the start of the data line, assuming the next</span>
+<span class="sd">    character is a digit, plus, or decimal separator.</span>
+
+<span class="sd">    Quotes around keys are removed.  For compatibility with the old interface,</span>
+<span class="sd">    quotes around values are removed as well.</span>
+
+<span class="sd">    Special hack for binned data: if the first column contains bin edges, then</span>
+<span class="sd">    the last row will only have the bin edge.  To make the array square,</span>
+<span class="sd">    we replace the bin edges with bin centers.  The original bins can be</span>
+<span class="sd">    found in the header using the &#39;bins&#39; key (unless that key already exists</span>
+<span class="sd">    in the header, in which case the key will be ignored).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">maybe_open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">_read_part</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">,</span> <span class="n">multi_part</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                        <span class="n">col_sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span> <span class="n">key_sep</span><span class="o">=</span><span class="n">keysep</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;data file is empty&quot;</span><span class="p">)</span>
+    <span class="c1"># compatibility: strip quotes from values in key-value pairs</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">strip_quotes</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;bins&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">data</span></div>
+
+
+<span class="k">def</span> <span class="nf">_read_part</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">key_sep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_sep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">multi_part</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">iseof</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="c1"># Blank lines indicate a section break.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="c1"># Skip blank lines if we are parsing the data as a single part file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">multi_part</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># If we are at the beginning of a section, then iseof is True and</span>
+            <span class="c1"># continuing to the next loop iteration will skip them. If we have</span>
+            <span class="c1"># already consumed some non-blank lines, then iseof will be false,</span>
+            <span class="c1"># and we need to break this section of the data.  If we have blank</span>
+            <span class="c1"># lines at the end of the file, we will never set iseof to False</span>
+            <span class="c1"># and they will be ignored.</span>
+            <span class="k">if</span> <span class="n">iseof</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Line is not blank, so process it.</span>
+        <span class="n">columns</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">_parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">,</span>
+                                          <span class="n">col_sep</span><span class="o">=</span><span class="n">col_sep</span><span class="p">,</span> <span class="n">key_sep</span><span class="o">=</span><span class="n">key_sep</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">indfloat</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+                <span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">value</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># We have processed some data, so</span>
+        <span class="n">iseof</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">iseof</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="c1"># print data</span>
+    <span class="c1"># print &quot;\n&quot;.join(k+&quot;:&quot;+v for k,v in header.items())</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># For TOF data, the first column is the bin edge, which has one</span>
+        <span class="c1"># more row than the remaining columns; fill those columns with</span>
+        <span class="c1"># bin centers instead</span>
+        <span class="n">last_edge</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">last_edge</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">edges</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bins</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">maybe_open</span><span class="p">(</span><span class="n">file_or_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A context manager for file opening, given as a file path or an open handle.</span>
+
+<span class="sd">    If *file_or_path* is a string ending in &quot;.gz&quot; then open with gzip.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file_or_path</span><span class="p">,</span> <span class="s1">&#39;readline&#39;</span><span class="p">):</span>
+        <span class="c1"># If it is a file handle, yield it and return without closing.</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">file_or_path</span>
+        <span class="k">yield</span> <span class="n">fh</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Otherwise it should be a path. Make sure it is at least a string.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">string_like</span><span class="p">(</span><span class="n">file_or_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;file must be a name or a file handle&#39;</span><span class="p">)</span>
+        <span class="c1"># Open file; if name ends in .gz then assume it is compressed.</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">file_or_path</span><span class="p">)</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">fh</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">string_like</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if s operates like a string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">key_sep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col_sep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+    <span class="c1"># Find location of the comment character on the line</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">comment</span><span class="p">)</span>
+
+    <span class="c1"># If the line does not contain a comment character or if the comment</span>
+    <span class="c1"># character is not in the first column, then this is a data line which</span>
+    <span class="c1"># should be returned as a sequence of text columns separated by spaces.</span>
+    <span class="c1"># The caller can turn the columns into numbers or leave them as strings.</span>
+    <span class="c1"># Data on the line after the comment character is ignored.</span>
+    <span class="c1"># TODO: allow quoted strings or backslash escaped spaces for text columns</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">line</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">col_sep</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">col_sep</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="c1"># Split line on key separator</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">key_sep</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">strip_quotes</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># If key is a number assume it is simply a commented out data point</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s1">&#39;.-+0123456789&#39;</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;inf&#39;</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;nan&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="p">[],</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
+
+
+<span class="k">def</span> <span class="nf">strip_quotes</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">&quot;&#39;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="n">s</span>
+
+<span class="n">INF_VALUES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;inf&#39;</span><span class="p">,</span> <span class="s1">&#39;1/0&#39;</span><span class="p">,</span> <span class="s1">&#39;1.#inf&#39;</span><span class="p">,</span> <span class="s1">&#39;infinity&#39;</span><span class="p">))</span>
+<span class="n">NAN_VALUES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s1">&#39;nan&#39;</span><span class="p">,</span> <span class="s1">&#39;0/0&#39;</span><span class="p">,</span> <span class="s1">&#39;1.#qnan&#39;</span><span class="p">,</span> <span class="s1">&#39;na&#39;</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">))</span>
+<div class="viewcode-block" id="indfloat">
+<a class="viewcode-back" href="../../bumps.data.html#bumps.data.indfloat">[docs]</a>
+<span class="k">def</span> <span class="nf">indfloat</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert string to float, with support for inf and nan.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; from numpy import isinf, isnan</span>
+<span class="sd">        &gt;&gt;&gt; print(isinf(indfloat(&#39;inf&#39;)))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; print(isinf(indfloat(&#39;-inf&#39;)))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; print(isnan(indfloat(&#39;nan&#39;)))</span>
+<span class="sd">        True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">INF_VALUES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inf</span>
+        <span class="k">elif</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="ow">in</span> <span class="n">INF_VALUES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">inf</span>
+        <span class="k">elif</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">NAN_VALUES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nan</span>
+        <span class="k">raise</span></div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.data</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

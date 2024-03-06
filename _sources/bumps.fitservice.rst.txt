@@ -1,0 +1,7 @@
+bumps.fitservice module
+=======================
+
+.. automodule:: bumps.fitservice
+   :members:
+   :undoc-members:
+   :show-inheritance:

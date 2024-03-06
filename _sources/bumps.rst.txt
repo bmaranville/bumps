@@ -1,0 +1,61 @@
+bumps package
+=============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.dream
+   bumps.gui
+   bumps.mystic
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.bounds
+   bumps.bspline
+   bumps.cheby
+   bumps.cli
+   bumps.curve
+   bumps.data
+   bumps.errplot
+   bumps.fitproblem
+   bumps.fitservice
+   bumps.fitters
+   bumps.formatnum
+   bumps.history
+   bumps.initpop
+   bumps.lsqerror
+   bumps.mapper
+   bumps.monitor
+   bumps.mono
+   bumps.mpfit
+   bumps.names
+   bumps.options
+   bumps.parameter
+   bumps.partemp
+   bumps.pdfwrapper
+   bumps.plotutil
+   bumps.plugin
+   bumps.pmath
+   bumps.pymcfit
+   bumps.pytwalk
+   bumps.quasinewton
+   bumps.random_lines
+   bumps.simplex
+   bumps.util
+   bumps.vfs
+   bumps.wsolve
+
+Module contents
+---------------
+
+.. automodule:: bumps
+   :members:
+   :undoc-members:
+   :show-inheritance:

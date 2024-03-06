@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>fitproblem - Interface between models and fitters &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="fitservice - Remote job plugin for fit jobs" href="fitservice.html" />
+    <link rel="prev" title="errplot - Plot sample profile uncertainty" href="errplot.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitservice.html" title="fitservice - Remote job plugin for fit jobs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="errplot.html" title="errplot - Plot sample profile uncertainty"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fitproblem - Interface between models and fitters</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitproblem-interface-between-models-and-fitters">
+<h1>fitproblem - Interface between models and fitters<a class="headerlink" href="#fitproblem-interface-between-models-and-fitters" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.Fitness" title="bumps.fitproblem.Fitness"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fitness</span></code></a></p></td>
+<td><p>Manage parameters, data, and theory function evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitProblem</span></code></a></p></td>
+<td><p>Return a fit problem instance for the fitness function(s).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.load_problem" title="bumps.fitproblem.load_problem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_problem</span></code></a></p></td>
+<td><p>Load a problem definition from a python script file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem" title="bumps.fitproblem.BaseFitProblem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseFitProblem</span></code></a></p></td>
+<td><p>See <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem()</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem" title="bumps.fitproblem.MultiFitProblem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiFitProblem</span></code></a></p></td>
+<td><p>Weighted fits for multiple models.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.fitproblem">Interface between the models and the fitters.</p>
+<p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.Fitness" title="bumps.fitproblem.Fitness"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fitness</span></code></a> defines the interface that model evaluators can follow.
+These models can be bundled together into a <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem()</span></code></a> and sent
+to <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitDriver" title="bumps.fitters.FitDriver"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.fitters.FitDriver</span></code></a> for optimization and uncertainty
+analysis.</p>
+<p>Summary of problem attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Used by fitters</span>
+<span class="n">nllf</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Vector</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span>  <span class="c1"># main calculation</span>
+<span class="n">bounds</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">)</span>    <span class="c1"># or equivalent sequence</span>
+<span class="n">setp</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span class="n">getp</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Vector</span>
+<span class="n">residuals</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Vector</span>  <span class="c1"># for LM, MPFit</span>
+<span class="n">parameter_residuals</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Vector</span>  <span class="c1"># for LM, MPFit</span>
+<span class="n">constraints_nllf</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="c1"># for LM, MPFit;  constraint cost is spread across the individual residuals</span>
+<span class="n">randomize</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="c1"># for multistart</span>
+<span class="n">resynth_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>  <span class="c1"># for Monte Carlo resampling of maximum likelihood</span>
+<span class="n">restore_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="c1"># for Monte Carlo resampling of maximum likelihood</span>
+<span class="n">name</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># DREAM uses this</span>
+<span class="n">chisq</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+<span class="n">chisq_str</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<span class="n">labels</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="n">summarize</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+<span class="n">show</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span class="n">load</span><span class="p">(</span><span class="n">input_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">figfile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+
+<span class="c1"># Set/used by bumps.cli</span>
+<span class="n">model_reset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="c1"># called by load_model</span>
+<span class="n">path</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># set by load_model</span>
+<span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="c1"># set by load_model</span>
+<span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">filename</span> <span class="c1"># set by load_moel</span>
+<span class="n">options</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>  <span class="c1"># from sys.argv[1:]</span>
+<span class="n">undefined</span><span class="p">:</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>  <span class="c1"># when loading a save .par file, these parameters weren&#39;t defined</span>
+<span class="n">store</span><span class="p">:</span> <span class="nb">str</span> <span class="c1"># set by make_store</span>
+<span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span> <span class="c1"># set by make_store</span>
+<span class="n">simulate_data</span><span class="p">(</span><span class="n">noise</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="c1"># for --simulate in opts</span>
+<span class="n">cov</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Matrix</span>   <span class="c1"># for --cov in opts</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitproblem.</span></span><span class="sig-name descname"><span class="pre">BaseFitProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_nllf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>See <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem()</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Return the bounds fore each parameter a 2 x N array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.chisq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.chisq" title="Link to this definition">¶</a></dt>
+<dd><p>Return sum squared residuals normalized by the degrees of freedom.</p>
+<p>In the context of a composite fit, the reduced chisq on the individual
+models only considers the points and the fitted parameters within
+the individual model.</p>
+<p>Note that this does not include cost factors due to constraints on
+the parameters, such as sample_offset ~ N(0,0.01).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.chisq_str">
+<span class="sig-name descname"><span class="pre">chisq_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.chisq_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.chisq_str" title="Link to this definition">¶</a></dt>
+<dd><p>Return a string representing the chisq equivalent of the nllf.</p>
+<p>If the model has strictly gaussian independent uncertainties then the
+negative log likelihood function will return 0.5*sum(residuals**2),
+which is 1/2*chisq.  Since we are printing normalized chisq, we
+multiply the model nllf by 2/DOF before displaying the value.  This
+is different from the problem nllf function, which includes the
+cost of the prior parameters and the cost of the penalty constraints
+in the total nllf.  The constraint value is displayed separately.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.constraints_nllf">
+<span class="sig-name descname"><span class="pre">constraints_nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.constraints_nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.constraints_nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the cost of all constraints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.cov">
+<span class="sig-name descname"><span class="pre">cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.cov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.cov" title="Link to this definition">¶</a></dt>
+<dd><p>Return the covariance matrix as computed from the Hessian matrix for
+the problem at the current parameter values estimated by numerical
+differentiation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.getp">
+<span class="sig-name descname"><span class="pre">getp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.getp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.getp" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the current value of the parameter vector.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.has_residuals">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_residuals</span></span><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.has_residuals" title="Link to this definition">¶</a></dt>
+<dd><p>True if the underlying fitness function defines residuals.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.labels" title="Link to this definition">¶</a></dt>
+<dd><p>Return the list of labels, one per fitted parameter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.model_nllf">
+<span class="sig-name descname"><span class="pre">model_nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.model_nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.model_nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Negative log likelihood of seeing data given model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.model_parameters">
+<span class="sig-name descname"><span class="pre">model_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.model_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Parameters associated with the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.model_points">
+<span class="sig-name descname"><span class="pre">model_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.model_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.model_points" title="Link to this definition">¶</a></dt>
+<dd><p>Number of data points associated with the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.model_reset">
+<span class="sig-name descname"><span class="pre">model_reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.model_reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.model_reset" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare for the fit.</p>
+<p>This sets the parameters and the bounds properties that the
+solver is expecting from the fittable object.  We also compute
+the degrees of freedom so that we can return a normalized fit
+likelihood.</p>
+<p>If the set of fit parameters changes, then model_reset must
+be called.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.model_update">
+<span class="sig-name descname"><span class="pre">model_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.model_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.model_update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the model according to the changed parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>compute the cost function for a new parameter set p.</p>
+<p>this is not simply the sum-squared residuals, but instead is the
+negative log likelihood of seeing the data given the model parameters
+plus the negative log likelihood of seeing the model parameters.  the
+value is used for a likelihood ratio test so normalization constants
+can be ignored.  there is an additional penalty value provided by
+the model which can be used to implement inequality constraints.  any
+penalty should be large enough that it is effectively excluded from
+the parameter space returned from uncertainty analysis.</p>
+<p>the model is not actually calculated if the parameter nllf plus the
+constraint nllf are bigger than <em>soft_limit</em>, but instead it is
+assigned a value of <em>penalty_nllf</em>.  this will prevent expensive
+models from spending time computing values in the unfeasible region.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.parameter_nllf">
+<span class="sig-name descname"><span class="pre">parameter_nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.parameter_nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.parameter_nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Returns negative log likelihood of seeing parameters p.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.parameter_residuals">
+<span class="sig-name descname"><span class="pre">parameter_residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.parameter_residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.parameter_residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Returns negative log likelihood of seeing parameters p.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fignum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the problem state for the current parameter set.</p>
+<p>The underlying Fitness object <em>plot</em> method is called with <em>view</em>.
+It should produce its plot on the current matplotlib figure.  This
+method will add chisq to the plot and save it to a file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.randomize">
+<span class="sig-name descname"><span class="pre">randomize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.randomize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.randomize" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a random model.</p>
+<p><em>randomize()</em> sets the model to a random value.</p>
+<p><em>randomize(n)</em> returns a population of <em>n</em> random models.</p>
+<p>For indefinite bounds, the random population distribution is centered
+on initial value of the parameter, or 1. if the initial parameter is
+not finite.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.residuals">
+<span class="sig-name descname"><span class="pre">residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Return the model residuals.</p>
+<p>If the model is defined by <span class="math notranslate nohighlight">\(y = f(x) + \epsilon\)</span> for normally
+distributed error in the measurement <span class="math notranslate nohighlight">\(y\)</span> equal to
+<span class="math notranslate nohighlight">\(\epsilon \sim N(0, \sigma^2)\)</span>, then residuals will be defined by
+<span class="math notranslate nohighlight">\(R = (y - f(x))/\sigma\)</span>.  If the measurement uncertainty is not normal,
+then the normal equivalent residuals should be defined so that the
+Levenberg-Marquardt fit behaves reasonably, and the plot of
+residuals gives an indication of which points are driving the fit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.restore_data">
+<span class="sig-name descname"><span class="pre">restore_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.restore_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.restore_data" title="Link to this definition">¶</a></dt>
+<dd><p>Restore original data after resynthesis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.resynth_data">
+<span class="sig-name descname"><span class="pre">resynth_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.resynth_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.resynth_data" title="Link to this definition">¶</a></dt>
+<dd><p>Resynthesize data with noise from the uncertainty estimates.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.save" title="Link to this definition">¶</a></dt>
+<dd><p>Save the problem state for the current parameter set.</p>
+<p>The underlying Fitness object <em>save</em> method is called, if it exists,
+so that theory values can be saved in a format suitable to the problem.</p>
+<p>Uses <em>basename</em> as the base of any files that are created.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.setp">
+<span class="sig-name descname"><span class="pre">setp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.setp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.setp" title="Link to this definition">¶</a></dt>
+<dd><p>Set a new value for the parameters into the model.  If the model
+is valid, calls model_update to signal that the model should be
+recalculated.</p>
+<p>Returns True if the value is valid and the parameters were set,
+otherwise returns False.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_subs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.show" title="Link to this definition">¶</a></dt>
+<dd><p>Print the available parameters to the console as a tree.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.simulate_data">
+<span class="sig-name descname"><span class="pre">simulate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.simulate_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.simulate_data" title="Link to this definition">¶</a></dt>
+<dd><p>Simulate data with added noise</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.stderr">
+<span class="sig-name descname"><span class="pre">stderr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.stderr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.stderr" title="Link to this definition">¶</a></dt>
+<dd><p>Return the 1-sigma uncertainty estimate for each parameter and the
+correlation matrix <em>R</em> as computed from the covariance returned by
+<em>cov</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.summarize">
+<span class="sig-name descname"><span class="pre">summarize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.summarize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.summarize" title="Link to this definition">¶</a></dt>
+<dd><p>Return a table of current parameter values with range bars.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.BaseFitProblem.valid">
+<span class="sig-name descname"><span class="pre">valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#BaseFitProblem.valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.BaseFitProblem.valid" title="Link to this definition">¶</a></dt>
+<dd><p>Return true if the point is in the feasible region</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitproblem.FitProblem">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitproblem.</span></span><span class="sig-name descname"><span class="pre">FitProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#FitProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.FitProblem" title="Link to this definition">¶</a></dt>
+<dd><p>Return a fit problem instance for the fitness function(s).</p>
+<p>For an individual model:</p>
+<blockquote>
+<div><p><em>fitness</em> is a <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.Fitness" title="bumps.fitproblem.Fitness"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fitness</span></code></a> instance.</p>
+</div></blockquote>
+<p>For a set of models:</p>
+<blockquote>
+<div><p><em>models</em> is a sequence of <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.Fitness" title="bumps.fitproblem.Fitness"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fitness</span></code></a> instances.</p>
+<p><em>weights</em> is an optional scale factor for each model. A weighted fit
+returns nllf <span class="math notranslate nohighlight">\(L = \sum w_k^2 L_k\)</span>. If an individual nllf is the sum
+squared residuals then this is equivalent to scaling the measurement
+uncertainty by <span class="math notranslate nohighlight">\(1/w\)</span>. Unless the measurement uncertainty is unknown,
+weights should be in [0, 1], representing an unknown systematic
+uncertainty spread across the individual measurements.</p>
+<p><em>freevars</em> is <a class="reference internal" href="../bumps.parameter.html#bumps.parameter.FreeVariables" title="bumps.parameter.FreeVariables"><code class="xref py py-class docutils literal notranslate"><span class="pre">parameter.FreeVariables</span></code></a> instance defining the
+per-model parameter assignments.  See <a class="reference internal" href="../guide/parameter.html#freevariables"><span class="std std-ref">Free Variables</span></a> for details.</p>
+</div></blockquote>
+<p>Additional parameters:</p>
+<blockquote>
+<div><p><em>name</em> name of the problem</p>
+<p><em>constraints</em> is a function which returns the negative log likelihood
+of seeing the parameters independent from the fitness function.  Use
+this for example to check for feasible regions of the search space, or
+to add constraints that cannot be easily calculated per parameter.
+Ideally, the constraints nllf will increase as you go farther from
+the feasible region so that the fit will be directed toward feasible
+values.</p>
+<p><em>soft_limit</em> is the constraints function cutoff, beyond which the
+<em>penalty_nllf</em> will be used and <em>fitness</em> nllf will not be calculated.</p>
+<p><em>penalty_nllf</em> is the nllf to use for <em>fitness</em> when <em>constraints</em>
+is greater than <em>soft_limit</em>.</p>
+</div></blockquote>
+<p>Total nllf is the sum of the parameter nllf, the constraints nllf and the
+depending on whether constraints is greater than soft_limit, either the
+fitness nllf or the penalty nllf.</p>
+<p>New in 0.9.0: weights are now squared when computing the sum rather than
+linear.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitproblem.</span></span><span class="sig-name descname"><span class="pre">Fitness</span></span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manage parameters, data, and theory function evaluation.</p>
+<p>See <a class="reference internal" href="../guide/experiment.html#fitness"><span class="std std-ref">Complex models</span></a> for a detailed explanation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood value of the current parameter set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.numpoints">
+<span class="sig-name descname"><span class="pre">numpoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.numpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.numpoints" title="Link to this definition">¶</a></dt>
+<dd><p>Return the number of data points.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>return the parameters in the model.</p>
+<p>model parameters are a hierarchical structure of lists and
+dictionaries.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the model to the current figure.  You only get one figure, but you
+can make it as complex as you want.  This will be saved as a png on
+the server, and composed onto a results web page.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.residuals">
+<span class="sig-name descname"><span class="pre">residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Return residuals for current theory minus data.</p>
+<p>Used for Levenburg-Marquardt, and for plotting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.restore_data">
+<span class="sig-name descname"><span class="pre">restore_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.restore_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.restore_data" title="Link to this definition">¶</a></dt>
+<dd><p>Restore the original data in the model (after resynth).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.resynth_data">
+<span class="sig-name descname"><span class="pre">resynth_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.resynth_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.resynth_data" title="Link to this definition">¶</a></dt>
+<dd><p>Generate fake data based on uncertainties in the real data.  For
+Monte Carlo resynth-refit uncertainty analysis.  Bootstrapping?</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.save" title="Link to this definition">¶</a></dt>
+<dd><p>Save the model to a file based on basename+extension.  This will point
+to a path to a directory on a remote machine; don’t make any
+assumptions about information stored on the server.  Return the set of
+files saved so that the monitor software can make a pretty web page.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.Fitness.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#Fitness.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.Fitness.update" title="Link to this definition">¶</a></dt>
+<dd><p>Called when parameters have been updated.  Any cached values will need
+to be cleared and the model reevaluated.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitproblem.</span></span><span class="sig-name descname"><span class="pre">MultiFitProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty_nllf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freevars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem" title="bumps.fitproblem.BaseFitProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseFitProblem</span></code></a></p>
+<p>Weighted fits for multiple models. See <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem()</span></code></a> for an
+explanation of weights.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Return the bounds fore each parameter a 2 x N array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.chisq" title="Link to this definition">¶</a></dt>
+<dd><p>Return sum squared residuals normalized by the degrees of freedom.</p>
+<p>In the context of a composite fit, the reduced chisq on the individual
+models only considers the points and the fitted parameters within
+the individual model.</p>
+<p>Note that this does not include cost factors due to constraints on
+the parameters, such as sample_offset ~ N(0,0.01).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.chisq_str">
+<span class="sig-name descname"><span class="pre">chisq_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.chisq_str" title="Link to this definition">¶</a></dt>
+<dd><p>Return a string representing the chisq equivalent of the nllf.</p>
+<p>If the model has strictly gaussian independent uncertainties then the
+negative log likelihood function will return 0.5*sum(residuals**2),
+which is 1/2*chisq.  Since we are printing normalized chisq, we
+multiply the model nllf by 2/DOF before displaying the value.  This
+is different from the problem nllf function, which includes the
+cost of the prior parameters and the cost of the penalty constraints
+in the total nllf.  The constraint value is displayed separately.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.constraints_nllf">
+<span class="sig-name descname"><span class="pre">constraints_nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.constraints_nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.constraints_nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the cost function for all constraints</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.cov">
+<span class="sig-name descname"><span class="pre">cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.cov" title="Link to this definition">¶</a></dt>
+<dd><p>Return the covariance matrix as computed from the Hessian matrix for
+the problem at the current parameter values estimated by numerical
+differentiation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.getp">
+<span class="sig-name descname"><span class="pre">getp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.getp" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the current value of the parameter vector.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.has_residuals">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_residuals</span></span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.has_residuals" title="Link to this definition">¶</a></dt>
+<dd><p>True if all underlying fitness functions define residuals.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.labels" title="Link to this definition">¶</a></dt>
+<dd><p>Return the list of labels, one per fitted parameter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.model_nllf">
+<span class="sig-name descname"><span class="pre">model_nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.model_nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.model_nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return cost function for all data sets</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.model_parameters">
+<span class="sig-name descname"><span class="pre">model_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.model_parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Return parameters from all models</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.model_points">
+<span class="sig-name descname"><span class="pre">model_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.model_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.model_points" title="Link to this definition">¶</a></dt>
+<dd><p>Return number of points in all models</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.model_reset">
+<span class="sig-name descname"><span class="pre">model_reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.model_reset" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare for the fit.</p>
+<p>This sets the parameters and the bounds properties that the
+solver is expecting from the fittable object.  We also compute
+the degrees of freedom so that we can return a normalized fit
+likelihood.</p>
+<p>If the set of fit parameters changes, then model_reset must
+be called.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.model_update">
+<span class="sig-name descname"><span class="pre">model_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.model_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.model_update" title="Link to this definition">¶</a></dt>
+<dd><p>Let all models know they need to be recalculated</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.models">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">models</span></span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.models" title="Link to this definition">¶</a></dt>
+<dd><p>Iterate over models, with free parameters set from model values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>compute the cost function for a new parameter set p.</p>
+<p>this is not simply the sum-squared residuals, but instead is the
+negative log likelihood of seeing the data given the model parameters
+plus the negative log likelihood of seeing the model parameters.  the
+value is used for a likelihood ratio test so normalization constants
+can be ignored.  there is an additional penalty value provided by
+the model which can be used to implement inequality constraints.  any
+penalty should be large enough that it is effectively excluded from
+the parameter space returned from uncertainty analysis.</p>
+<p>the model is not actually calculated if the parameter nllf plus the
+constraint nllf are bigger than <em>soft_limit</em>, but instead it is
+assigned a value of <em>penalty_nllf</em>.  this will prevent expensive
+models from spending time computing values in the unfeasible region.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.parameter_nllf">
+<span class="sig-name descname"><span class="pre">parameter_nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.parameter_nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Returns negative log likelihood of seeing parameters p.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.parameter_residuals">
+<span class="sig-name descname"><span class="pre">parameter_residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.parameter_residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Returns negative log likelihood of seeing parameters p.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fignum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the problem state for the current parameter set.</p>
+<p>The underlying Fitness object <em>plot</em> method is called with <em>view</em>.
+It should produce its plot on the current matplotlib figure.  This
+method will add chisq to the plot and save it to a file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.randomize">
+<span class="sig-name descname"><span class="pre">randomize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.randomize" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a random model.</p>
+<p><em>randomize()</em> sets the model to a random value.</p>
+<p><em>randomize(n)</em> returns a population of <em>n</em> random models.</p>
+<p>For indefinite bounds, the random population distribution is centered
+on initial value of the parameter, or 1. if the initial parameter is
+not finite.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.residuals">
+<span class="sig-name descname"><span class="pre">residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Return the model residuals.</p>
+<p>If the model is defined by <span class="math notranslate nohighlight">\(y = f(x) + \epsilon\)</span> for normally
+distributed error in the measurement <span class="math notranslate nohighlight">\(y\)</span> equal to
+<span class="math notranslate nohighlight">\(\epsilon \sim N(0, \sigma^2)\)</span>, then residuals will be defined by
+<span class="math notranslate nohighlight">\(R = (y - f(x))/\sigma\)</span>.  If the measurement uncertainty is not normal,
+then the normal equivalent residuals should be defined so that the
+Levenberg-Marquardt fit behaves reasonably, and the plot of
+residuals gives an indication of which points are driving the fit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.restore_data">
+<span class="sig-name descname"><span class="pre">restore_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.restore_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.restore_data" title="Link to this definition">¶</a></dt>
+<dd><p>Restore original data after resynthesis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.resynth_data">
+<span class="sig-name descname"><span class="pre">resynth_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.resynth_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.resynth_data" title="Link to this definition">¶</a></dt>
+<dd><p>Resynthesize data with noise from the uncertainty estimates.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.save" title="Link to this definition">¶</a></dt>
+<dd><p>Save the problem state for the current parameter set.</p>
+<p>The underlying Fitness object <em>save</em> method is called, if it exists,
+so that theory values can be saved in a format suitable to the problem.</p>
+<p>Uses <em>basename</em> as the base of any files that are created.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.set_active_model">
+<span class="sig-name descname"><span class="pre">set_active_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.set_active_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.set_active_model" title="Link to this definition">¶</a></dt>
+<dd><p>Use free parameters from model <em>i</em></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.setp">
+<span class="sig-name descname"><span class="pre">setp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.setp" title="Link to this definition">¶</a></dt>
+<dd><p>Set a new value for the parameters into the model.  If the model
+is valid, calls model_update to signal that the model should be
+recalculated.</p>
+<p>Returns True if the value is valid and the parameters were set,
+otherwise returns False.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.show" title="Link to this definition">¶</a></dt>
+<dd><p>Print the available parameters to the console as a tree.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.simulate_data">
+<span class="sig-name descname"><span class="pre">simulate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.simulate_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.simulate_data" title="Link to this definition">¶</a></dt>
+<dd><p>Simulate data with added noise</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.stderr">
+<span class="sig-name descname"><span class="pre">stderr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.stderr" title="Link to this definition">¶</a></dt>
+<dd><p>Return the 1-sigma uncertainty estimate for each parameter and the
+correlation matrix <em>R</em> as computed from the covariance returned by
+<em>cov</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.summarize">
+<span class="sig-name descname"><span class="pre">summarize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.summarize" title="Link to this definition">¶</a></dt>
+<dd><p>Return a table of current parameter values with range bars.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#MultiFitProblem.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitproblem.MultiFitProblem.valid">
+<span class="sig-name descname"><span class="pre">valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitproblem.MultiFitProblem.valid" title="Link to this definition">¶</a></dt>
+<dd><p>Return true if the point is in the feasible region</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitproblem.load_problem">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitproblem.</span></span><span class="sig-name descname"><span class="pre">load_problem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitproblem.html#load_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitproblem.load_problem" title="Link to this definition">¶</a></dt>
+<dd><p>Load a problem definition from a python script file.</p>
+<p>sys.argv is set to <code class="docutils literal notranslate"><span class="pre">[file]</span> <span class="pre">+</span> <span class="pre">options</span></code> within the context of the script.</p>
+<p>The user must define <code class="docutils literal notranslate"><span class="pre">problem=FitProblem(...)</span></code> within the script.</p>
+<p>Raises ValueError if the script does not define problem.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">fitproblem - Interface between models and fitters</a><ul>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.bounds"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.bounds()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.chisq"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.chisq()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.chisq_str"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.chisq_str()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.constraints_nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.constraints_nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.cov"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.cov()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.getp"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.getp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.has_residuals"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.has_residuals</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.labels"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.labels()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.model_nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.model_parameters"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.model_points"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_points()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.model_reset"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.model_update"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_update()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.parameter_nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.parameter_nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.parameter_residuals"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.parameter_residuals()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.plot"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.randomize"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.randomize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.residuals"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.residuals()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.restore_data"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.restore_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.resynth_data"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.resynth_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.save"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.setp"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.setp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.show"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.show()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.simulate_data"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.simulate_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.stderr"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.stderr()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.summarize"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.summarize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.to_dict"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.BaseFitProblem.valid"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.valid()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitproblem.FitProblem"><code class="docutils literal notranslate"><span class="pre">FitProblem()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness"><code class="docutils literal notranslate"><span class="pre">Fitness</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.nllf"><code class="docutils literal notranslate"><span class="pre">Fitness.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.numpoints"><code class="docutils literal notranslate"><span class="pre">Fitness.numpoints()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.parameters"><code class="docutils literal notranslate"><span class="pre">Fitness.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.plot"><code class="docutils literal notranslate"><span class="pre">Fitness.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.residuals"><code class="docutils literal notranslate"><span class="pre">Fitness.residuals()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.restore_data"><code class="docutils literal notranslate"><span class="pre">Fitness.restore_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.resynth_data"><code class="docutils literal notranslate"><span class="pre">Fitness.resynth_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.save"><code class="docutils literal notranslate"><span class="pre">Fitness.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.to_dict"><code class="docutils literal notranslate"><span class="pre">Fitness.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.Fitness.update"><code class="docutils literal notranslate"><span class="pre">Fitness.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.bounds"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.bounds()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.chisq"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.chisq()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.chisq_str"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.chisq_str()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.constraints_nllf"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.constraints_nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.cov"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.cov()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.getp"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.getp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.has_residuals"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.has_residuals</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.labels"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.labels()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.model_nllf"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.model_parameters"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.model_points"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_points()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.model_reset"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.model_update"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_update()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.models"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.models</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.nllf"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.parameter_nllf"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.parameter_nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.parameter_residuals"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.parameter_residuals()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.plot"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.randomize"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.randomize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.residuals"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.residuals()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.restore_data"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.restore_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.resynth_data"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.resynth_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.save"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.set_active_model"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.set_active_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.setp"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.setp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.show"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.show()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.simulate_data"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.simulate_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.stderr"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.stderr()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.summarize"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.summarize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.to_dict"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitproblem.MultiFitProblem.valid"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.valid()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitproblem.load_problem"><code class="docutils literal notranslate"><span class="pre">load_problem()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="errplot.html"
+                          title="previous chapter">errplot - Plot sample profile uncertainty</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="fitservice.html"
+                          title="next chapter">fitservice - Remote job plugin for fit jobs</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/fitproblem.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitservice.html" title="fitservice - Remote job plugin for fit jobs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="errplot.html" title="errplot - Plot sample profile uncertainty"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fitproblem - Interface between models and fitters</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

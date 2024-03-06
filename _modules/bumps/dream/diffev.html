@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.diffev &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.diffev</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.diffev</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Differential evolution MCMC stepper.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;de_step&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">eye</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="nb">sum</span><span class="p">,</span> <span class="nb">all</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">where</span><span class="p">,</span> <span class="n">select</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span><span class="p">,</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">draw</span><span class="p">,</span> <span class="n">rng</span>
+
+<span class="n">EPS</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="n">_SNOOKER</span><span class="p">,</span> <span class="n">_DE</span><span class="p">,</span> <span class="n">_DIRECT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="de_step">
+<a class="viewcode-back" href="../../../dream/diffev.html#bumps.dream.diffev.de_step">[docs]</a>
+<span class="k">def</span> <span class="nf">de_step</span><span class="p">(</span><span class="n">Nchain</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">CR</span><span class="p">,</span> <span class="n">max_pairs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+            <span class="n">snooker_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates offspring using METROPOLIS HASTINGS monte-carlo markov chain</span>
+
+<span class="sd">    The number of chains may be smaller than the population size if the</span>
+<span class="sd">    population is selected from both the current generation and the</span>
+<span class="sd">    ancestors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Npop</span><span class="p">,</span> <span class="n">Nvar</span> <span class="o">=</span> <span class="n">pop</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Initialize the delta update to zero</span>
+    <span class="n">delta_x</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">Nchain</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span>
+    <span class="n">step_alpha</span> <span class="o">=</span> <span class="n">ones</span><span class="p">(</span><span class="n">Nchain</span><span class="p">)</span>
+
+    <span class="c1"># Choose snooker, de or direct according to snooker_rate, and 80:20</span>
+    <span class="c1"># ratio of de to direct.</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">Nchain</span><span class="p">)</span>
+    <span class="n">de_rate</span> <span class="o">=</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">snooker_rate</span><span class="p">)</span>
+    <span class="n">alg</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">u</span> <span class="o">&lt;</span> <span class="n">snooker_rate</span><span class="p">,</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">snooker_rate</span><span class="o">+</span><span class="n">de_rate</span><span class="p">],</span>
+                 <span class="p">[</span><span class="n">_SNOOKER</span><span class="p">,</span> <span class="n">_DE</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">_DIRECT</span><span class="p">)</span>
+    <span class="c1"># [PAK] CR selection moved from crossover into DE step</span>
+    <span class="n">CR_used</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">CR</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">Nchain</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">CR</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Chains evolve using information from other chains to create offspring</span>
+    <span class="k">for</span> <span class="n">qq</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchain</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">alg</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">==</span> <span class="n">_DE</span><span class="p">:</span>  <span class="c1"># Use DE with cross-over ratio</span>
+
+            <span class="c1"># Select to number of vector pair differences to use in update</span>
+            <span class="c1"># using k ~ discrete U[1, max pairs]</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">max_pairs</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+            <span class="c1"># [PAK: same as k = DEversion[qq, 1] in matlab version]</span>
+
+            <span class="c1"># Select 2*k members at random different from the current member</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">,</span> <span class="n">Npop</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">perm</span> <span class="o">&gt;=</span> <span class="n">qq</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">perm</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">perm</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">]</span>
+
+            <span class="c1"># Select the dims to update based on the crossover ratio, making</span>
+            <span class="c1"># sure at least one dim is selected</span>
+            <span class="nb">vars</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">Nvar</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">CR_used</span><span class="p">[</span><span class="n">qq</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">Nvar</span><span class="p">)]</span>
+
+            <span class="c1"># Weight the size of the jump inversely proportional to the</span>
+            <span class="c1"># number of contributions, both from the parameters being</span>
+            <span class="c1"># updated and from the population defining the step direction.</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="mf">2.38</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span>
+            <span class="c1"># [PAK: same as F=Table_JumpRate[len(vars), k] in matlab version]</span>
+
+            <span class="c1"># Find and average step from the selected pairs</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pop</span><span class="p">[</span><span class="n">r1</span><span class="p">]</span><span class="o">-</span><span class="n">pop</span><span class="p">[</span><span class="n">r2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># Apply that step with F scaling and noise</span>
+            <span class="n">jiggle</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">eps</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">step</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">,</span> <span class="nb">vars</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">jiggle</span><span class="o">*</span><span class="n">gamma</span><span class="o">*</span><span class="n">step</span><span class="p">)[</span><span class="nb">vars</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">alg</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">==</span> <span class="n">_SNOOKER</span><span class="p">:</span>  <span class="c1"># Use snooker update</span>
+
+            <span class="c1"># Select current and three others</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">Npop</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">perm</span> <span class="o">&gt;=</span> <span class="n">qq</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">pop</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">R1</span><span class="p">,</span> <span class="n">R2</span> <span class="o">=</span> <span class="p">[</span><span class="n">pop</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">perm</span><span class="p">]</span>
+
+            <span class="c1"># Find the step direction and scale it to the length of the</span>
+            <span class="c1"># projection of R1-R2 onto the step direction.</span>
+            <span class="c1"># TODO: population sometimes not unique!</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">xi</span> <span class="o">-</span> <span class="n">z</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">step</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">denom</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># identical points; should be extremely rare</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="n">EPS</span><span class="o">*</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">step</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">denom</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">step</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">step_scale</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">R1</span><span class="o">-</span><span class="n">R2</span><span class="p">)</span><span class="o">*</span><span class="n">step</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+
+            <span class="c1"># Step using gamma of 2.38/sqrt(2) + U(-0.5, 0.5)</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="mf">1.2</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+            <span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">step_scale</span> <span class="o">*</span> <span class="n">step</span>
+
+            <span class="c1"># Scale Metropolis probability by (||xi* - z||/||xi - z||)^(d-1)</span>
+            <span class="n">step_alpha</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span><span class="o">+</span><span class="n">step</span><span class="p">)</span><span class="o">/</span><span class="n">norm</span><span class="p">(</span><span class="n">step</span><span class="p">))</span><span class="o">**</span><span class="p">((</span><span class="n">Nvar</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">CR_used</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">elif</span> <span class="n">alg</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">==</span> <span class="n">_DIRECT</span><span class="p">:</span>  <span class="c1"># Use one pair and all dimensions</span>
+
+            <span class="c1"># Note that there is no F scaling, dimension selection or noise</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">Npop</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">perm</span> <span class="o">&gt;=</span> <span class="n">qq</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">pop</span><span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">pop</span><span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">:]</span>
+            <span class="n">CR_used</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Select failed...should never happen&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If no step was specified (exceedingly unlikely!), then</span>
+        <span class="c1"># select a delta at random from a gaussian approximation to the</span>
+        <span class="c1"># current population</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1">#print &quot;No step&quot;</span>
+                <span class="c1"># Compute the Cholesky Decomposition of x_old</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.38</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Nvar</span><span class="p">))</span> <span class="o">*</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">cov</span><span class="p">(</span><span class="n">pop</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="n">EPS</span><span class="o">*</span><span class="n">eye</span><span class="p">(</span><span class="n">Nvar</span><span class="p">))</span>
+                <span class="c1"># Generate jump using multinormal distribution</span>
+                <span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">)),</span> <span class="n">R</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bad cholesky&quot;</span><span class="p">)</span>
+                <span class="n">delta_x</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">Nvar</span><span class="p">)</span>
+
+    <span class="c1"># Update x_old with delta_x and noise</span>
+    <span class="n">delta_x</span> <span class="o">*=</span> <span class="n">scale</span>
+
+    <span class="c1"># [PAK] The noise term needs to depend on the fitting range</span>
+    <span class="c1"># of the parameter rather than using a fixed noise value for all</span>
+    <span class="c1"># parameters.  The  current parameter value is a pretty good proxy</span>
+    <span class="c1"># in most cases (i.e., relative noise), but it breaks down if the</span>
+    <span class="c1"># parameter is zero, or if the range is something like 1 +/- eps.</span>
+
+    <span class="c1"># absolute noise</span>
+    <span class="c1">#x_new = pop[:Nchain] + delta_x + scale*noise*rng.randn(Nchain, Nvar)</span>
+
+    <span class="c1"># relative noise</span>
+    <span class="n">x_new</span> <span class="o">=</span> <span class="n">pop</span><span class="p">[:</span><span class="n">Nchain</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">scale</span><span class="o">*</span><span class="n">noise</span><span class="o">*</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">Nchain</span><span class="p">,</span> <span class="n">Nvar</span><span class="p">))</span> <span class="o">+</span> <span class="n">delta_x</span>
+
+    <span class="c1"># no noise</span>
+    <span class="c1">#x_new = pop[:Nchain] + delta_x</span>
+
+    <span class="k">return</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">step_alpha</span><span class="p">,</span> <span class="n">CR_used</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_check</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">arange</span>
+    <span class="n">nchain</span><span class="p">,</span> <span class="n">npop</span><span class="p">,</span> <span class="n">nvar</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3</span>
+
+    <span class="n">pop</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">arange</span><span class="p">(</span><span class="n">npop</span><span class="o">*</span><span class="n">nvar</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">npop</span><span class="p">,</span> <span class="n">nvar</span><span class="p">))</span>
+    <span class="n">pop</span> <span class="o">+=</span> <span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">pop</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="mf">1e-6</span>
+    <span class="n">cr</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">nvar</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_new</span><span class="p">,</span> <span class="n">_step_alpha</span><span class="p">,</span> <span class="n">used</span> <span class="o">=</span> <span class="n">de_step</span><span class="p">(</span><span class="n">nchain</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">max_pairs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">The following table shows the expected portion of the dimensions that</span>
+<span class="s2">are changed and the rounded value of the change for each point in the</span>
+<span class="s2">population.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">used</span><span class="p">):</span>
+        <span class="n">rstr</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%3d%%</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="mi">100</span><span class="p">))</span> <span class="k">if</span> <span class="n">u</span> <span class="k">else</span> <span class="s2">&quot;full &quot;</span>
+        <span class="n">vstr</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%4d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">/</span><span class="mi">100</span><span class="o">+</span><span class="mf">0.5</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x_new</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">pop</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">rstr</span><span class="o">+</span><span class="n">vstr</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">_check</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.diffev</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

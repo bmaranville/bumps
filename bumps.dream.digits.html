@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.digits module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.digits module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.digits">
+<span id="bumps-dream-digits-module"></span><h1>bumps.dream.digits module<a class="headerlink" href="#module-bumps.dream.digits" title="Link to this heading">¶</a></h1>
+<section id="significant-digits">
+<h2>Significant digits<a class="headerlink" href="#significant-digits" title="Link to this heading">¶</a></h2>
+<p>Calculate the number significant digits in a statistic using boot
+strapping/jackknife.</p>
+<p>The ‘gum’ method from the GUM supplement[1] splits the sequence into n
+independent sequences, computes the statistic for each sequence, and
+returns the mean and variance of the statistic as the estimated value
+with uncertainty.  Each block should have at least 10000 samples, or
+100/(1-ci) samples if the desired credible interval ci &gt; 0.99.</p>
+<p>The ‘jack’ method uses</p>
+<p>notes:</p>
+<ul class="simple">
+<li><p>the gum method gives a slight underestimate of the sd, while
+jackknife gives an overestimate.</p></li>
+<li><p>Jackknife performs better than gum on small samples</p></li>
+<li><p>in current implementation, gum is much faster</p></li>
+<li><p>in picking the number of cuts for jackknife, lower is usually better
+(but not too low…)</p></li>
+</ul>
+<p>[1] JCGM, 2008. Evaluation of measurement data - Supplement 1 to the “Guide to
+the expression of uncertainty in measurement” - Propagation of distributions
+using a Monte Carlo method (No. JCGM 101:2008). Geneva, Switzerland.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.digits.FastJackknife">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.digits.</span></span><span class="sig-name descname"><span class="pre">FastJackknife</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#FastJackknife"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.FastJackknife" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.digits.FastJackknife.data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#bumps.dream.digits.FastJackknife.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.digits.FastJackknife.fn">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fn</span></span><a class="headerlink" href="#bumps.dream.digits.FastJackknife.fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.digits.FastJackknife.pooled">
+<span class="sig-name descname"><span class="pre">pooled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#FastJackknife.pooled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.FastJackknife.pooled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.digits.FastJackknife.set_args">
+<span class="sig-name descname"><span class="pre">set_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#FastJackknife.set_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.FastJackknife.set_args" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.digits.FastJackknife.std">
+<span class="sig-name descname"><span class="pre">std</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#FastJackknife.std"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.FastJackknife.std" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.digits.credible_interval_sd">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.digits.</span></span><span class="sig-name descname"><span class="pre">credible_interval_sd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#credible_interval_sd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.credible_interval_sd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.digits.fast_jack">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.digits.</span></span><span class="sig-name descname"><span class="pre">fast_jack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#fast_jack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.fast_jack" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.digits.gum_sd">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.digits.</span></span><span class="sig-name descname"><span class="pre">gum_sd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#gum_sd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.gum_sd" title="Link to this definition">¶</a></dt>
+<dd><p>adaptation of method in section 7.9.4 of gum suppliment 1</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.digits.jack_sd">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.digits.</span></span><span class="sig-name descname"><span class="pre">jack_sd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#jack_sd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.jack_sd" title="Link to this definition">¶</a></dt>
+<dd><p>does an average of sd on smaller blocks to counteract skewed
+distribution of jackknife</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.digits.n_dig">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.digits.</span></span><span class="sig-name descname"><span class="pre">n_dig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/digits.html#n_dig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.digits.n_dig" title="Link to this definition">¶</a></dt>
+<dd><p>Converts standard deviation to # of significand digits.</p>
+<p><em>sx</em> is standard deviation of the statistic
+<em>sd</em> is standard deviation of the sample</p>
+<p>Adapted from section 7.9.2 of gum suppliment 1</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.digits module</a><ul>
+<li><a class="reference internal" href="#significant-digits">Significant digits</a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.FastJackknife"><code class="docutils literal notranslate"><span class="pre">FastJackknife</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.digits.FastJackknife.data"><code class="docutils literal notranslate"><span class="pre">FastJackknife.data</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.FastJackknife.fn"><code class="docutils literal notranslate"><span class="pre">FastJackknife.fn</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.FastJackknife.pooled"><code class="docutils literal notranslate"><span class="pre">FastJackknife.pooled()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.FastJackknife.set_args"><code class="docutils literal notranslate"><span class="pre">FastJackknife.set_args()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.FastJackknife.std"><code class="docutils literal notranslate"><span class="pre">FastJackknife.std()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.digits.credible_interval_sd"><code class="docutils literal notranslate"><span class="pre">credible_interval_sd()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.fast_jack"><code class="docutils literal notranslate"><span class="pre">fast_jack()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.gum_sd"><code class="docutils literal notranslate"><span class="pre">gum_sd()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.jack_sd"><code class="docutils literal notranslate"><span class="pre">jack_sd()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.digits.n_dig"><code class="docutils literal notranslate"><span class="pre">n_dig()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.digits.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.digits module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

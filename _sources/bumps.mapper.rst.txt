@@ -1,0 +1,7 @@
+bumps.mapper module
+===================
+
+.. automodule:: bumps.mapper
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fitting an ODE &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Fitting a multi-valued function" href="ode2.html" />
+    <link rel="prev" title="Poisson simulation" href="sim.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ode2.html" title="Fitting a multi-valued function"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sim.html" title="Poisson simulation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="readme.html" accesskey="U">Simple functions</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting an ODE</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitting-an-ode">
+<h1>Fitting an ODE<a class="headerlink" href="#fitting-an-ode" title="Link to this heading">¶</a></h1>
+<p>Bumps can fit black-box functions, such as odeint from scipy.</p>
+<p>The following example is adapted from:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://people.duke.edu/~ccc14/sta-663/CalibratingODEs.html">https://people.duke.edu/~ccc14/sta-663/CalibratingODEs.html</a>.</p>
+</div></blockquote>
+<div class="line-block">
+<div class="line">Instructor: Cliburn Chan <a class="reference external" href="mailto:cliburn&#46;chan&#37;&#52;&#48;duke&#46;&#46;edu">cliburn<span>&#46;</span>chan<span>&#64;</span>duke<span>&#46;</span><span>&#46;</span>edu</a></div>
+<div class="line">Instructor: Janice McCarthy <a class="reference external" href="mailto:janice&#46;mccarthy&#37;&#52;&#48;duke&#46;edu">janice<span>&#46;</span>mccarthy<span>&#64;</span>duke<span>&#46;</span>edu</a></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">odeint</span>
+</pre></div>
+</div>
+<p>Define the ODE</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solution to the ODE x&#39;(t) = f(t,x,k) with initial condition x(0) = x0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">odeint</span><span class="p">(</span><span class="n">dfdt</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">dfdt</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Receptor synthesis-internalization model.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span>
+</pre></div>
+</div>
+<p>Simulate some data.</p>
+<p>Note that the function <a class="reference internal" href="../../bumps.util.html#bumps.util.push_seed" title="bumps.util.push_seed"><code class="xref py py-func docutils literal notranslate"><span class="pre">bumps.util.push_seed()</span></code></a> is to set the random
+number generator to a known state so that this function will create the
+same data every time the simulation is run.  If not, then you wouldn’t
+be able to resume a fit since each time you resumed you would be fitting
+different data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">simulate</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">bumps.util</span> <span class="kn">import</span> <span class="n">push_seed</span>
+
+    <span class="c1"># Fake some data</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">2.0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="mf">10.0</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="mf">0.2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">dy</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="c1">#print(a, b, x0, t, dt, gt)</span>
+    <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span>
+
+<span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Define the fit problem.</p>
+<p>In this case <a class="reference internal" href="../../bumps.curve.html#bumps.curve.Curve" title="bumps.curve.Curve"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.curve.Curve</span></code></a> is initialized with <em>plot_x</em>
+as a vector of length 1000.  This is so that a smooth curve is drawn between
+the ten data points that were simulated in the fit.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">Curve</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+          <span class="n">plot_x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1000</span><span class="p">))</span>
+<span class="n">M</span><span class="o">.</span><span class="n">x0</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download: <a class="reference download internal" download="" href="../../_downloads/4fa9bb220f015e8ed33306090b52c916/ode.py"><code class="xref download docutils literal notranslate"><span class="pre">ode.py</span></code></a>.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="sim.html"
+                          title="previous chapter">Poisson simulation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="ode2.html"
+                          title="next chapter">Fitting a multi-valued function</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tutorial/curvefit/ode.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ode2.html" title="Fitting a multi-valued function"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sim.html" title="Poisson simulation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="readme.html" >Simple functions</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting an ODE</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+bumps.mystic.examples.simple module
+===================================
+
+.. automodule:: bumps.mystic.examples.simple
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>util - Miscellaneous functions &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="wsolve - Weighted linear and polynomial solver with uncertainty" href="wsolve.html" />
+    <link rel="prev" title="simplex - Nelder-Mead simplex optimizer (amoeba)" href="simplex.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wsolve.html" title="wsolve - Weighted linear and polynomial solver with uncertainty"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simplex.html" title="simplex - Nelder-Mead simplex optimizer (amoeba)"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">util - Miscellaneous functions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="util-miscellaneous-functions">
+<h1>util - Miscellaneous functions<a class="headerlink" href="#util-miscellaneous-functions" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.util.html#bumps.util.kbhit" title="bumps.util.kbhit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kbhit</span></code></a></p></td>
+<td><p>Check whether a key has been pressed on the console.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.util.html#bumps.util.profile" title="bumps.util.profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">profile</span></code></a></p></td>
+<td><p>Profile a function called with the given arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.util.html#bumps.util.pushdir" title="bumps.util.pushdir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pushdir</span></code></a></p></td>
+<td><p>Change directories for the duration of a with statement.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.util.html#bumps.util.push_seed" title="bumps.util.push_seed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">push_seed</span></code></a></p></td>
+<td><p>Set the seed value for the random number generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.util.html#bumps.util.redirect_console" title="bumps.util.redirect_console"><code class="xref py py-obj docutils literal notranslate"><span class="pre">redirect_console</span></code></a></p></td>
+<td><p>Console output redirection context</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.util">Miscellaneous utility functions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.util.kbhit">
+<span class="sig-prename descclassname"><span class="pre">bumps.util.</span></span><span class="sig-name descname"><span class="pre">kbhit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/util.html#kbhit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.util.kbhit" title="Link to this definition">¶</a></dt>
+<dd><p>Check whether a key has been pressed on the console.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.util.profile">
+<span class="sig-prename descclassname"><span class="pre">bumps.util.</span></span><span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/util.html#profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.util.profile" title="Link to this definition">¶</a></dt>
+<dd><p>Profile a function called with the given arguments.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.util.push_seed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.util.</span></span><span class="sig-name descname"><span class="pre">push_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/util.html#push_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.util.push_seed" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Set the seed value for the random number generator.</p>
+<p>When used in a with statement, the random number generator state is
+restored after the with statement is complete.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<dl class="simple">
+<dt><em>seed</em><span class="classifier">int or array_like, optional</span></dt><dd><p>Seed for RandomState</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>Seed can be used directly to set the seed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">randint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">push_seed</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+<span class="go">&lt;...push_seed object at...&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[242082    899 211136]</span>
+</pre></div>
+</div>
+<p>Seed can also be used in a with statement, which sets the random
+number generator state for the enclosed computations and restores
+it to the previous state on completion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[242082    899 211136]</span>
+</pre></div>
+</div>
+<p>Using nested contexts, we can demonstrate that state is indeed
+restored after the block completes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">))</span>
+<span class="go">242082</span>
+<span class="go">[242082    899 211136]</span>
+<span class="go">899</span>
+</pre></div>
+</div>
+<p>The restore step is protected against exceptions in the block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">))</span>
+<span class="gp">... </span>   <span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">24</span><span class="p">):</span>
+<span class="gp">... </span>           <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="gp">... </span>           <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>
+<span class="gp">... </span>   <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exception raised&quot;</span><span class="p">)</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">))</span>
+<span class="go">242082</span>
+<span class="go">[242082    899 211136]</span>
+<span class="go">Exception raised</span>
+<span class="go">899</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.util.pushdir">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.util.</span></span><span class="sig-name descname"><span class="pre">pushdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/util.html#pushdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.util.pushdir" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Change directories for the duration of a with statement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>Show that the original directory is restored:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">original_wd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">pushdir</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+<span class="gp">... </span>    <span class="n">pushed_wd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">first_site</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="k">assert</span> <span class="n">pushed_wd</span> <span class="o">==</span> <span class="n">first_site</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">restored_wd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">original_wd</span> <span class="o">==</span> <span class="n">restored_wd</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.util.redirect_console">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.util.</span></span><span class="sig-name descname"><span class="pre">redirect_console</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stdout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/util.html#redirect_console"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.util.redirect_console" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Console output redirection context</p>
+<p>The output can be redirected to a string, to an already opened file
+(anything with a <em>write</em> attribute), or to a filename which will be
+opened for the duration of the with context.  Unless <em>stderr</em> is
+specified, then both standard output and standard error are
+redirected to the same file.  The open file handle is returned on
+enter, and (if it was not an already opened file) it is closed on exit.</p>
+<p>If no file is specified, then output is redirected to a StringIO
+object, which has a getvalue() method which can retrieve the string.
+The StringIO object is deleted when the context ends, so be sure to
+retrieve its value within the redirect_console context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>Show that output is captured in a file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bumps.util</span> <span class="kn">import</span> <span class="n">redirect_console</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+<span class="go">hello</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">redirect_console</span><span class="p">(</span><span class="s2">&quot;redirect_out.log&quot;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;captured&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+<span class="go">hello</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;redirect_out.log&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">captured</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span><span class="p">;</span> <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s2">&quot;redirect_out.log&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output can also be captured to a string:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">redirect_console</span><span class="p">()</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;captured to string&quot;</span><span class="p">)</span>
+<span class="gp">... </span>   <span class="n">captured_string</span> <span class="o">=</span> <span class="n">fid</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">captured_string</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<span class="go">captured to string</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">util - Miscellaneous functions</a><ul>
+<li><a class="reference internal" href="#bumps.util.kbhit"><code class="docutils literal notranslate"><span class="pre">kbhit()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.util.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.util.push_seed"><code class="docutils literal notranslate"><span class="pre">push_seed</span></code></a></li>
+<li><a class="reference internal" href="#bumps.util.pushdir"><code class="docutils literal notranslate"><span class="pre">pushdir</span></code></a></li>
+<li><a class="reference internal" href="#bumps.util.redirect_console"><code class="docutils literal notranslate"><span class="pre">redirect_console</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="simplex.html"
+                          title="previous chapter">simplex - Nelder-Mead simplex optimizer (amoeba)</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="wsolve.html"
+                          title="next chapter">wsolve - Weighted linear and polynomial solver with uncertainty</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wsolve.html" title="wsolve - Weighted linear and polynomial solver with uncertainty"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simplex.html" title="simplex - Nelder-Mead simplex optimizer (amoeba)"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">util - Miscellaneous functions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

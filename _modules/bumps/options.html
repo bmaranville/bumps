@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.options &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.options</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.options</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Option parser for bumps command line</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.fitters</span> <span class="kn">import</span> <span class="n">FITTERS</span><span class="p">,</span> <span class="n">FIT_AVAILABLE_IDS</span><span class="p">,</span> <span class="n">FIT_ACTIVE_IDS</span><span class="p">,</span> <span class="n">FIT_DEFAULT_ID</span>
+
+<span class="c1"># TODO: replace with standard argparse module</span>
+<div class="viewcode-block" id="ParseOpts">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.ParseOpts">[docs]</a>
+<span class="k">class</span> <span class="nc">ParseOpts</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Options parser.</span>
+
+<span class="sd">    Subclass should define *MINARGS*, *FLAGS*, *VALUES* and *USAGE*.</span>
+
+<span class="sd">    *MINARGS* is the minimum number of positional arguments.</span>
+
+<span class="sd">    *FLAGS* is a set of arguments that may be present or absent.</span>
+
+<span class="sd">    *VALUES* is a set of arguments that take values.  Value checking</span>
+<span class="sd">    can be done in the setter for each argument in the set.  Default</span>
+<span class="sd">    values should be set in the corresponding object attribute.</span>
+
+<span class="sd">    *USAGE* is the help string to display for option &quot;help&quot;.</span>
+
+<span class="sd">    The constructor will invoke the command line parser, leaving the</span>
+<span class="sd">    values set by the command line as attribute values.   Flag options</span>
+<span class="sd">    will be True or False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MINARGS</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">FLAGS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">VALUES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="c1">#: Value to use if a value flag is is present without &#39;=&#39;.  This is</span>
+    <span class="c1">#: different from the default value if the flag is not present, which</span>
+    <span class="c1">#: is the default value set in the calling class.</span>
+    <span class="n">IMPLICIT_VALUES</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">USAGE</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">VALUES</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLAGS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;option used as both a flag and a value: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span>
+                            <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VALUES</span><span class="o">&amp;</span><span class="bp">self</span><span class="o">.</span><span class="n">FLAGS</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;-?&#39;</span><span class="p">,</span> <span class="s1">&#39;-h&#39;</span><span class="p">,</span> <span class="s1">&#39;-help&#39;</span><span class="p">)):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">USAGE</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+        <span class="c1"># Drop the &quot;bumps&quot; arg from the beginning of the list.</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="c1"># Fill in implicit values. We need to do this to support something</span>
+        <span class="c1"># like &quot;bumps ... --parallel=2 ... --parallel&quot;, which should have the</span>
+        <span class="c1"># later (implicit) parameter take precedence over the earlier</span>
+        <span class="c1"># parameters.</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">arg</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">IMPLICIT_VALUES</span><span class="p">[</span><span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">:]])</span>
+             <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">IMPLICIT_VALUES</span> <span class="k">else</span> <span class="n">arg</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+
+        <span class="c1"># Parse options.</span>
+        <span class="c1"># Given tuples [..., (a, 1), ..., (a, 2), ...], then dict(tuples)</span>
+        <span class="c1"># will use the later value for the key rather than the earlier</span>
+        <span class="c1"># value, which is what we want for the command line interpreter.</span>
+        <span class="n">position_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)]</span>
+        <span class="n">flag_args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>  <span class="c1"># convert --flag =&gt; flag</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+        <span class="n">value_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># convert --flag=value =&gt; (flag, value)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Check that options are valid.</span>
+        <span class="c1"># TODO: move type checking from FitConfig.set_from_cli to here.</span>
+        <span class="n">flags</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flag_args</span><span class="p">),</span> <span class="nb">set</span><span class="p">(</span><span class="n">value_args</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">(</span><span class="n">flags</span><span class="o">|</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLAGS</span><span class="o">|</span><span class="bp">self</span><span class="o">.</span><span class="n">VALUES</span><span class="p">)</span>
+        <span class="n">unexpected_value</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLAGS</span>
+        <span class="n">blank_values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value_args</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">VALUES</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">missing_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">values</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">VALUES</span><span class="p">)</span> <span class="o">|</span> <span class="n">blank_values</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">unknown</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;Unknown options --</span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="s2">&quot;, --&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">unexpected_value</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;Unexpected value for --</span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="s2">&quot;, --&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unexpected_value</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">missing_value</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;Missing value for --</span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="s2">&quot;, --&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing_value</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;Use -? for help.&quot;</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="c1"># Set the values into the fields.</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLAGS</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="p">(</span><span class="n">option</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">value_args</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">position_args</span></div>
+
+
+
+<span class="c1"># === Fitter option parsing ===</span>
+
+<div class="viewcode-block" id="ChoiceList">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.ChoiceList">[docs]</a>
+<span class="k">class</span> <span class="nc">ChoiceList</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">choices</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid option &quot;</span><span class="si">%s</span><span class="s1">&quot;: use </span><span class="si">%s</span><span class="s1">&#39;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="yesno">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.yesno">[docs]</a>
+<span class="k">def</span> <span class="nf">yesno</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;on&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">,</span> <span class="s1">&#39;off&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;invalid option &quot;</span><span class="si">%s</span><span class="s1">&quot;: use yes|no&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_int">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.parse_int">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="n">float_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">float_value</span><span class="p">)</span> <span class="o">!=</span> <span class="n">float_value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;integer expected&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">float_value</span><span class="p">)</span></div>
+
+
+
+<span class="n">FIT_FIELDS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">starts</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Starts&quot;</span><span class="p">,</span> <span class="n">parse_int</span><span class="p">),</span>
+    <span class="n">steps</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Steps&quot;</span><span class="p">,</span> <span class="n">parse_int</span><span class="p">),</span>
+    <span class="n">samples</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Samples&quot;</span><span class="p">,</span> <span class="n">parse_int</span><span class="p">),</span>
+    <span class="n">xtol</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;x tolerance&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">ftol</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;f(x) tolerance&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Convergence&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">stop</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Stopping criteria&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+    <span class="n">thin</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Thinning&quot;</span><span class="p">,</span> <span class="n">parse_int</span><span class="p">),</span>
+    <span class="n">burn</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Burn-in steps&quot;</span><span class="p">,</span> <span class="n">parse_int</span><span class="p">),</span>
+    <span class="n">pop</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Population&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">init</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Initializer&quot;</span><span class="p">,</span> <span class="n">ChoiceList</span><span class="p">(</span><span class="s2">&quot;eps&quot;</span><span class="p">,</span> <span class="s2">&quot;lhs&quot;</span><span class="p">,</span> <span class="s2">&quot;cov&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">)),</span>
+    <span class="n">CR</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Crossover ratio&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">F</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Scale&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">nT</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;# Temperatures&quot;</span><span class="p">,</span> <span class="n">parse_int</span><span class="p">),</span>
+    <span class="n">Tmin</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Min temperature&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">Tmax</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Max temperature&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="n">radius</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Simplex radius&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="c1"># TODO: convert --trim into a boolean flag and update docs</span>
+    <span class="n">trim</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Burn-in trim&quot;</span><span class="p">,</span> <span class="n">yesno</span><span class="p">),</span>
+    <span class="n">outliers</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Outliers&quot;</span> <span class="p">,</span> <span class="n">ChoiceList</span><span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;iqr&quot;</span><span class="p">,</span> <span class="s2">&quot;grubbs&quot;</span><span class="p">,</span> <span class="s2">&quot;mahal&quot;</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+<span class="c1"># Make sure all settings are parseable</span>
+<span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">FITTERS</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">opt</span> <span class="ow">in</span> <span class="n">FIT_FIELDS</span> <span class="k">for</span> <span class="n">opt</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">settings</span><span class="p">),</span> <span class="p">(</span>
+        <span class="s2">&quot;Fitter </span><span class="si">%s</span><span class="s2"> contains unknown settings </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="o">%</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opt</span> <span class="k">for</span> <span class="n">opt</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">opt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">FIT_FIELDS</span><span class="p">)))</span>
+<span class="k">del</span> <span class="n">fit</span>
+
+<div class="viewcode-block" id="FitConfig">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.FitConfig">[docs]</a>
+<span class="k">class</span> <span class="nc">FitConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fit settings configuration object.</span>
+
+<span class="sd">    The command line parser will define a FitConfig object which contains</span>
+<span class="sd">    the fitter that was given on the command line and all its options.  For</span>
+<span class="sd">    embedded bumps, which does not use the bumps command line parser, a</span>
+<span class="sd">    new FitConfig object can be created with its own selected options.</span>
+
+<span class="sd">    **Attributes**</span>
+
+<span class="sd">    *ids = [id, id, ...]* is a list available fitters in &quot;preferred&quot; order.</span>
+<span class="sd">    Depending on usage, you may want to sort them, or alternatively, sort</span>
+<span class="sd">    by long name with *[id for _,id in sorted((v,k) for k,v in self.names]*</span>
+
+<span class="sd">    *fitters = {id: fitclasss}* maps ids to fitters.</span>
+
+<span class="sd">    *names* = {id: name}* maps ids to long names</span>
+
+<span class="sd">    *settings = {id: [(option, default), ...]}* maps ids to default settings.</span>
+<span class="sd">    The order of the settings is the preferred order to present the settings</span>
+<span class="sd">    to the user in a GUI dialog for example.</span>
+
+<span class="sd">    *values = {id: {option: value, ...}}* maps ids to the settings for</span>
+<span class="sd">    each fitter.  Note that in the GUI, different fitters may have there</span>
+<span class="sd">    settings recorded and preserved even when not selected.</span>
+
+<span class="sd">    *active_ids = [id, id, ...]* is the list of fitters to show the user in</span>
+<span class="sd">    a GUI dialog for example.  The other fitters should still be available from</span>
+<span class="sd">    the command line.</span>
+
+<span class="sd">    *default_id = id* is the fitter to use by default.</span>
+
+<span class="sd">    *selected_id = id* is the fitter that was selected, either by command line</span>
+<span class="sd">    or by GUI.</span>
+
+<span class="sd">    *selected_values = {option: value}* returns the settings for the current</span>
+<span class="sd">    fitter.</span>
+
+<span class="sd">    *selected_name = name* returns the name of the selected fitter.</span>
+
+<span class="sd">    *selected_fitter = FitClass* returns the class of the selected fitter.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">FIT_DEFAULT_ID</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="n">FIT_ACTIVE_IDS</span><span class="p">):</span>
+        <span class="c1"># Keep a private copy of the configure settings rather than modifying</span>
+        <span class="c1"># the global defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">fit</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">FITTERS</span><span class="p">]</span>
+        <span class="c1"># FITTERS is a list of FitBase classes</span>
+        <span class="c1"># Each class has:</span>
+        <span class="c1">#     fit.id: the short name used on the command line</span>
+        <span class="c1">#     fit.name: the long name used in the GUI</span>
+        <span class="c1">#     fit.settings: available options: [(key,default value), ...]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">fit</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">fit</span><span class="p">)</span> <span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">FITTERS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">fit</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">fit</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">FITTERS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">fit</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">fit</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span> <span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">FITTERS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">fit</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">settings</span><span class="p">))</span> <span class="k">for</span> <span class="n">fit</span> <span class="ow">in</span> <span class="n">FITTERS</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">active</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Some active fitters are not available&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">active</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;default fitter is not active&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_ids</span> <span class="o">=</span> <span class="n">active</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_id</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_id</span> <span class="o">=</span> <span class="n">default</span>
+
+<div class="viewcode-block" id="FitConfig.set_from_cli">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.FitConfig.set_from_cli">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_from_cli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the BumpsOpts command line parser values to set the selected</span>
+<span class="sd">        fitter and its configuration options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fitter</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_id</span> <span class="o">=</span> <span class="n">fitter</span>
+        <span class="c1"># Convert supplied options to the correct types and save them in value</span>
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">reset_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">fitter</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">parse</span> <span class="o">=</span> <span class="n">FIT_FIELDS</span><span class="p">[</span><span class="n">field</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">fitter</span><span class="p">][</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;error in --</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)))</span></div>
+
+                    <span class="c1"># print(&quot;options=%s&quot;%(str(self.options)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_id</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_id</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_fitter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_id</span><span class="p">]</span></div>
+
+
+<span class="c1">#: FitConfig singleton for the common case in which only one config is needed.</span>
+<span class="c1">#: There may be other use cases, such as saving the fit config along with the</span>
+<span class="c1">#: rest of the state so that on resume the fit options are restored, but in that</span>
+<span class="c1">#: case the application will not be using the singleton.</span>
+<span class="n">FIT_CONFIG</span> <span class="o">=</span> <span class="n">FitConfig</span><span class="p">()</span>
+
+<span class="c1"># === Bumps options parsing ===</span>
+<div class="viewcode-block" id="BumpsOpts">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.BumpsOpts">[docs]</a>
+<span class="k">class</span> <span class="nc">BumpsOpts</span><span class="p">(</span><span class="n">ParseOpts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Option parser for bumps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MINARGS</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># TODO: document all options in USAGE and doc/guide/options.rst</span>
+    <span class="c1"># TODO: remove application-specific options like --staj</span>
+    <span class="n">FLAGS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s2">&quot;preview&quot;</span><span class="p">,</span> <span class="s2">&quot;chisq&quot;</span><span class="p">,</span> <span class="s2">&quot;profile&quot;</span><span class="p">,</span> <span class="s2">&quot;time_model&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;simulate&quot;</span><span class="p">,</span> <span class="s2">&quot;simrandom&quot;</span><span class="p">,</span> <span class="s2">&quot;shake&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;worker&quot;</span><span class="p">,</span> <span class="c1"># internal, so not documented</span>
+                 <span class="s2">&quot;multiprocessing-fork&quot;</span><span class="p">,</span> <span class="c1"># passed in when app is a frozen image</span>
+                 <span class="s2">&quot;remote&quot;</span><span class="p">,</span> <span class="c1"># not active, so not documented</span>
+                 <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;noshow&quot;</span><span class="p">,</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span> <span class="s2">&quot;stepmon&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;err&quot;</span><span class="p">,</span> <span class="s2">&quot;cov&quot;</span><span class="p">,</span> <span class="s2">&quot;edit&quot;</span><span class="p">,</span> <span class="s2">&quot;mpi&quot;</span><span class="p">,</span> <span class="s2">&quot;keep_best&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;staj&quot;</span><span class="p">,</span>
+                 <span class="c1"># passed when not running bumps, but instead using a</span>
+                 <span class="c1"># bundled application as a python distribution with domain</span>
+                 <span class="c1"># specific models pre-defined.</span>
+                 <span class="s2">&quot;i&quot;</span><span class="p">,</span>
+                <span class="p">))</span>
+    <span class="n">VALUES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="s2">&quot;plot&quot;</span><span class="p">,</span> <span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="s2">&quot;resume&quot;</span><span class="p">,</span> <span class="s2">&quot;entropy&quot;</span><span class="p">,</span> <span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;noise&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;pars&quot;</span><span class="p">,</span> <span class="s2">&quot;resynth&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;checkpoint&quot;</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;parallel&quot;</span><span class="p">,</span> <span class="s2">&quot;view&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;trim&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;outliers&quot;</span><span class="p">,</span>
+                  <span class="c1"># The following options are for remote fitting via the</span>
+                  <span class="c1"># fitting service, but this is not currently active.</span>
+                  <span class="s2">&quot;transport&quot;</span><span class="p">,</span> <span class="s2">&quot;notify&quot;</span><span class="p">,</span> <span class="s2">&quot;queue&quot;</span><span class="p">,</span>
+                 <span class="p">))</span>
+    <span class="c1"># Add in parameters from the fitters</span>
+    <span class="n">VALUES</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">(</span><span class="n">FIT_FIELDS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="c1"># --parallel is equivalent to --parallel=0</span>
+    <span class="n">IMPLICIT_VALUES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;parallel&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;entropy&#39;</span><span class="p">:</span> <span class="s1">&#39;llf&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;resume&#39;</span><span class="p">:</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">pars</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">notify</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">resynth</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="s2">&quot;5&quot;</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="s2">&quot;inf&quot;</span>
+    <span class="n">checkpoint</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span>
+    <span class="n">parallel</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">entropy</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">trim</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
+    <span class="n">view</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">PLOTTERS</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;residuals&quot;</span>
+    <span class="n">USAGE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">Usage: bumps [options] modelfile [modelargs]</span>
+
+<span class="s2">The modelfile is a Python script (i.e., a series of Python commands)</span>
+<span class="s2">which sets up the data, the models, and the fittable parameters.</span>
+<span class="s2">The model arguments are available in the modelfile as sys.argv[1:].</span>
+<span class="s2">Model arguments may not start with &#39;-&#39;.</span>
+
+<span class="s2">Options:</span>
+
+<span class="s2">    --preview</span>
+<span class="s2">        display model but do not perform a fitting operation</span>
+<span class="s2">    --pars=filename or store path</span>
+<span class="s2">        initial parameter values; fit results are saved as path/&lt;modelname&gt;.par</span>
+<span class="s2">    --plot=log      [</span><span class="si">%(plotter)s</span><span class="s2">]</span>
+<span class="s2">        type of plot to display</span>
+<span class="s2">    --trim=true</span>
+<span class="s2">        trim any remaining burn before displaying plots [dream only]</span>
+<span class="s2">    --simulate</span>
+<span class="s2">        simulate a dataset using the initial problem parameters</span>
+<span class="s2">    --simrandom</span>
+<span class="s2">        simulate a dataset using random problem parameters</span>
+<span class="s2">    --shake</span>
+<span class="s2">        set random parameters before fitting</span>
+<span class="s2">    --noise=5</span><span class="si">%%</span>
+<span class="s2">        percent noise to add to the simulated data</span>
+<span class="s2">    --seed=integer</span>
+<span class="s2">        random number seed</span>
+<span class="s2">    --err</span>
+<span class="s2">        show uncertainty estimate from curvature at the minimum</span>
+<span class="s2">    --cov</span>
+<span class="s2">        show the covariance matrix for the model when done</span>
+<span class="s2">    --entropy=gmm|mvn|wnn|llf</span>
+<span class="s2">        compute entropy on posterior distribution [dream only]</span>
+<span class="s2">    --staj</span>
+<span class="s2">        output staj file when done [Refl1D only]</span>
+<span class="s2">    --edit</span>
+<span class="s2">        start the gui</span>
+<span class="s2">    --view=linear|log</span>
+<span class="s2">        one of the predefined problem views; reflectometry also has fresnel,</span>
+<span class="s2">        logfresnel, q4 and residuals</span>
+
+<span class="s2">    --store=path</span>
+<span class="s2">        output directory for plots and models</span>
+<span class="s2">    --overwrite</span>
+<span class="s2">        if store already exists, replace it</span>
+<span class="s2">    --resume=path    [dream]</span>
+<span class="s2">        resume a fit from previous stored state; if path is &#39;-&#39; then use the</span>
+<span class="s2">        path given by --store, if it exists</span>
+<span class="s2">    --parallel=n</span>
+<span class="s2">        run fit using multiprocessing for parallelism; use --parallel=0 for all cpus</span>
+<span class="s2">    --mpi</span>
+<span class="s2">        run fit using MPI for parallelism (use command &quot;mpirun -n cpus ...&quot;)</span>
+<span class="s2">    --batch</span>
+<span class="s2">        batch mode; save output in .mon file and don&#39;t show plots after fit</span>
+<span class="s2">    --noshow</span>
+<span class="s2">        semi-batch; send output to console but don&#39;t show plots after fit</span>
+<span class="s2">    --time=inf</span>
+<span class="s2">        run for a maximum number of hours</span>
+<span class="s2">    --checkpoint=0</span>
+<span class="s2">        save fit state every n hours, or 0 for no checkpoints</span>
+
+<span class="s2">    --fit=amoeba    [</span><span class="si">%(fitter)s</span><span class="s2">]</span>
+<span class="s2">        fitting engine to use; see manual for details</span>
+<span class="s2">    --steps=0       [</span><span class="si">%(fitter)s</span><span class="s2">]</span>
+<span class="s2">        number of fit iterations after any burn-in time; use samples if steps=0</span>
+<span class="s2">    --samples=1e4   [dream]</span>
+<span class="s2">        set steps=samples/(pop*#pars) so the target number of samples is drawn</span>
+<span class="s2">    --xtol=1e-4     [de, amoeba]</span>
+<span class="s2">        minimum population diameter</span>
+<span class="s2">    --ftol=1e-4     [de, amoeba]</span>
+<span class="s2">        minimum population flatness</span>
+<span class="s2">    --alpha=0.0     [dream]</span>
+<span class="s2">        p-level for rejecting convergence; with fewer samples use a stricter</span>
+<span class="s2">        stopping condition, such as --alpha=0.01 --samples=20000</span>
+<span class="s2">    --outliers=none [dream]</span>
+<span class="s2">        name of test used for removing outlier chains every N samples:</span>
+<span class="s2">          none:   no outlier removal</span>
+<span class="s2">          iqr:    use interquartile range on likelihood</span>
+<span class="s2">          grubbs: use t-test on likelihood</span>
+<span class="s2">          mahal:  use distance from parameter values on the best chain</span>
+<span class="s2">    --pop=10        [dream, de, rl, ps]</span>
+<span class="s2">        population size is pop times number of fitted parameters; if pop is</span>
+<span class="s2">        negative, then set population size to -pop.</span>
+<span class="s2">    --burn=100      [dream, pt]</span>
+<span class="s2">        number of burn-in iterations before accumulating stats</span>
+<span class="s2">    --thin=1        [dream]</span>
+<span class="s2">        number of fit iterations between steps</span>
+<span class="s2">    --nT=25</span>
+<span class="s2">    --Tmin=0.1</span>
+<span class="s2">    --Tmax=10       [pt]</span>
+<span class="s2">        temperatures vector; use a higher maximum temperature and a larger</span>
+<span class="s2">        nT if your fit is getting stuck in local minima</span>
+<span class="s2">    --CR=0.9        [de, rl, pt]</span>
+<span class="s2">        crossover ratio for population mixing</span>
+<span class="s2">    --starts=1      [newton, rl, amoeba]</span>
+<span class="s2">        number of times to run the fit from random starting points.</span>
+<span class="s2">    --keep_best</span>
+<span class="s2">        when running with multiple starts, restart from a point near the</span>
+<span class="s2">        last minimum rather than using a completely random starting point.</span>
+<span class="s2">    --init=eps      [dream]</span>
+<span class="s2">        population initialization method:</span>
+<span class="s2">          eps:    ball around initial parameter set</span>
+<span class="s2">          lhs:    latin hypercube sampling</span>
+<span class="s2">          cov:    normally distributed according to covariance matrix</span>
+<span class="s2">          random: uniformly distributed within parameter ranges</span>
+<span class="s2">    --stepmon</span>
+<span class="s2">        show details for each step</span>
+<span class="s2">    --resynth=0</span>
+<span class="s2">        run resynthesis error analysis for n generations</span>
+
+<span class="s2">    --time_model</span>
+<span class="s2">        run the model --steps times in order to estimate total run time.</span>
+<span class="s2">    --profile</span>
+<span class="s2">        run the python profiler on the model; use --steps to run multiple</span>
+<span class="s2">        models for better statistics</span>
+<span class="s2">    --chisq</span>
+<span class="s2">        print the model description and chisq value and exit</span>
+<span class="s2">    -m/-c/-p command</span>
+<span class="s2">        run the python interpreter with bumps on the path:</span>
+<span class="s2">            m: command is a module such as bumps.cli, run as __main__</span>
+<span class="s2">            c: command is a python one-line command</span>
+<span class="s2">            p: command is the name of a python script</span>
+<span class="s2">    -i</span>
+<span class="s2">        start the interactive interpreter</span>
+<span class="s2">    -?/-h/--help</span>
+<span class="s2">        display this help</span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s1">&#39;fitter&#39;</span><span class="p">:</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">FIT_AVAILABLE_IDS</span><span class="p">)),</span>
+       <span class="s1">&#39;plotter&#39;</span><span class="p">:</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PLOTTERS</span><span class="p">),</span>
+      <span class="p">}</span>
+
+<span class="c1">#    --remote</span>
+<span class="c1">#        queue fit to run on remote server</span>
+<span class="c1">#    --notify=user@email</span>
+<span class="c1">#        remote fit notification</span>
+<span class="c1">#    --queue=http://reflectometry.org</span>
+<span class="c1">#        remote job queue</span>
+<span class="c1">#    --transport=mp  {amqp|mp|mpi}</span>
+<span class="c1">#        use amqp/multiprocessing/mpi for parallel evaluation</span>
+
+    <span class="n">_plot</span> <span class="o">=</span> <span class="s1">&#39;log&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_set_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PLOTTERS</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown plot type </span><span class="si">%s</span><span class="s2">; use </span><span class="si">%s</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PLOTTERS</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">plot</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">fget</span><span class="o">=</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">_set_plot</span><span class="p">)</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">resume</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_fit</span> <span class="o">=</span> <span class="n">FIT_DEFAULT_ID</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span>
+    <span class="nd">@fit</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">FIT_AVAILABLE_IDS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown fitter </span><span class="si">%s</span><span class="s2">; use </span><span class="si">%s</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">FIT_AVAILABLE_IDS</span><span class="p">))))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">fit_config</span> <span class="o">=</span> <span class="n">FIT_CONFIG</span>
+    <span class="n">TRANSPORTS</span> <span class="o">=</span> <span class="s1">&#39;amqp&#39;</span><span class="p">,</span> <span class="s1">&#39;mp&#39;</span><span class="p">,</span> <span class="s1">&#39;mpi&#39;</span><span class="p">,</span> <span class="s1">&#39;celery&#39;</span>
+    <span class="n">_transport</span> <span class="o">=</span> <span class="s1">&#39;mp&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_set_transport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRANSPORTS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown transport </span><span class="si">%s</span><span class="s2">; use </span><span class="si">%s</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TRANSPORTS</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transport</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">transport</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">fget</span><span class="o">=</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transport</span><span class="p">,</span> <span class="n">fset</span><span class="o">=</span><span class="n">_set_transport</span><span class="p">)</span>
+    <span class="n">meshsteps</span> <span class="o">=</span> <span class="mi">40</span></div>
+
+
+
+<div class="viewcode-block" id="getopts">
+<a class="viewcode-back" href="../../bumps.options.html#bumps.options.getopts">[docs]</a>
+<span class="k">def</span> <span class="nf">getopts</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process command line options.</span>
+
+<span class="sd">    Option values will be stored as attributes in the returned object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">BumpsOpts</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    <span class="n">opts</span><span class="o">.</span><span class="n">resynth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">resynth</span><span class="p">)</span>
+    <span class="c1"># Set a random seed if none is given; want to know the seed so we can</span>
+    <span class="c1"># reproduce the run.  The seed needs to be saved to the monitor file.</span>
+    <span class="n">opts</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span> <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">seed</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
+    <span class="n">opts</span><span class="o">.</span><span class="n">fit_config</span><span class="o">.</span><span class="n">set_from_cli</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">opts</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.options</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

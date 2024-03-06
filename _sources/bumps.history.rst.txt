@@ -1,0 +1,7 @@
+bumps.history module
+====================
+
+.. automodule:: bumps.history
+   :members:
+   :undoc-members:
+   :show-inheritance:

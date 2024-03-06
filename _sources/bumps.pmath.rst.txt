@@ -1,0 +1,7 @@
+bumps.pmath module
+==================
+
+.. automodule:: bumps.pmath
+   :members:
+   :undoc-members:
+   :show-inheritance:

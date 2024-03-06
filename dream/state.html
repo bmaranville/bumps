@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>state - Sampling history for MCMC &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="stats - Statistics helper functions" href="stats.html" />
+    <link rel="prev" title="parcoord - Parallel coordinates plot" href="parcoord.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stats.html" title="stats - Statistics helper functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="parcoord.html" title="parcoord - Parallel coordinates plot"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">state - Sampling history for MCMC</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="state-sampling-history-for-mcmc">
+<h1>state - Sampling history for MCMC<a class="headerlink" href="#state-sampling-history-for-mcmc" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.state.MCMCDraw" title="bumps.dream.state.MCMCDraw"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCMCDraw</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.state.load_state" title="bumps.dream.state.load_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.state.save_state" title="bumps.dream.state.save_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_state</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.state">Sampling history for MCMC.</p>
+<p>MCMC keeps track of a number of things during sampling.</p>
+<p>The results may be queried as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">draws</span><span class="p">,</span> <span class="n">generation</span><span class="p">,</span> <span class="n">thinning</span>
+<span class="n">sample</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span> <span class="n">returns</span> <span class="n">draws</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">logp</span>
+<span class="n">logp</span><span class="p">()</span>            <span class="n">returns</span> <span class="n">draws</span><span class="p">,</span> <span class="n">logp</span>
+<span class="n">acceptance_rate</span><span class="p">()</span> <span class="n">returns</span> <span class="n">draws</span><span class="p">,</span> <span class="n">AR</span>
+<span class="n">chains</span><span class="p">()</span>          <span class="n">returns</span> <span class="n">draws</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">logp</span>
+<span class="n">CR_weight</span><span class="p">()</span>       <span class="n">returns</span> <span class="n">draws</span><span class="p">,</span> <span class="n">CR_weight</span>
+<span class="n">best</span><span class="p">()</span>            <span class="n">returns</span> <span class="n">best_x</span><span class="p">,</span> <span class="n">best_logp</span>
+<span class="n">outliers</span><span class="p">()</span>        <span class="n">returns</span> <span class="n">outliers</span>
+<span class="n">show</span><span class="p">()</span><span class="o">/</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">/</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Data is stored in circular arrays, which keeps the last N generations and
+throws the rest away.</p>
+<p>draws is the total number of draws from the sampler.</p>
+<p>generation is the total number of generations.</p>
+<p>thinning is the number of generations per stored sample.</p>
+<p>draws[i] is the number of draws including those required to produce the
+information in the corresponding return vector.  Note that draw numbers
+need not be linearly spaced, since techniques like delayed rejection
+will result in a varying number of samples per generation.</p>
+<p>logp[i] is the set of log likelihoods, one for each member of the population.
+The logp() method returns the complete set, and the sample() method returns
+a thinned set, with on element of logp[i] for each vector point[i, :].</p>
+<p>AR[i] is the acceptance rate at generation i, showing the proportion of
+proposed points which are accepted into the population.</p>
+<p>chains[i, :, :] is the set of points in the differential evolution population
+at thinned generation i.  Ideally, the thinning rate of the MCMC process
+is chosen so that thinned generations i and i+1 are independent samples
+from the posterior distribution, though there is a chance that this may
+not be the case, and indeed, some points in generation i+1 may be identical
+to those in generation i.  Actual generation number is i*thinning.</p>
+<p>points[i, :] is the ith point in a returned sample.  The i is just a place
+holder; there is no inherent ordering to the sample once they have been
+extracted from the chains.  Note that the sample may be from a marginal
+distribution.</p>
+<p>R[i] is the Gelman R statistic measuring convergence of the Markov chain.</p>
+<p>CR_weight[i] is the set of weights used for selecting between the crossover
+ratios available to the candidate generation process of differential
+evolution.  These will be fixed early in the sampling, even when adaptive
+differential evolution is selected.</p>
+<p>outliers[i] is a vector containing the thinned generation number at which
+an outlier chain was removed, the id of the chain that was removed and
+the id of the chain that replaced it.  We leave it to the reader to decide
+if the cloned samples, point[:generation, :, removed_id], should be included
+in further analysis.</p>
+<p>best_logp is the highest log likelihood observed during the analysis and
+best_x is the corresponding point at which it was observed.</p>
+<p>generation is the last generation number</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.state.</span></span><span class="sig-name descname"><span class="pre">MCMCDraw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ngen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nthin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nupdate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nvar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Npop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ncr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinning</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.CR_weight">
+<span class="sig-name descname"><span class="pre">CR_weight</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.CR_weight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.CR_weight" title="Link to this definition">¶</a></dt>
+<dd><p>Return the crossover ratio weights to be used in the next generation.</p>
+<p>For example, to see if the adaptive CR is stable use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">draw</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">CR_weight</span><span class="p">()</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="crossover.html#module-bumps.dream.crossover" title="bumps.dream.crossover"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crossover</span></code></a> for details.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Ncr">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Ncr</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Ncr" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Ngen">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Ngen</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Ngen" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Npop">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Npop</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Npop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Nsamples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Nsamples</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Nsamples" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Nthin">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Nthin</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Nthin" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Nupdate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Nupdate</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Nupdate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.Nvar">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Nvar</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.Nvar" title="Link to this definition">¶</a></dt>
+<dd><p>Number of parameters in the fit</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.acceptance_rate">
+<span class="sig-name descname"><span class="pre">acceptance_rate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.acceptance_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.acceptance_rate" title="Link to this definition">¶</a></dt>
+<dd><p>Return the iteration number and the acceptance rate for that iteration.</p>
+<p>For example, to plot the acceptance rate over time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">draw</span><span class="p">,</span> <span class="n">AR</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">acceptance_rate</span><span class="p">()</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">AR</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.best">
+<span class="sig-name descname"><span class="pre">best</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.best"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.best" title="Link to this definition">¶</a></dt>
+<dd><p>Return the best point seen and its log likelihood.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.chains">
+<span class="sig-name descname"><span class="pre">chains</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.chains" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the observed Markov chains and the corresponding likelihoods.</p>
+<p>The return value is a tuple (<em>draws</em>, <em>chains</em>, <em>logp</em>).</p>
+<p><em>draws</em> is the number of samples taken up to and including the samples
+for the current generation.</p>
+<p><em>chains</em> is a three dimensional array of generations X chains X vars
+giving the set of points observed for each chain in every generation.
+Only the thinned samples are returned.</p>
+<p><em>logp</em> is a two dimensional array of generation X population giving
+the log likelihood of observing the set of variable values given in
+chains.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.derive_vars">
+<span class="sig-name descname"><span class="pre">derive_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.derive_vars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.derive_vars" title="Link to this definition">¶</a></dt>
+<dd><p>Generate derived variables from the current sample, adding columns
+for the derived variables to each sample of every chain.</p>
+<p>The new columns are treated as part of the sample.</p>
+<p><em>fn</em> is a function taking points p[:, k] for k in 0 … samples and
+returning a set of derived variables pj[k] for each sample k.  The
+variables can be returned as any kind of sequence including an
+array or a tuple with one entry per variable.  The caller uses
+asarray to convert the returned variables into a vars X samples array.
+For convenience, a single variable can be returned by itself.</p>
+<p><em>labels</em> are the labels to use for the derived variables.</p>
+<p>The following example adds the new variable x+y = P[0] + P[1]:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">state</span><span class="o">.</span><span class="n">derive_vars</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x+y&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.draw">
+<span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.draw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.draw" title="Link to this definition">¶</a></dt>
+<dd><p>Return a sample from the posterior distribution.</p>
+<p><em>portion</em> is the portion of each chain to use</p>
+<p><em>vars</em> is a list of variables to return for each point</p>
+<p><em>selection</em> sets the range each parameter in the returned distribution,
+using {variable: (low, high)}. Missing variables use the full range.</p>
+<p><em>thin</em> takes every nth item.</p>
+<p>To plot the distribution for parameter p1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">draw</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+<span class="n">hist</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>To plot the interdependence of p1 and p2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">draw</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">draw</span><span class="o">.</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.entropy">
+<span class="sig-name descname"><span class="pre">entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_est</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Return entropy estimate and uncertainty from an MCMC draw.</p>
+<p><em>portion</em> is the portion of each chain to use</p>
+<p><em>vars</em> is the set of variables to marginalize over.  It is None for
+the visible variables, or a list of variables.</p>
+<p><em>vars</em> is the list of variables to use for marginalization.</p>
+<p><em>selection</em> sets the range each parameter in the returned distribution,
+using {variable: (low, high)}. Missing variables use the full range.</p>
+<p><em>n_est</em> is the number of points to use from the draw when estimating
+the entropy (default=10000).</p>
+<p><em>thin</em> is the amount of thinning to use when selecting points from the
+draw.</p>
+<p><em>method</em> determines which entropy calculation to use:</p>
+<ul class="simple">
+<li><p>gmm: fit sample to a gaussian mixture model (GMM) with <span class="math notranslate nohighlight">\(5 \sqrt{d}\)</span>
+components where <span class="math notranslate nohighlight">\(d\)</span> is the number fitted parameters and estimate
+entropy by sampling from the GMM.</p></li>
+<li><p>llf: estimates likelihood scale factor from ratio of density
+estimate to model likelihood, then computes Monte Carlo entropy
+from sample; this does not work for marginal likelihood estimates.
+DOI:10.1109/CCA.2010.5611198</p></li>
+<li><p>mvn: fit sample to a multi-variate Gaussian and return the entropy
+of the best fit gaussian; uses bootstrap to estimate uncertainty.</p></li>
+<li><p>wnn: estimate entropy from nearest-neighbor distances in sample.
+DOI:10.1214/18-AOS1688</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.gelman">
+<span class="sig-name descname"><span class="pre">gelman</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.gelman"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.gelman" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the R-statistic for the current frame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.keep_best">
+<span class="sig-name descname"><span class="pre">keep_best</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.keep_best"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.keep_best" title="Link to this definition">¶</a></dt>
+<dd><p>Place the best point at the end of the last good chain.</p>
+<p>Good chains are defined by mark_outliers.</p>
+<p>Because the Markov chain is designed to wander the parameter
+space, the best individual seen during the random walk may have
+been observed during the burn-in period, and may no longer be
+present in the chain.  If this is the case, replace the final
+point with the best, otherwise swap the positions of the final
+and the best.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.labels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#bumps.dream.state.MCMCDraw.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.logp">
+<span class="sig-name descname"><span class="pre">logp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.logp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.logp" title="Link to this definition">¶</a></dt>
+<dd><p>Return the iteration number and the log likelihood for each point in
+the individual sequences in that iteration.</p>
+<p>For example, to plot the convergence of each sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">draw</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">logp</span><span class="p">()</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">logp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that draw[i] represents the total number of samples taken,
+including those for the samples in logp[i].</p>
+<p>If full is True, then return all chains, not just good chains.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.logp_slice">
+<span class="sig-name descname"><span class="pre">logp_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.logp_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.logp_slice" title="Link to this definition">¶</a></dt>
+<dd><p>Return a slice of the logp chains, either the first n if n &gt; 0
+or the last n if n &lt; 0.  Avoids unrolling the circular buffer if
+possible.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.mark_outliers">
+<span class="sig-name descname"><span class="pre">mark_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'IQR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.mark_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.mark_outliers" title="Link to this definition">¶</a></dt>
+<dd><p>Mark some chains as outliers but don’t remove them.  This can happen
+after drawing is complete, so that chains that did not converge are
+not included in the statistics.</p>
+<p><em>test</em> is ‘IQR’, ‘Mahol’ or ‘none’.</p>
+<p><em>portion</em> indicates what portion of the samples should be included
+in the outlier test.  The default is to include all of them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.min_slice">
+<span class="sig-name descname"><span class="pre">min_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.min_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.min_slice" title="Link to this definition">¶</a></dt>
+<dd><p>Return the minimum logp for n slices, from the head if positive
+or the tail if negative.</p>
+<p>This is a specialized function so it can be fast.  Convergence
+can be quickly rejected if the min in a short head is smaller
+than the min in a long tail.  Unfortunately, if the data is
+wrapped, then the max function will cost extra.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.outliers">
+<span class="sig-name descname"><span class="pre">outliers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.outliers" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of outlier removal operations.</p>
+<p>Each outlier operation is a tuple giving the thinned generation
+in which it occurred, the old chain id and the new chain id.</p>
+<p>The chains themselves have already been updated to reflect the
+removal.</p>
+<p>Curiously, it is possible for the maximum likelihood seen so far
+to be removed by this operation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.remove_outliers">
+<span class="sig-name descname"><span class="pre">remove_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'IQR'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.remove_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.remove_outliers" title="Link to this definition">¶</a></dt>
+<dd><p>Replace outlier chains with clones of good ones.  This should happen
+early in the sampling processes so the clones have an opportunity
+to evolve their own identity.  Only the head of the chain is modified.</p>
+<p><em>state</em> contains the chains, with log likelihood for each point.</p>
+<p><em>x</em>, <em>logp</em> are the current population and the corresponding
+log likelihoods; these are updated with cloned chain values.</p>
+<p><em>test</em> is the name of the test to use (one of IQR, Grubbs, Mahal
+or none). See <a class="reference internal" href="outliers.html#bumps.dream.outliers.identify_outliers" title="bumps.dream.outliers.identify_outliers"><code class="xref py py-func docutils literal notranslate"><span class="pre">outliers.identify_outliers()</span></code></a> for details.</p>
+<p>Updates <em>state</em>, <em>x</em> and <em>logp</em> to reflect the changes.</p>
+<p>Returns a list of the outliers that were removed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.resize">
+<span class="sig-name descname"><span class="pre">resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ngen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nthin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nupdate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nvar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Npop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ncr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thinning</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.resize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Return a sample from the posterior distribution.</p>
+<p><strong>Deprecated</strong> use <a class="reference internal" href="#bumps.dream.state.MCMCDraw.draw" title="bumps.dream.state.MCMCDraw.draw"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draw()</span></code></a> instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.set_integer_vars">
+<span class="sig-name descname"><span class="pre">set_integer_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.set_integer_vars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.set_integer_vars" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate tha variables should be considered integer variables when
+computing statistics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.set_visible_vars">
+<span class="sig-name descname"><span class="pre">set_visible_vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.set_visible_vars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.set_visible_vars" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.show" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.stable_best">
+<span class="sig-name descname"><span class="pre">stable_best</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.stable_best"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.stable_best" title="Link to this definition">¶</a></dt>
+<dd><p>Return the best point seen and its log likelihood.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.state.MCMCDraw.title" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.state.MCMCDraw.trim_portion">
+<span class="sig-name descname"><span class="pre">trim_portion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#MCMCDraw.trim_portion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.MCMCDraw.trim_portion" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.state.load_state">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.state.</span></span><span class="sig-name descname"><span class="pre">load_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derived_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#load_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.load_state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.state.save_state">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.state.</span></span><span class="sig-name descname"><span class="pre">save_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/state.html#save_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.state.save_state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">state - Sampling history for MCMC</a><ul>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw"><code class="docutils literal notranslate"><span class="pre">MCMCDraw</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.CR_weight"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.CR_weight()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Ncr"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Ncr</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Ngen"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Ngen</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Npop"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Npop</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Nsamples"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Nsamples</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Nthin"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Nthin</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Nupdate"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Nupdate</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.Nvar"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.Nvar</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.acceptance_rate"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.acceptance_rate()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.best"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.best()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.chains"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.chains()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.derive_vars"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.derive_vars()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.draw"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.draw()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.entropy"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.gelman"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.gelman()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.keep_best"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.keep_best()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.labels"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.logp"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.logp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.logp_slice"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.logp_slice()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.mark_outliers"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.mark_outliers()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.min_slice"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.min_slice()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.outliers"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.outliers()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.remove_outliers"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.remove_outliers()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.resize"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.resize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.sample"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.sample()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.save"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.set_integer_vars"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.set_integer_vars()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.set_visible_vars"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.set_visible_vars()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.show"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.show()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.stable_best"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.stable_best()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.title"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.title</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.MCMCDraw.trim_portion"><code class="docutils literal notranslate"><span class="pre">MCMCDraw.trim_portion()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.state.load_state"><code class="docutils literal notranslate"><span class="pre">load_state()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.state.save_state"><code class="docutils literal notranslate"><span class="pre">save_state()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="parcoord.html"
+                          title="previous chapter">parcoord - Parallel coordinates plot</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="stats.html"
+                          title="next chapter">stats - Statistics helper functions</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/state.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stats.html" title="stats - Statistics helper functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="parcoord.html" title="parcoord - Parallel coordinates plot"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">state - Sampling history for MCMC</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

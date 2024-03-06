@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.util &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.util</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.util</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Miscellaneous utility functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;kbhit&quot;</span><span class="p">,</span> <span class="s2">&quot;profile&quot;</span><span class="p">,</span> <span class="s2">&quot;pushdir&quot;</span><span class="p">,</span> <span class="s2">&quot;push_seed&quot;</span><span class="p">,</span> <span class="s2">&quot;redirect_console&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">types</span>
+
+<span class="k">try</span><span class="p">:</span>  <span class="c1"># CRUFT: python 2.x</span>
+    <span class="kn">from</span> <span class="nn">cStringIO</span> <span class="kn">import</span> <span class="n">StringIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ascontiguousarray</span> <span class="k">as</span> <span class="n">_dense</span>
+<span class="c1"># **DEPRECATED** we can import erf directly from scipy.special.erf</span>
+<span class="c1"># so there is no longer a need for bumps.util.erf.</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">erf</span>
+
+
+<span class="k">def</span> <span class="nf">parse_errfile</span><span class="p">(</span><span class="n">errfile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse dream statistics from a particular fit.</span>
+
+<span class="sd">    Returns overall chisq, list of chisq for individual models and</span>
+<span class="sd">    a parameter dictionary with attributes for number, name, mean, median,</span>
+<span class="sd">    p68 for 68% credible interval and p95 for 95% credible interval.</span>
+
+<span class="sd">    The parameter dictionary is keyed by parameter name.</span>
+
+<span class="sd">    Usually there is only one errfile in a directory, which can be</span>
+<span class="sd">    retrieved using::</span>
+
+<span class="sd">        import os.path</span>
+<span class="sd">        import glob</span>
+<span class="sd">        errfile = glob.glob(os.path.join(path, &#39;*.err&#39;))[0]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.dream.stats</span> <span class="kn">import</span> <span class="n">parse_var</span>
+    <span class="n">pars</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">chisq</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">overall</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">errfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;[overall&quot;</span><span class="p">):</span>
+                <span class="n">overall</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">6</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;[chisq&quot;</span><span class="p">):</span>
+                <span class="n">chisq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">7</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">continue</span>
+
+            <span class="n">p</span> <span class="o">=</span> <span class="n">parse_var</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">overall</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">overall</span> <span class="o">=</span> <span class="n">chisq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pardict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">overall</span><span class="p">,</span> <span class="n">chisq</span><span class="p">,</span> <span class="n">pardict</span>
+
+
+<div class="viewcode-block" id="profile">
+<a class="viewcode-back" href="../../bumps.util.html#bumps.util.profile">[docs]</a>
+<span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Profile a function called with the given arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">cProfile</span>
+    <span class="kn">import</span> <span class="nn">pstats</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">():</span>
+        <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">datafile</span> <span class="o">=</span> <span class="s1">&#39;profile.out&#39;</span>
+    <span class="n">cProfile</span><span class="o">.</span><span class="n">runctx</span><span class="p">(</span><span class="s1">&#39;call()&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">call</span><span class="o">=</span><span class="n">call</span><span class="p">),</span> <span class="p">{},</span> <span class="n">datafile</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">pstats</span><span class="o">.</span><span class="n">Stats</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
+    <span class="c1"># order=&#39;calls&#39;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="s1">&#39;cumulative&#39;</span>
+    <span class="c1"># order=&#39;pcalls&#39;</span>
+    <span class="c1"># order=&#39;time&#39;</span>
+    <span class="n">stats</span><span class="o">.</span><span class="n">sort_stats</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+    <span class="n">stats</span><span class="o">.</span><span class="n">print_stats</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="kbhit">
+<a class="viewcode-back" href="../../bumps.util.html#bumps.util.kbhit">[docs]</a>
+<span class="k">def</span> <span class="nf">kbhit</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check whether a key has been pressed on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>  <span class="c1"># Windows</span>
+        <span class="kn">import</span> <span class="nn">msvcrt</span>
+        <span class="k">return</span> <span class="n">msvcrt</span><span class="o">.</span><span class="n">kbhit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># Unix</span>
+        <span class="kn">import</span> <span class="nn">select</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mf">0.0001</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">in</span> <span class="n">i</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">DynamicModule</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ModuleType</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">__path__</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span><span class="p">]</span>
+       <span class="bp">self</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">name</span>
+       <span class="c1"># In the bowels of importlib the parent spec attribute is used to</span>
+       <span class="c1"># avoid circular imports, but only if spec is not None. This behaviour</span>
+       <span class="c1"># was observed on python 3.11, and perhaps earlier.</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">__spec__</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">relative_import</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">module_name</span><span class="o">=</span><span class="s2">&quot;relative_import&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Define an empty module allowing relative imports from a script.</span>
+
+<span class="sd">    By setting :code:`__package__ = relative_import(__file__)` at the top of</span>
+<span class="sd">    your script file you can even run your model as a python script.  So long</span>
+<span class="sd">    as the script behaviour is isolated in :code:`if __name__ == &quot;__main__&quot;:`</span>
+<span class="sd">    code block and :code:`problem = FitProblem(...)` is defined, the same model</span>
+<span class="sd">    can be used both within and outside of bumps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">module_name</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module_name</span><span class="p">],</span> <span class="n">DynamicModule</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;relative import would override the existing module </span><span class="si">%s</span><span class="s2">. Use another name&quot;</span>
+                          <span class="o">%</span> <span class="n">module_name</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">DynamicModule</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">module_name</span>
+
+
+<div class="viewcode-block" id="redirect_console">
+<a class="viewcode-back" href="../../bumps.util.html#bumps.util.redirect_console">[docs]</a>
+<span class="k">class</span> <span class="nc">redirect_console</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Console output redirection context</span>
+
+<span class="sd">    The output can be redirected to a string, to an already opened file</span>
+<span class="sd">    (anything with a *write* attribute), or to a filename which will be</span>
+<span class="sd">    opened for the duration of the with context.  Unless *stderr* is</span>
+<span class="sd">    specified, then both standard output and standard error are</span>
+<span class="sd">    redirected to the same file.  The open file handle is returned on</span>
+<span class="sd">    enter, and (if it was not an already opened file) it is closed on exit.</span>
+
+<span class="sd">    If no file is specified, then output is redirected to a StringIO</span>
+<span class="sd">    object, which has a getvalue() method which can retrieve the string.</span>
+<span class="sd">    The StringIO object is deleted when the context ends, so be sure to</span>
+<span class="sd">    retrieve its value within the redirect_console context.</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    Show that output is captured in a file:</span>
+
+<span class="sd">        &gt;&gt;&gt; from bumps.util import redirect_console</span>
+<span class="sd">        &gt;&gt;&gt; print(&quot;hello&quot;)</span>
+<span class="sd">        hello</span>
+<span class="sd">        &gt;&gt;&gt; with redirect_console(&quot;redirect_out.log&quot;):</span>
+<span class="sd">        ...     print(&quot;captured&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(&quot;hello&quot;)</span>
+<span class="sd">        hello</span>
+<span class="sd">        &gt;&gt;&gt; print(open(&quot;redirect_out.log&quot;).read()[:-1])</span>
+<span class="sd">        captured</span>
+<span class="sd">        &gt;&gt;&gt; import os; os.unlink(&quot;redirect_out.log&quot;)</span>
+
+<span class="sd">    Output can also be captured to a string:</span>
+
+<span class="sd">        &gt;&gt;&gt; with redirect_console() as fid:</span>
+<span class="sd">        ...    print(&quot;captured to string&quot;)</span>
+<span class="sd">        ...    captured_string = fid.getvalue()</span>
+<span class="sd">        &gt;&gt;&gt; print(captured_string.strip())</span>
+<span class="sd">        captured to string</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sys_stdout</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sys_stderr</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sys_stdout</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sys_stderr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sys_stdout</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sys_stderr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">sys_stdout</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">sys_stderr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="k">class</span> <span class="nc">push_python_path</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Change sys.path for the duration of a with statement.</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    Show that the original directory is restored::</span>
+
+<span class="sd">        &gt;&gt;&gt; import sys, os</span>
+<span class="sd">        &gt;&gt;&gt; original_path = list(sys.path)</span>
+<span class="sd">        &gt;&gt;&gt; with push_python_path(&#39;/tmp&#39;):</span>
+<span class="sd">        ...     assert sys.path[-1] == &#39;/tmp&#39;</span>
+<span class="sd">        &gt;&gt;&gt; restored_path = list(sys.path)</span>
+<span class="sd">        &gt;&gt;&gt; assert original_path == restored_path</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="pushdir">
+<a class="viewcode-back" href="../../bumps.util.html#bumps.util.pushdir">[docs]</a>
+<span class="k">class</span> <span class="nc">pushdir</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Change directories for the duration of a with statement.</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    Show that the original directory is restored::</span>
+
+<span class="sd">        &gt;&gt;&gt; import sys, os</span>
+<span class="sd">        &gt;&gt;&gt; original_wd = os.getcwd()</span>
+<span class="sd">        &gt;&gt;&gt; with pushdir(sys.path[0]):</span>
+<span class="sd">        ...     pushed_wd = os.getcwd()</span>
+<span class="sd">        ...     first_site = os.path.abspath(sys.path[0])</span>
+<span class="sd">        ...     assert pushed_wd == first_site</span>
+<span class="sd">        &gt;&gt;&gt; restored_wd = os.getcwd()</span>
+<span class="sd">        &gt;&gt;&gt; assert original_wd == restored_wd</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cwd</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="push_seed">
+<a class="viewcode-back" href="../../bumps.util.html#bumps.util.push_seed">[docs]</a>
+<span class="k">class</span> <span class="nc">push_seed</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set the seed value for the random number generator.</span>
+
+<span class="sd">    When used in a with statement, the random number generator state is</span>
+<span class="sd">    restored after the with statement is complete.</span>
+
+<span class="sd">    :Parameters:</span>
+
+<span class="sd">    *seed* : int or array_like, optional</span>
+<span class="sd">        Seed for RandomState</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">    Seed can be used directly to set the seed::</span>
+
+<span class="sd">        &gt;&gt;&gt; from numpy.random import randint</span>
+<span class="sd">        &gt;&gt;&gt; push_seed(24)</span>
+<span class="sd">        &lt;...push_seed object at...&gt;</span>
+<span class="sd">        &gt;&gt;&gt; print(randint(0,1000000,3))</span>
+<span class="sd">        [242082    899 211136]</span>
+
+<span class="sd">    Seed can also be used in a with statement, which sets the random</span>
+<span class="sd">    number generator state for the enclosed computations and restores</span>
+<span class="sd">    it to the previous state on completion::</span>
+
+<span class="sd">        &gt;&gt;&gt; with push_seed(24):</span>
+<span class="sd">        ...    print(randint(0,1000000,3))</span>
+<span class="sd">        [242082    899 211136]</span>
+
+<span class="sd">    Using nested contexts, we can demonstrate that state is indeed</span>
+<span class="sd">    restored after the block completes::</span>
+
+<span class="sd">        &gt;&gt;&gt; with push_seed(24):</span>
+<span class="sd">        ...    print(randint(0,1000000))</span>
+<span class="sd">        ...    with push_seed(24):</span>
+<span class="sd">        ...        print(randint(0,1000000,3))</span>
+<span class="sd">        ...    print(randint(0,1000000))</span>
+<span class="sd">        242082</span>
+<span class="sd">        [242082    899 211136]</span>
+<span class="sd">        899</span>
+
+<span class="sd">    The restore step is protected against exceptions in the block::</span>
+
+<span class="sd">        &gt;&gt;&gt; with push_seed(24):</span>
+<span class="sd">        ...    print(randint(0,1000000))</span>
+<span class="sd">        ...    try:</span>
+<span class="sd">        ...        with push_seed(24):</span>
+<span class="sd">        ...            print(randint(0,1000000,3))</span>
+<span class="sd">        ...            raise Exception()</span>
+<span class="sd">        ...    except Exception:</span>
+<span class="sd">        ...        print(&quot;Exception raised&quot;)</span>
+<span class="sd">        ...    print(randint(0,1000000))</span>
+<span class="sd">        242082</span>
+<span class="sd">        [242082    899 211136]</span>
+<span class="sd">        Exception raised</span>
+<span class="sd">        899</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.util</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

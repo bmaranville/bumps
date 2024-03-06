@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.random_lines &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.random_lines</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.random_lines</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Random Lines Algorithm finds the optimal minimum of a function.</span>
+
+<span class="sd">Sahin, I. (2013). Minimization over randomly selected lines.  An</span>
+<span class="sd">International  Journal Of Optimization And Control: Theories &amp;</span>
+<span class="sd">Applications (IJOCTA), 3(2), 111-119.</span>
+<span class="sd">http://dx.doi.org/10.11121/ijocta.01.2013.00167</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Author : Ismet Sahin</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;random_lines&quot;</span><span class="p">,</span> <span class="s2">&quot;particle_swarm&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">isfinite</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">rand</span><span class="p">,</span> <span class="n">random_integers</span>
+
+
+<span class="k">def</span> <span class="nf">print_every_five</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">fx</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="random_lines">
+<a class="viewcode-back" href="../../bumps.random_lines.html#bumps.random_lines.random_lines">[docs]</a>
+<span class="k">def</span> <span class="nf">random_lines</span><span class="p">(</span><span class="n">cfo</span><span class="p">,</span> <span class="n">NP</span><span class="p">,</span> <span class="n">CR</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">abort_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Random lines is a population based optimizer which using quadratic</span>
+<span class="sd">    fits along randomly oriented directions.</span>
+
+<span class="sd">    *cfo* is the cost function object.  This is a dictionary which contains</span>
+<span class="sd">    the following keys:</span>
+
+<span class="sd">        *cost* is the function to be optimized.  If *parallel_cost* exists,</span>
+<span class="sd">        it should accept a list of points, not just a single point on each</span>
+<span class="sd">        evaluation.</span>
+
+<span class="sd">        *n* is the problem dimension</span>
+
+<span class="sd">        *x0* is the initial point</span>
+
+<span class="sd">        *x1* and *x2* are lower and upper bounds for each parameter</span>
+
+<span class="sd">        *monitor* is a callable which is called each iteration using</span>
+<span class="sd">        *callback(step, x, fx, k)*, where *step* is the iteration number,</span>
+<span class="sd">        *x* is the population, *fx* is value of the cost function for each</span>
+<span class="sd">        member of the population and *k* is the index of the best point in</span>
+<span class="sd">        the population.</span>
+
+<span class="sd">        *f_opt* is the target value of the optimization</span>
+
+<span class="sd">    *NP* is the number of fit parameters</span>
+
+<span class="sd">    *CR* is the cross-over ratio, which is the proportion of dimensions</span>
+<span class="sd">    that participate in any random orientation vector.</span>
+
+<span class="sd">    *epsilon* is the convergence criterion.</span>
+
+<span class="sd">    *abort_test* is a callable which indicates whether an external processes</span>
+<span class="sd">    requests the fit to stop.</span>
+
+<span class="sd">    *maxiter* is the maximum number of generations</span>
+
+<span class="sd">    Returns success, num_evals, f(x_best), x_best.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;parallel_cost&#39;</span> <span class="ow">in</span> <span class="n">cfo</span><span class="p">:</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">asarray</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;parallel_cost&#39;</span><span class="p">](</span><span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">monitor</span> <span class="o">=</span> <span class="n">cfo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;monitor&#39;</span><span class="p">,</span> <span class="n">print_every_five</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">NP</span><span class="p">)</span>            <span class="c1"># will hold original vectors</span>
+
+    <span class="c1"># CREATE FIRST GENERATION WITH LEGAL PARAMETER VALUES AND EVALUATE COSTS</span>
+    <span class="c1"># m th member of the population</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;x0&#39;</span> <span class="ow">in</span> <span class="n">cfo</span><span class="p">:</span>
+        <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x0&#39;</span><span class="p">]</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="n">n_feval</span> <span class="o">=</span> <span class="n">NP</span>
+    <span class="n">f_best</span><span class="p">,</span> <span class="n">i_best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">count</span><span class="p">()))</span>
+
+    <span class="c1"># CHECK INITIAL STOPPING CRITERIA</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;f_opt&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_best</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">:</span>
+        <span class="n">satisfied_sc</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">x_best</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">satisfied_sc</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">x_best</span>
+
+    <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxiter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+
+        <span class="c1"># finding destination vector</span>
+        <span class="n">i_Xj</span> <span class="o">=</span> <span class="n">random_integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">NP</span><span class="p">)</span>
+        <span class="n">i_ge</span> <span class="o">=</span> <span class="p">(</span><span class="n">i_Xj</span> <span class="o">&gt;=</span> <span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="p">))</span>
+        <span class="n">i_Xj</span><span class="p">[</span><span class="n">i_ge</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># choosing muk</span>
+        <span class="n">muk</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">+</span> <span class="mf">0.49</span> <span class="o">*</span> <span class="n">rand</span><span class="p">(</span><span class="n">NP</span><span class="p">)</span>
+        <span class="n">inx</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">NP</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span>
+        <span class="n">muk</span><span class="p">[</span><span class="n">inx</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">muk</span><span class="p">[</span><span class="n">inx</span><span class="p">]</span>
+
+        <span class="c1"># find xk and fk s</span>
+        <span class="n">Xi</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="n">Xj</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_Xj</span><span class="p">]</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">Xj</span> <span class="o">-</span> <span class="n">Xi</span>
+        <span class="n">Xk</span> <span class="o">=</span> <span class="n">Xi</span> <span class="o">+</span> <span class="p">(</span><span class="n">ones</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">muk</span><span class="p">)</span> <span class="o">*</span> <span class="n">P</span>
+        <span class="n">fk</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">Xk</span><span class="p">)</span>
+        <span class="n">n_feval</span> <span class="o">=</span> <span class="n">n_feval</span> <span class="o">+</span> <span class="n">NP</span>
+
+        <span class="c1"># find quadratic models</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">muk</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">muk</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">satisfied_sc</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">x_best</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;muk cannot be zero or one !!!&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">satisfied_sc</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">x_best</span>
+
+        <span class="n">fi</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="n">fj</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">i_Xj</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">muk</span><span class="o">/</span><span class="p">(</span><span class="n">muk</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">*</span><span class="n">fj</span> <span class="o">-</span> <span class="p">((</span><span class="n">muk</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">muk</span><span class="p">)</span><span class="o">*</span><span class="n">fi</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">muk</span><span class="o">*</span><span class="p">(</span><span class="n">muk</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span><span class="o">*</span><span class="n">fk</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">fj</span> <span class="o">-</span> <span class="n">fi</span> <span class="o">-</span> <span class="n">b</span>
+
+        <span class="n">crossovers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-30</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">fk</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">fi</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">and</span> <span class="n">fk</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">fj</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                    <span class="ow">or</span> <span class="ow">not</span> <span class="n">isfinite</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">])):</span>
+                <span class="c1"># xi survives</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># xi may not survive</span>
+                <span class="n">mustar</span> <span class="o">=</span> <span class="o">-</span><span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                <span class="n">xstar</span> <span class="o">=</span> <span class="n">Xi</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">mustar</span> <span class="o">*</span> <span class="n">P</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
+
+                <span class="c1"># choosing random numbers for crossover</span>
+                <span class="n">rn</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="n">indi</span> <span class="o">=</span> <span class="p">(</span><span class="n">rn</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">CR</span><span class="p">))</span>
+                <span class="n">indj</span> <span class="o">=</span> <span class="p">(</span><span class="n">rn</span> <span class="o">&gt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">CR</span><span class="p">))</span>
+                <span class="n">xstar</span><span class="p">[</span><span class="n">indi</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xi</span><span class="p">[</span><span class="n">indi</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+                <span class="n">xstar</span><span class="p">[</span><span class="n">indj</span><span class="p">]</span> <span class="o">=</span> <span class="n">Xj</span><span class="p">[</span><span class="n">indj</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+
+                <span class="c1"># map into feasible set</span>
+                <span class="n">inx</span> <span class="o">=</span> <span class="n">xstar</span> <span class="o">&lt;</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span>
+                <span class="n">xstar</span><span class="p">[</span><span class="n">inx</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">][</span><span class="n">inx</span><span class="p">]</span>
+                <span class="n">inx</span> <span class="o">=</span> <span class="n">xstar</span> <span class="o">&gt;</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span>
+                <span class="n">xstar</span><span class="p">[</span><span class="n">inx</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">][</span><span class="n">inx</span><span class="p">]</span>
+
+                <span class="n">crossovers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">xstar</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">crossovers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">idx</span><span class="p">,</span> <span class="n">xstar</span> <span class="o">=</span> <span class="p">[</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">crossovers</span><span class="p">)]</span>
+            <span class="n">fstar</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">xstar</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">n_feval</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">crossovers</span><span class="p">)</span>
+
+            <span class="c1"># xi does not survive, xstar replaces it</span>
+            <span class="n">update</span> <span class="o">=</span> <span class="n">fstar</span> <span class="o">&lt;</span> <span class="n">fi</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="n">update</span><span class="p">]]</span> <span class="o">=</span> <span class="n">fstar</span><span class="p">[</span><span class="n">update</span><span class="p">]</span>
+            <span class="n">X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">[</span><span class="n">update</span><span class="p">]]</span> <span class="o">=</span> <span class="n">xstar</span><span class="p">[</span><span class="n">update</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># CHECKING STOPPING CRITERIA</span>
+        <span class="n">f_best</span><span class="p">,</span> <span class="n">i_best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">count</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;f_opt&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_best</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">:</span>
+            <span class="n">satisfied_sc</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">x_best</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">satisfied_sc</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">x_best</span>
+        <span class="k">if</span> <span class="n">abort_test</span><span class="p">():</span>
+            <span class="k">break</span>
+
+        <span class="n">monitor</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">i_best</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="particle_swarm">
+<a class="viewcode-back" href="../../bumps.random_lines.html#bumps.random_lines.particle_swarm">[docs]</a>
+<span class="k">def</span> <span class="nf">particle_swarm</span><span class="p">(</span><span class="n">cfo</span><span class="p">,</span> <span class="n">NP</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Particle swarm is a population based optimizer which uses force and</span>
+<span class="sd">    momentum to select candidate points.</span>
+
+<span class="sd">    *cfo* is the cost function object.  This is a dictionary which contains</span>
+<span class="sd">    the following keys:</span>
+
+<span class="sd">        *cost* is the function to be optimized.  If *parallel_cost* exists,</span>
+<span class="sd">        it should accept a list of points, not just a single point on each</span>
+<span class="sd">        evaluation.</span>
+
+<span class="sd">        *n* is the problem dimension</span>
+
+<span class="sd">        *x0* is the initial point</span>
+
+<span class="sd">        *x1* and *x2* are lower and upper bounds for each parameter</span>
+
+<span class="sd">        *monitor* is a callable which is called each iteration using</span>
+<span class="sd">        *callback(step, x, fx, k)*, where *step* is the iteration number,</span>
+<span class="sd">        *x* is the population, *fx* is value of the cost function for each</span>
+<span class="sd">        member of the population and *k* is the index of the best point in</span>
+<span class="sd">        the population.</span>
+
+<span class="sd">        *f_opt* is the target value of the optimization</span>
+
+<span class="sd">    *NP* is the number of fit parameters</span>
+
+<span class="sd">    *epsilon* is the convergence criterion.</span>
+
+<span class="sd">    *abort_test* is a callable which indicates whether an external processes</span>
+<span class="sd">    requests the fit to stop.</span>
+
+<span class="sd">    *maxiter* is the maximum number of generations</span>
+
+<span class="sd">    Returns success, num_evals, f(x_best), x_best.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;parallel_cost&#39;</span> <span class="ow">in</span> <span class="n">cfo</span><span class="p">:</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">asarray</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;parallel_cost&#39;</span><span class="p">](</span><span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">monitor</span> <span class="o">=</span> <span class="n">cfo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;monitor&#39;</span><span class="p">,</span> <span class="n">print_every_five</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="mf">2.8</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="mf">1.3</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">c1</span> <span class="o">+</span> <span class="n">c2</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">phi</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">phi</span> <span class="o">*</span> <span class="n">phi</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">phi</span><span class="p">))</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">NP</span><span class="p">)</span>            <span class="c1"># will hold original vectors</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">NP</span><span class="p">))</span>
+
+    <span class="c1"># CREATE FIRST GENERATION WITH LEGAL PARAMETER VALUES AND EVALUATE COSTS</span>
+    <span class="n">rn1</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">NP</span><span class="p">)</span>
+    <span class="c1"># m th member of the population</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="p">):</span>
+        <span class="n">extend</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span>
+        <span class="n">X</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">extend</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span>
+        <span class="n">V</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rn1</span><span class="p">[:,</span> <span class="n">m</span><span class="p">]</span> <span class="o">*</span> <span class="n">extend</span> <span class="o">-</span> <span class="n">extend</span>
+
+    <span class="k">if</span> <span class="s1">&#39;x0&#39;</span> <span class="ow">in</span> <span class="n">cfo</span><span class="p">:</span>
+        <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;x0&#39;</span><span class="p">]</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="n">n_feval</span> <span class="o">=</span> <span class="n">NP</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:]</span>
+
+    <span class="n">f_best</span><span class="p">,</span> <span class="n">i_best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">count</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">maxiter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+
+        <span class="n">rn2</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">NP</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">NP</span><span class="p">):</span>
+            <span class="c1">#r = rand(2)</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">rn2</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">V</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">c1</span> <span class="o">*</span> \
+                <span class="p">(</span><span class="n">P</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">c2</span> <span class="o">*</span> <span class="p">(</span><span class="n">P</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+            <span class="n">V</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span> <span class="o">*</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+
+            <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+
+        <span class="n">f_temp</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">f_temp</span> <span class="o">&lt;</span> <span class="n">f</span>
+        <span class="n">f</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_temp</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">P</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+
+        <span class="n">n_feval</span> <span class="o">=</span> <span class="n">n_feval</span> <span class="o">+</span> <span class="n">NP</span>
+
+        <span class="c1"># CHECKING STOPPING CRITERIA</span>
+        <span class="n">f_best</span><span class="p">,</span> <span class="n">i_best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">count</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cfo</span><span class="p">[</span><span class="s1">&#39;f_opt&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_best</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">:</span>
+            <span class="n">satisfied_sc</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">satisfied_sc</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span>
+
+        <span class="n">monitor</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">i_best</span><span class="p">)</span>
+
+    <span class="n">satisfied_sc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">satisfied_sc</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">i_best</span><span class="p">]</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">example_call</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">random_lines</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">seed</span>
+    <span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">f_opt</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">cfo</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cost&#39;</span><span class="p">:</span> <span class="n">cost</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="n">x1</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="n">x2</span><span class="p">,</span> <span class="s1">&#39;f_opt&#39;</span><span class="p">:</span> <span class="n">f_opt</span><span class="p">}</span>
+
+    <span class="n">NP</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">satisfied_sc</span><span class="p">,</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">x_best</span> <span class="o">=</span> <span class="n">optimizer</span><span class="p">(</span><span class="n">cfo</span><span class="p">,</span> <span class="n">NP</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">satisfied_sc</span><span class="p">,</span> <span class="s2">&quot;n:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">n_feval</span><span class="p">,</span> <span class="n">f_best</span><span class="p">,</span> <span class="n">x_best</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== Random Lines&quot;</span><span class="p">)</span>
+    <span class="n">example_call</span><span class="p">(</span><span class="n">random_lines</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== Particle Swarm&quot;</span><span class="p">)</span>
+    <span class="n">example_call</span><span class="p">(</span><span class="n">particle_swarm</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.random_lines</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

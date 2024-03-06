@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fitting a multi-valued function &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Peak Fitting" href="../peaks/readme.html" />
+    <link rel="prev" title="Fitting an ODE" href="ode.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../peaks/readme.html" title="Peak Fitting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ode.html" title="Fitting an ODE"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="readme.html" accesskey="U">Simple functions</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting a multi-valued function</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitting-a-multi-valued-function">
+<h1>Fitting a multi-valued function<a class="headerlink" href="#fitting-a-multi-valued-function" title="Link to this heading">¶</a></h1>
+<p>Like the ODE fit function, but this example fits a set of coupled ODEs.
+In this case, there are multiple values reported at each time step, two
+of which are measured and fitted.</p>
+<p>From SciPy cookbook coupled spring mass example:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://scipy-cookbook.readthedocs.io/items/CoupledSpringMassSystem.html">https://scipy-cookbook.readthedocs.io/items/CoupledSpringMassSystem.html</a></p>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">odeint</span>
+</pre></div>
+</div>
+<p>Use ODEINT to solve the differential equations defined by the vector field</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">vectorfield</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines the differential equations for the coupled spring-mass system.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        w :  vector of the state variables:</span>
+<span class="sd">                  w = [x1,y1,x2,y2]</span>
+<span class="sd">        t :  time</span>
+<span class="sd">        p :  vector of the parameters:</span>
+<span class="sd">                  p = [m1,m2,k1,k2,L1,L2,b1,b2]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">w</span>
+    <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">p</span>
+
+    <span class="c1"># Create f = (x1&#39;,y1&#39;,x2&#39;,y2&#39;):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">[</span><span class="n">y1</span><span class="p">,</span>
+         <span class="p">(</span><span class="o">-</span><span class="n">b1</span> <span class="o">*</span> <span class="n">y1</span> <span class="o">-</span> <span class="n">k1</span> <span class="o">*</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">L1</span><span class="p">)</span> <span class="o">+</span> <span class="n">k2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">L2</span><span class="p">))</span> <span class="o">/</span> <span class="n">m1</span><span class="p">,</span>
+         <span class="n">y2</span><span class="p">,</span>
+         <span class="p">(</span><span class="o">-</span><span class="n">b2</span> <span class="o">*</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">k2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">L2</span><span class="p">))</span> <span class="o">/</span> <span class="n">m2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">f</span>
+</pre></div>
+</div>
+<p>ODE solver parameters</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">abserr</span> <span class="o">=</span> <span class="mf">1.0e-8</span>
+<span class="n">relerr</span> <span class="o">=</span> <span class="mf">1.0e-6</span>
+</pre></div>
+</div>
+<p>Curve function with all parameters exposed so that bumps knows their names.
+Only tracking x1, x2 with our measurements and not y1, y2, so returning
+components 0 and 2 of the <em>vectorfield</em> result.  The multi-valued y values
+are stacked into an array whose first axis matches t.  This is needed so that
+the plotter can sort out the different lines.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">):</span>
+    <span class="c1"># Pack up the parameters and initial conditions:</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">]</span>
+    <span class="n">w0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">]</span>
+
+    <span class="c1"># Call the ODE solver.</span>
+    <span class="n">wsol</span> <span class="o">=</span> <span class="n">odeint</span><span class="p">(</span><span class="n">vectorfield</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">,),</span>
+                  <span class="n">atol</span><span class="o">=</span><span class="n">abserr</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">relerr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">wsol</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">wsol</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Simulation parameter values</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Masses</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+<span class="c1"># Spring constants</span>
+<span class="n">k1</span> <span class="o">=</span> <span class="mf">8.0</span>
+<span class="n">k2</span> <span class="o">=</span> <span class="mf">40.0</span>
+
+<span class="c1"># Natural lengths</span>
+<span class="n">L1</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">L2</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="c1"># Friction coefficients</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="n">b2</span> <span class="o">=</span> <span class="mf">0.5</span>
+</pre></div>
+</div>
+<p>Initial conditions</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># x1 and x2 are the initial displacements; y1 and y2 are the initial velocities</span>
+<span class="n">x1</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">y1</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">x2</span> <span class="o">=</span> <span class="mf">2.25</span>
+<span class="n">y2</span> <span class="o">=</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>Simulate data</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">simulate</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">bumps.util</span> <span class="kn">import</span> <span class="n">push_seed</span>
+
+    <span class="c1"># Create the time samples for the output of the ODE solver.</span>
+    <span class="c1"># These are the times that the data is sampled, not the times at</span>
+    <span class="c1"># which to evaluate the ode solver.</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+    <span class="c1"># Pack up the parameters and initial conditions:</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">]</span>
+    <span class="n">w0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">]</span>
+    <span class="n">ft</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">w0</span> <span class="o">+</span> <span class="n">p</span><span class="p">))</span>
+
+    <span class="n">noise</span> <span class="o">=</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">push_seed</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># Make sure that the simulated data is the same each run</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">ft</span> <span class="o">+</span> <span class="n">noise</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">ft</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">noise</span>
+
+<span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Initial values for most parameters are known from system configuration.
+We are not including the spring constants or the friction coefficients
+since these will be fitted to the measured position over time.  <em>labels</em>
+allow you to set the labels for the x-axis and y-axis and the legend for
+the two data lines on the plot.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">Curve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">m1</span><span class="o">=</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="o">=</span><span class="n">m2</span><span class="p">,</span> <span class="n">L1</span><span class="o">=</span><span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="o">=</span><span class="n">L2</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="o">=</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="n">y2</span><span class="p">,</span>
+          <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">],</span> <span class="n">plot_x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1000</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Fitted parameters</p>
+<p>Only fitting spring constants and friction coefficients since these are
+not immediately measurable.  If we wanted to be fancy, we could set the
+prior on position and mass according to the uncertainty in our
+initial configuration and allow them to vary slightly.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Masses: Allow mass estimate to be off by +/- 2% (1-sigma)  *untested*</span>
+<span class="c1">#M.m1.dev(0.02*m1)</span>
+<span class="c1">#M.m2.dev(0.02*m2)</span>
+
+<span class="c1"># Spring constants</span>
+<span class="n">M</span><span class="o">.</span><span class="n">k1</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">k2</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># Natural lengths</span>
+<span class="c1">#M.L1.range(0, 10)</span>
+<span class="c1">#M.L2.range(0, 10)</span>
+
+<span class="c1"># Friction coefficients</span>
+<span class="n">M</span><span class="o">.</span><span class="n">b1</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">b2</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Initial conditions</span>
+<span class="c1"># x1 and x2 are the initial displacements; y1 and y2 are the initial velocities</span>
+<span class="c1">#M.x1.range(0, 10)</span>
+<span class="c1">#M.x2.range(0, 10)</span>
+<span class="c1">#M.y1.range(0, 10)</span>
+<span class="c1">#M.y2.range(0, 10)</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download: <a class="reference download internal" download="" href="../../_downloads/6b7570b01148ac6fa77ea08c4cafd2c2/ode2.py"><code class="xref download docutils literal notranslate"><span class="pre">ode2.py</span></code></a>.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="ode.html"
+                          title="previous chapter">Fitting an ODE</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="../peaks/readme.html"
+                          title="next chapter">Peak Fitting</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tutorial/curvefit/ode2.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../peaks/readme.html" title="Peak Fitting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ode.html" title="Fitting an ODE"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="readme.html" >Simple functions</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting a multi-valued function</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

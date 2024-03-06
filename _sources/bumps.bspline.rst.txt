@@ -1,0 +1,7 @@
+bumps.bspline module
+====================
+
+.. automodule:: bumps.bspline
+   :members:
+   :undoc-members:
+   :show-inheritance:

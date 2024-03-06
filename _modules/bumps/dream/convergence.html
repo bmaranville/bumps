@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.convergence &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.convergence</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.convergence</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Convergence diagnostics</span>
+<span class="sd">=======================</span>
+
+<span class="sd">The function :func:`burn_point` returns the point within the MCMC</span>
+<span class="sd">chain at which the chain can be said to have converged, or -1 if</span>
+<span class="sd">the log probabilities are still improving throughout the chain.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;burn_point&quot;</span><span class="p">,</span> <span class="s2">&quot;ks_converged&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">ks_2samp</span><span class="p">,</span> <span class="n">kstest</span><span class="p">,</span> <span class="n">chi2</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">choice</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.state</span> <span class="kn">import</span> <span class="n">MCMCDraw</span>
+
+<span class="c1"># TODO is cramer von mises better than a KS test?</span>
+
+<span class="c1"># defaults should match for ks_converged and burn_point trimming</span>
+<span class="n">DENSITY</span> <span class="o">=</span> <span class="mf">0.6</span>
+<span class="n">ALPHA</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">SAMPLES</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">TRIALS</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">MIN_WINDOW</span> <span class="o">=</span> <span class="mi">100</span>
+
+<div class="viewcode-block" id="ks_converged">
+<a class="viewcode-back" href="../../../dream/convergence.html#bumps.dream.convergence.ks_converged">[docs]</a>
+<span class="k">def</span> <span class="nf">ks_converged</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="n">TRIALS</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="n">DENSITY</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">ALPHA</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">SAMPLES</span><span class="p">):</span>
+    <span class="c1"># type: (&quot;MCMCDraw&quot;, int, float, float, int) -&gt; bool</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if the MCMC has converged according to the K-S window test.</span>
+
+<span class="sd">    Since we are only looking at the distribution of logp values, and not the</span>
+<span class="sd">    individual points, we should be relatively stable regardless of the</span>
+<span class="sd">    properties of the sampler.  The main reason for failure will be &quot;stuck&quot;</span>
+<span class="sd">    fits which have not had a chance to jump to a lower minimum.</span>
+
+<span class="sd">    *state* contains the MCMC chain information.</span>
+
+<span class="sd">    *trials* is the number of times to run the K-S test.</span>
+
+<span class="sd">    *density* is the proportion of samples to select from the window.  Prefer</span>
+<span class="sd">    lower density from larger number of samples so the sets chosen for the</span>
+<span class="sd">    K-S test have fewer duplicates.  For density=0.1 about 5% of samples will</span>
+<span class="sd">    be duplicates.  For density=0.6 about 25% will be duplicates.</span>
+
+<span class="sd">    *alpha* is the significance level for the test.  With smaller alpha</span>
+<span class="sd">    values the K-S test is less likely to reject the current window when</span>
+<span class="sd">    testing against the tail of the distribution, and so the fit will end</span>
+<span class="sd">    earlier, with more samples after the burn point.</span>
+
+<span class="sd">    *samples* is the size of the sample window. If the window is too big</span>
+<span class="sd">    the test will falsly end burn when the start of the window is still</span>
+<span class="sd">    converging.  If the window is too small the test will take a long time,</span>
+<span class="sd">    and will start to show effects of autocorrelation (efficient MCMC</span>
+<span class="sd">    samplers move slowly across the posterior probability space, showing</span>
+<span class="sd">    short term autocorrelation between samples.)  A minimum of 10 generations</span>
+<span class="sd">    and a maximum of 1/2 the generations will be used.</span>
+
+<span class="sd">    There is a strong interaction between density, alpha, samples and trials.</span>
+<span class="sd">    If the K-S test has too many points (=density*samples), it will often</span>
+<span class="sd">    reject simply because the different portions of the Markov chain are</span>
+<span class="sd">    not identical (Markov chains can have short range correlations yet</span>
+<span class="sd">    still have the full chain as a representative draw from the posterior</span>
+<span class="sd">    distribution) unless alpha is reduced.  With fewer points, the estimated</span>
+<span class="sd">    K-S statistic will have more variance, and so more trials will be needed</span>
+<span class="sd">    to avoid spurious accept/reject decisions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Make sure we are testing for convergence</span>
+    <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Make sure we have the desired number of draws</span>
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Quick fail if best occurred within draw</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span><span class="o">.</span><span class="n">stable_best</span><span class="p">():</span>
+        <span class="c1">#print(state.generation, &quot;best gen&quot;, state._best_gen, &quot;start&quot;, state.generation - state.Ngen)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Grab a window at the start and the end</span>
+    <span class="n">window_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">samples</span><span class="o">//</span><span class="n">state</span><span class="o">.</span><span class="n">Npop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MIN_WINDOW</span><span class="p">),</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">head</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">logp_slice</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">logp_slice</span><span class="p">(</span><span class="o">-</span><span class="n">window_size</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="c1"># Quick fail if logp head is worse than logp tail</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">head</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">state</span><span class="o">.</span><span class="n">min_slice</span><span class="p">(</span><span class="o">-</span><span class="n">state</span><span class="o">.</span><span class="n">Ngen</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+        <span class="c1">#print(state.generation, &quot;improving worst&quot;, np.min(head), state.min_slice(-state.Ngen//2))</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">n_draw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">density</span> <span class="o">*</span> <span class="n">samples</span><span class="p">)</span>
+    <span class="n">reject</span> <span class="o">=</span> <span class="n">_robust_ks_2samp</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reject</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="k">def</span> <span class="nf">check_nllf_distribution</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the nllf distribution looks like chisq.</span>
+
+<span class="sd">    Note: test is not used.  It is only true for gaussian.  It fails pretty</span>
+<span class="sd">    badly for doc/examples/test_functions.py griewank 2.  It fails even</span>
+<span class="sd">    worse with pure integer models such as the OpenBugs asia example, which</span>
+<span class="sd">    has discrete levels in the posterior pdf corresponding to the various</span>
+<span class="sd">    binary configurations of the model values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check that likelihood distribution looks like chi2</span>
+    <span class="c1"># Note: cheating, and looking at the stored logp without unrolling</span>
+    <span class="n">reject</span> <span class="o">=</span> <span class="n">_check_nllf_distribution</span><span class="p">(</span><span class="n">data</span><span class="o">=-</span><span class="n">state</span><span class="o">.</span><span class="n">_gen_logp</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                      <span class="n">df</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Nvar</span><span class="p">,</span>
+                                      <span class="n">n_draw</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">reject</span>
+
+<span class="k">def</span> <span class="nf">_check_nllf_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+    <span class="c1"># fit the best chisq to the data given df</span>
+    <span class="n">float_df</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">chi2</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">float_df</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">cdf</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chi2</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+
+    <span class="c1"># check the quality of the fit (i.e., does the set of nllfs look vaguely</span>
+    <span class="c1"># like the fitted chisq distribution).  Repeat the test a few times on</span>
+    <span class="c1"># small data sets for consistency.</span>
+    <span class="n">p_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+        <span class="n">f_samp</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">p_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kstest</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cdf</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;llf dist&quot;</span><span class="p">,</span> <span class="n">p_vals</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">alpha</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">p_vals</span><span class="p">)</span>
+
+<div class="viewcode-block" id="burn_point">
+<a class="viewcode-back" href="../../../dream/convergence.html#bumps.dream.convergence.burn_point">[docs]</a>
+<span class="k">def</span> <span class="nf">burn_point</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;window&#39;</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="n">TRIALS</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># type: (&quot;MCMCDraw&quot;, str, int, **dict) -&gt; int</span>
+
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the point at which the MCMC chain seems to have converged.</span>
+
+<span class="sd">    *state* contains the MCMC chain information.</span>
+
+<span class="sd">    *method=&quot;window&quot;* is the name of the convergence diagnostic (see below).</span>
+
+<span class="sd">    *trials* is the number of times to run the K-S test.</span>
+
+<span class="sd">    Returns the index of the burn points, or -1 if no good burn point is found.</span>
+
+<span class="sd">    **Kolmogorov-Smirnov sliding window**</span>
+
+<span class="sd">    The &quot;window&quot; method detects convergence by comparing the distribution of</span>
+<span class="sd">    $\log(p)$ values in a small window at the start of the chains and the</span>
+<span class="sd">    values in a section at the end of the chain using a Kolmogorov-Smirnov</span>
+<span class="sd">    test.  See :func:`ks_converged` for a description of the parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;window&#39;</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">_ks_sliding_window</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="n">trials</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown convergence test &quot;</span> <span class="o">+</span> <span class="n">method</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Did not converge!&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index</span></div>
+
+
+<span class="k">def</span> <span class="nf">_ks_sliding_window</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="n">TRIALS</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="n">DENSITY</span><span class="p">,</span>
+                       <span class="n">alpha</span><span class="o">=</span><span class="n">ALPHA</span><span class="o">*</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="n">SAMPLES</span><span class="p">):</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">logp</span><span class="p">()</span>
+
+    <span class="n">window_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">samples</span><span class="o">//</span><span class="n">state</span><span class="o">.</span><span class="n">Npop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MIN_WINDOW</span><span class="p">),</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">tiny_window</span> <span class="o">=</span> <span class="n">window_size</span><span class="o">//</span><span class="mi">11</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">half</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span><span class="o">//</span><span class="mi">2</span>
+    <span class="n">max_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logp</span><span class="p">)</span> <span class="o">-</span> <span class="n">half</span> <span class="o">-</span> <span class="n">window_size</span>
+
+    <span class="k">if</span> <span class="n">max_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="o">-</span><span class="n">half</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">min_tail</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">tail</span><span class="p">)</span>
+
+    <span class="c1"># Check in large bunches</span>
+    <span class="n">n_draw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">density</span> <span class="o">*</span> <span class="n">samples</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_index</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">window_size</span><span class="p">):</span>
+        <span class="c1"># [PAK] make sure the worst point is not in the first window.</span>
+        <span class="c1"># Stastically this will introduce some bias (by chance the max could</span>
+        <span class="c1"># happen to occur in the first window) but it will be small when the</span>
+        <span class="c1"># window is small relative to the full pool.  A better test would</span>
+        <span class="c1"># count the number of samples worse than the all the tail, compute</span>
+        <span class="c1"># the probability, and reject according to a comparison with a uniform</span>
+        <span class="c1"># number in [0,1].  To much work for so little bias.</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">index</span><span class="p">:</span><span class="n">index</span><span class="o">+</span><span class="n">window_size</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">window</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_tail</span><span class="p">:</span>
+            <span class="c1">#print(&quot;step llf&quot;, index, window_size, len(window), np.min(window), min_tail)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># if head and tail are different, slide to the next window</span>
+        <span class="n">reject</span> <span class="o">=</span> <span class="n">_robust_ks_2samp</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reject</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Head and tail are not significantly different, so break.</span>
+        <span class="c1"># Index is not yet updated, so the tiny step loop will start with</span>
+        <span class="c1"># the first rejected window.</span>
+        <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">max_index</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># check in smaller steps for fine tuned stopping</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="o">+</span><span class="n">window_size</span><span class="p">,</span> <span class="n">tiny_window</span><span class="p">):</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">logp</span><span class="p">[</span><span class="n">index</span><span class="p">:</span><span class="n">index</span><span class="o">+</span><span class="n">tiny_window</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">window</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_tail</span><span class="p">:</span>
+            <span class="c1">#print(&quot;tiny llf&quot;, index, tiny_window, len(window), np.min(window), min_tail)</span>
+            <span class="k">continue</span>
+
+        <span class="n">p_val</span> <span class="o">=</span> <span class="n">_robust_ks_2samp</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="c1">#print(&quot;tiny ks&quot;, index, tiny_window, len(window), p_val, alpha)</span>
+        <span class="k">if</span> <span class="n">p_val</span> <span class="o">&gt;</span> <span class="n">alpha</span><span class="p">:</span>
+            <span class="c1"># head and tail are not significantly different, so break</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">index</span>
+
+<span class="k">def</span> <span class="nf">_robust_ks_2samp</span><span class="p">(</span><span class="n">f_data</span><span class="p">,</span> <span class="n">r_data</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Repeat ks test n times for a more robust statistic.</span>
+
+<span class="sd">    Returns True if f_data is significantly different from r_data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+        <span class="c1"># [PAK] Using replace=True since it is more efficient and practically</span>
+        <span class="c1"># indistinguishable for a small sampling portion such as 10% or less.</span>
+        <span class="c1"># When drawing 60% of the sample size, 25% of the samples are repeated.</span>
+        <span class="n">f_samp</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="n">f_data</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">r_samp</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="n">r_data</span><span class="p">,</span> <span class="n">n_draw</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">p_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ks_2samp</span><span class="p">(</span><span class="n">f_samp</span><span class="p">,</span> <span class="n">r_samp</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">alpha</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">p_vals</span><span class="p">)</span>
+    <span class="c1">#return any(alpha &gt; p for p in p_vals)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.convergence</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

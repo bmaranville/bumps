@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.curve module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.curve module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.curve">
+<span id="bumps-curve-module"></span><h1>bumps.curve module<a class="headerlink" href="#module-bumps.curve" title="Link to this heading">¶</a></h1>
+<p>Build a bumps model from a function and data.</p>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>Given a function <em>sin_model</em> which computes a sine wave at times <em>t</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sin</span>
+<span class="k">def</span> <span class="nf">sin_model</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">freq</span><span class="o">*</span><span class="n">t</span> <span class="o">+</span> <span class="n">phase</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>and given data <em>(y,dy)</em> measured at times <em>t</em>, we can define the fit
+problem as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">M</span> <span class="o">=</span> <span class="n">Curve</span><span class="p">(</span><span class="n">sin_model</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <em>freq</em> and <em>phase</em> keywords are optional initial values for the model
+parameters which otherwise default to zero.  The model parameters can be
+accessed as attributes on the model to set fit range:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span><span class="o">.</span><span class="n">freq</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">phase</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As usual, you can initialize or assign parameter expressions to the the
+parameters if you want to tie parameters together within or between models.</p>
+<p>Note: there is sometimes difficulty getting bumps to recognize the function
+during fits, which can be addressed by putting the definition in a separate
+file on the python path.  With the windows binary distribution of bumps,
+this can be done in the problem definition file with the following code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The model function can then be imported from the external module as usual:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sin_model</span> <span class="kn">import</span> <span class="n">sin_model</span>
+</pre></div>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.curve.Curve">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.curve.</span></span><span class="sig-name descname"><span class="pre">Curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Model a measurement with a user defined function.</p>
+<p>The function <em>fn(x,p1,p2,…)</em> should return the expected value <em>y</em> for
+each point <em>x</em> given the parameters <em>p1</em>, <em>p2</em>, etc.  <em>dy</em> is the
+uncertainty for each measured value <em>y</em>.  If not specified, it defaults
+to 1. Multi-valued functions, which return multiple <em>y</em> values for each
+<em>x</em> value, should have <em>x</em> as a vector of length <em>n</em> and <em>y</em>, <em>dy</em> as
+arrays of size <em>[n, k]</em>.</p>
+<p>Initial values for the parameters can be set as <em>p=value</em> arguments to
+<em>Curve</em>. If no value is set, then the initial value will be taken from
+the default value given in the definition of <em>fn</em>, or set to 0 if the
+parameter is not defined with an initial value.  Arbitrary non-fittable
+data can be passed to the function as parameters, but only if the
+parameter is given a default value of <em>None</em> in the function definition,
+and has the initial value set as an argument to <em>Curve</em>.  Defining
+<em>state=dict(key=value, …)</em> before <em>Curve</em>, and calling <em>Curve</em> as
+<em>Curve(…, **state)</em> works pretty well.</p>
+<p><em>Curve</em> takes the following special keyword arguments:</p>
+<ul class="simple">
+<li><p><em>name</em> is added to each parameter name when the parameter is defined.
+The filename for the data is a good choice, since this allows you to keep
+the parameters straight when fitting multiple datasets simultaneously.</p></li>
+<li><p><em>plot</em> is an alternative plotting function. The function should be
+defined as <em>plot(x,y,dy,fy,**kw)</em>. The keyword arguments will be
+filled with the values of the parameters used to compute <em>fy</em>.  It
+will be easiest to list the parameters you need to make your plot
+as positional arguments after <em>x,y,dy,fy</em> in the plot function
+declaration.  For example, <em>plot(x,y,dy,fy,p3,**kw)</em> will make the
+value of parameter <em>p3</em> available as a variable in your function.  The
+special keyword <em>view</em> will be a string containing <em>linear</em>, <em>log</em>,
+<em>logx</em>, or <em>loglog</em>.  If only showing the residuals, the string
+will be <em>residual</em>.</p></li>
+<li><p><em>plot_x</em> is an array giving the sample points to use when plotting
+the theory function, if different from the <em>x</em> values at which the
+function is sampled.  Use this to draw a smooth curve between the
+fitted points.  This value is ignored if you provide your own plot
+function.</p></li>
+<li><p><em>labels</em> are the axis labels for the plot.  This should include
+units in parentheses. If the function is multi-valued then
+use <em>[‘x axis’, ‘y axis’, ‘line 1’, ‘line 2’, …]</em>.</p></li>
+</ul>
+<p>The data uncertainty is assumed to follow a gaussian distribution.
+If measurements draw from some other uncertainty distribution, then
+subclass Curve and replace nllf with the correct probability given the
+residuals.  See the implementation of <a class="reference internal" href="#bumps.curve.PoissonCurve" title="bumps.curve.PoissonCurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">PoissonCurve</span></code></a> for an example.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.numpoints">
+<span class="sig-name descname"><span class="pre">numpoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.numpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.numpoints" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.residuals">
+<span class="sig-name descname"><span class="pre">residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.residuals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.simulate_data">
+<span class="sig-name descname"><span class="pre">simulate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.simulate_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.simulate_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.theory">
+<span class="sig-name descname"><span class="pre">theory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.theory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.theory" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.Curve.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#Curve.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.Curve.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.curve.PoissonCurve">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.curve.</span></span><span class="sig-name descname"><span class="pre">PoissonCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fnkw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#PoissonCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.PoissonCurve" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.curve.Curve" title="bumps.curve.Curve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curve</span></code></a></p>
+<p>Model a measurement with Poisson uncertainty.</p>
+<p>The nllf is calculated using Poisson probabilities, but the curve itself
+is displayed using the approximation that <span class="math notranslate nohighlight">\(\sigma_y \approx \sqrt(y)\)</span>.</p>
+<p>See <a class="reference internal" href="#bumps.curve.Curve" title="bumps.curve.Curve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curve</span></code></a> for details.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.PoissonCurve.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#PoissonCurve.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.PoissonCurve.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.curve.PoissonCurve.simulate_data">
+<span class="sig-name descname"><span class="pre">simulate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#PoissonCurve.simulate_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.PoissonCurve.simulate_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.curve.plot_err">
+<span class="sig-prename descclassname"><span class="pre">bumps.curve.</span></span><span class="sig-name descname"><span class="pre">plot_err</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/curve.html#plot_err"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.curve.plot_err" title="Link to this definition">¶</a></dt>
+<dd><p><strong>DEPRECATED</strong>: subclass Curve and override the plot function.</p>
+<p>Plot data <em>y</em> and error <em>dy</em> against <em>x</em>.</p>
+<p><em>view</em> is one of linear, log, logx or loglog.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.curve module</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve"><code class="docutils literal notranslate"><span class="pre">Curve</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.curve.Curve.nllf"><code class="docutils literal notranslate"><span class="pre">Curve.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.numpoints"><code class="docutils literal notranslate"><span class="pre">Curve.numpoints()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.parameters"><code class="docutils literal notranslate"><span class="pre">Curve.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.plot"><code class="docutils literal notranslate"><span class="pre">Curve.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.residuals"><code class="docutils literal notranslate"><span class="pre">Curve.residuals()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.save"><code class="docutils literal notranslate"><span class="pre">Curve.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.simulate_data"><code class="docutils literal notranslate"><span class="pre">Curve.simulate_data()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.theory"><code class="docutils literal notranslate"><span class="pre">Curve.theory()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.Curve.update"><code class="docutils literal notranslate"><span class="pre">Curve.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.curve.PoissonCurve"><code class="docutils literal notranslate"><span class="pre">PoissonCurve</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.curve.PoissonCurve.nllf"><code class="docutils literal notranslate"><span class="pre">PoissonCurve.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.curve.PoissonCurve.simulate_data"><code class="docutils literal notranslate"><span class="pre">PoissonCurve.simulate_data()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.curve.plot_err"><code class="docutils literal notranslate"><span class="pre">plot_err()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.curve.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.curve module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

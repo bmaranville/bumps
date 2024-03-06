@@ -1,0 +1,7 @@
+bumps.mystic.examples.circle module
+===================================
+
+.. automodule:: bumps.mystic.examples.circle
+   :members:
+   :undoc-members:
+   :show-inheritance:

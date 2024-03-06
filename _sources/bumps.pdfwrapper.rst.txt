@@ -1,0 +1,7 @@
+bumps.pdfwrapper module
+=======================
+
+.. automodule:: bumps.pdfwrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:

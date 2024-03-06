@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.wsolve module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.wsolve module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.wsolve">
+<span id="bumps-wsolve-module"></span><h1>bumps.wsolve module<a class="headerlink" href="#module-bumps.wsolve" title="Link to this heading">¶</a></h1>
+<p>Weighted linear and polynomial solver with uncertainty.</p>
+<p>Given <span class="math notranslate nohighlight">\(A \bar x = \bar y \pm \delta \bar y\)</span>, solve using <em>s = wsolve(A,y,dy)</em></p>
+<p><em>wsolve</em> uses the singular value decomposition for increased accuracy.</p>
+<p>The uncertainty in the solution is estimated from the scatter in the data.
+Estimates the uncertainty for the solution from the scatter in the data.</p>
+<p>The returned model object <em>s</em> provides:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>s.x</p></td>
+<td><p>solution</p></td>
+</tr>
+<tr class="row-odd"><td><p>s.std</p></td>
+<td><p>uncertainty estimate assuming no correlation</p></td>
+</tr>
+<tr class="row-even"><td><p>s.rnorm</p></td>
+<td><p>residual norm</p></td>
+</tr>
+<tr class="row-odd"><td><p>s.DoF</p></td>
+<td><p>degrees of freedom</p></td>
+</tr>
+<tr class="row-even"><td><p>s.cov</p></td>
+<td><p>covariance matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p>s.ci(p)</p></td>
+<td><p>confidence intervals at point p</p></td>
+</tr>
+<tr class="row-even"><td><p>s.pi(p)</p></td>
+<td><p>prediction intervals at point p</p></td>
+</tr>
+<tr class="row-odd"><td><p>s(p)</p></td>
+<td><p>predicted value at point p</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>Weighted system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bumps</span> <span class="kn">import</span> <span class="n">wsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dy</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">14.16</span><span class="p">,</span> <span class="mf">13.01</span><span class="p">,</span> <span class="mf">6.15</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">wsolve</span><span class="o">.</span><span class="n">wsolve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%0.2f</span><span class="s2"> +/- </span><span class="si">%0.2f</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">s</span><span class="o">.</span><span class="n">std</span><span class="p">)))</span>
+<span class="go">1.05 +/- 0.17, 2.20 +/- 0.12, 2.91 +/- 0.12</span>
+</pre></div>
+</div>
+<p>Note there is a counter-intuitive result that scaling the estimated
+uncertainty in the data does not affect the computed uncertainty in
+the fit.  This is the correct result — if the data were indeed
+selected from a process with ten times the uncertainty, you would
+expect the scatter in the data to increase by a factor of ten as
+well.  When this new data set is fitted, it will show a computed
+uncertainty increased by the same factor.  Monte carlo simulations
+bear this out.  The conclusion is that the dataset carries its own
+information about the variance in the data, and the weight vector
+serves only to provide relative weighting between the points.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.wsolve.</span></span><span class="sig-name descname"><span class="pre">LinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DoF</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SVinv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnorm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#LinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.LinearModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Model evaluator for linear solution to <span class="math notranslate nohighlight">\(Ax = y\)</span>.</p>
+<p>Use <em>s(A)</em> to compute the predicted value of the linear model <em>s</em>
+at points given on the rows of <span class="math notranslate nohighlight">\(A\)</span>.</p>
+<p>Computes a confidence interval (range of likely values for the
+mean at <span class="math notranslate nohighlight">\(x\)</span>) or a prediction interval (range of likely values
+seen when measuring at <span class="math notranslate nohighlight">\(x\)</span>).  The prediction interval gives
+the width of the distribution at <span class="math notranslate nohighlight">\(x\)</span>.  This should be the same
+regardless of the number of measurements you have for the value
+at <span class="math notranslate nohighlight">\(x\)</span>.  The confidence interval gives the uncertainty in the
+mean at <span class="math notranslate nohighlight">\(x\)</span>.  It should get smaller as you increase the number of
+measurements.  Error bars in the physical sciences usually show
+a <span class="math notranslate nohighlight">\(1-\alpha\)</span> confidence value of <span class="math notranslate nohighlight">\(\text{erfc}(1/\sqrt{2})\)</span>, representing
+a <span class="math notranslate nohighlight">\(1-\sigma\)</span> standand deviation of uncertainty in the mean.</p>
+<p>Confidence intervals for the expected value of the linear system
+evaluated at a new point <span class="math notranslate nohighlight">\(w\)</span> are given by the <span class="math notranslate nohighlight">\(t\)</span> distribution for
+the selected interval <span class="math notranslate nohighlight">\(1-\alpha\)</span>, the solution <span class="math notranslate nohighlight">\(x\)</span>, and the number
+of degrees of freedom <span class="math notranslate nohighlight">\(n-p\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[w^T x \pm t^{\alpha/2}_{n-p} \sqrt{ \text{var}(w) }\]</div>
+<p>where the variance <span class="math notranslate nohighlight">\(\text{var}(w)\)</span> is given by:</p>
+<div class="math notranslate nohighlight">
+\[\text{var}(w) = \sigma^2 (w^T (A^TA)^{-1} w)\]</div>
+<p>Prediction intervals are similar, except the variance term increases to
+include both the uncertainty in the predicted value and the variance in
+the data:</p>
+<div class="math notranslate nohighlight">
+\[\text{var}(w) = \sigma^2 (1 + w^T (A^TA)^{-1} w)\]</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.DoF">
+<span class="sig-name descname"><span class="pre">DoF</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.DoF" title="Link to this definition">¶</a></dt>
+<dd><p>number of degrees of freedom in the solution</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.ci">
+<span class="sig-name descname"><span class="pre">ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#LinearModel.ci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.LinearModel.ci" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the calculated values and the confidence intervals
+for the linear model evaluated at <span class="math notranslate nohighlight">\(A\)</span>.</p>
+<p><em>sigma=1</em> corresponds to a <span class="math notranslate nohighlight">\(1-\sigma\)</span> confidence interval</p>
+<p>Confidence intervals are sometimes expressed as <span class="math notranslate nohighlight">\(1-\alpha\)</span> values,
+where <span class="math notranslate nohighlight">\(\alpha = \text{erfc}(\sigma/\sqrt{2})\)</span>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.cov">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cov</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.cov" title="Link to this definition">¶</a></dt>
+<dd><p>covariance matrix [inv(A’A); O(n^3)]</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.p">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">p</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.p" title="Link to this definition">¶</a></dt>
+<dd><p>p-value probability of rejection</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.pi">
+<span class="sig-name descname"><span class="pre">pi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#LinearModel.pi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.LinearModel.pi" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the calculated values and the prediction intervals
+for the linear model evaluated at <span class="math notranslate nohighlight">\(A\)</span>.</p>
+<p><em>p=0.05</em> corresponds to the 95% prediction interval.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.rnorm">
+<span class="sig-name descname"><span class="pre">rnorm</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.rnorm" title="Link to this definition">¶</a></dt>
+<dd><p>2-norm of the residuals <span class="math notranslate nohighlight">\(||y-Ax||_2\)</span></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">std</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.std" title="Link to this definition">¶</a></dt>
+<dd><p>solution standard deviation [sqrt(var); O(n^2)]</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.var">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.var" title="Link to this definition">¶</a></dt>
+<dd><p>solution variance [diag(cov); O(n^2)]</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.LinearModel.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#bumps.wsolve.LinearModel.x" title="Link to this definition">¶</a></dt>
+<dd><p>solution to the equation <span class="math notranslate nohighlight">\(Ax = y\)</span></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.wsolve.</span></span><span class="sig-name descname"><span class="pre">PolynomialModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#PolynomialModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.PolynomialModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Model evaluator for best fit polynomial <span class="math notranslate nohighlight">\(p(x) = y +/- \delta y\)</span>.</p>
+<p>Use <em>p(x)</em> for PolynomialModel <em>p</em> to evaluate the polynomial at all
+points in the vector <em>x</em>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.DoF">
+<span class="sig-name descname"><span class="pre">DoF</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.DoF" title="Link to this definition">¶</a></dt>
+<dd><p>number of degrees of freedom in the solution</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.ci">
+<span class="sig-name descname"><span class="pre">ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#PolynomialModel.ci"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.PolynomialModel.ci" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the polynomial and the confidence intervals at x.</p>
+<p>sigma=1 corresponds to a 1-sigma confidence interval</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.coeff">
+<span class="sig-name descname"><span class="pre">coeff</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.coeff" title="Link to this definition">¶</a></dt>
+<dd><p>polynomial coefficients</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.cov">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cov</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.cov" title="Link to this definition">¶</a></dt>
+<dd><p>covariance matrix</p>
+<p>Note that the ones column will be absent if <em>origin</em> is True.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.degree">
+<span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.degree" title="Link to this definition">¶</a></dt>
+<dd><p>polynomial degree</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.der">
+<span class="sig-name descname"><span class="pre">der</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#PolynomialModel.der"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.PolynomialModel.der" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the polynomial derivative at x.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.origin">
+<span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.origin" title="Link to this definition">¶</a></dt>
+<dd><p>True if polynomial goes through the origin</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.p">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">p</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.p" title="Link to this definition">¶</a></dt>
+<dd><p>p-value probability of rejection</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.pi">
+<span class="sig-name descname"><span class="pre">pi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#PolynomialModel.pi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.PolynomialModel.pi" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the polynomial and the prediction intervals at x.</p>
+<p>p = 1-alpha = 0.05 corresponds to 95% prediction interval</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#PolynomialModel.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.PolynomialModel.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.rnorm">
+<span class="sig-name descname"><span class="pre">rnorm</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.rnorm" title="Link to this definition">¶</a></dt>
+<dd><p>2-norm of the residuals <span class="math notranslate nohighlight">\(||y-Ax||_2\)</span></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">std</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.std" title="Link to this definition">¶</a></dt>
+<dd><p>solution standard deviation</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.wsolve.PolynomialModel.var">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">var</span></span><a class="headerlink" href="#bumps.wsolve.PolynomialModel.var" title="Link to this definition">¶</a></dt>
+<dd><p>solution variance</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.wsolve.wpolyfit">
+<span class="sig-prename descclassname"><span class="pre">bumps.wsolve.</span></span><span class="sig-name descname"><span class="pre">wpolyfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#wpolyfit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.wpolyfit" title="Link to this definition">¶</a></dt>
+<dd><p>Return the polynomial of degree <span class="math notranslate nohighlight">\(n\)</span> that minimizes <span class="math notranslate nohighlight">\(\sum(p(x_i) - y_i)^2/\sigma_i^2\)</span>.</p>
+<p>if origin is True, the fit should go through the origin.</p>
+<p>Returns <a class="reference internal" href="#bumps.wsolve.PolynomialModel" title="bumps.wsolve.PolynomialModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolynomialModel</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.wsolve.wsolve">
+<span class="sig-prename descclassname"><span class="pre">bumps.wsolve.</span></span><span class="sig-name descname"><span class="pre">wsolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rcond</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/wsolve.html#wsolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.wsolve.wsolve" title="Link to this definition">¶</a></dt>
+<dd><p>Given a linear system <span class="math notranslate nohighlight">\(y = A x + \delta y\)</span>, estimates <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(\delta x\)</span>.</p>
+<p><em>A</em> is an n x m array of measurement points.</p>
+<p><em>y</em> is an n x k array or vector of length n of measured values at <em>A</em>.</p>
+<p><em>dy</em> is a scalar or an n x 1 array of uncertainties in the values at <em>A</em>.</p>
+<p>Returns <a class="reference internal" href="#bumps.wsolve.LinearModel" title="bumps.wsolve.LinearModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearModel</span></code></a>.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.wsolve module</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel"><code class="docutils literal notranslate"><span class="pre">LinearModel</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.DoF"><code class="docutils literal notranslate"><span class="pre">LinearModel.DoF</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.ci"><code class="docutils literal notranslate"><span class="pre">LinearModel.ci()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.cov"><code class="docutils literal notranslate"><span class="pre">LinearModel.cov</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.p"><code class="docutils literal notranslate"><span class="pre">LinearModel.p</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.pi"><code class="docutils literal notranslate"><span class="pre">LinearModel.pi()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.rnorm"><code class="docutils literal notranslate"><span class="pre">LinearModel.rnorm</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.std"><code class="docutils literal notranslate"><span class="pre">LinearModel.std</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.var"><code class="docutils literal notranslate"><span class="pre">LinearModel.var</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.LinearModel.x"><code class="docutils literal notranslate"><span class="pre">LinearModel.x</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel"><code class="docutils literal notranslate"><span class="pre">PolynomialModel</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.DoF"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.DoF</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.ci"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.ci()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.coeff"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.coeff</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.cov"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.cov</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.degree"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.degree</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.der"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.der()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.origin"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.origin</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.p"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.p</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.pi"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.pi()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.plot"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.rnorm"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.rnorm</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.std"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.std</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.PolynomialModel.var"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.var</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.wsolve.wpolyfit"><code class="docutils literal notranslate"><span class="pre">wpolyfit()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.wsolve.wsolve"><code class="docutils literal notranslate"><span class="pre">wsolve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.wsolve.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.wsolve module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

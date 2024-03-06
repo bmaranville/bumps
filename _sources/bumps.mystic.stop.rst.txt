@@ -1,0 +1,7 @@
+bumps.mystic.stop module
+========================
+
+.. automodule:: bumps.mystic.stop
+   :members:
+   :undoc-members:
+   :show-inheritance:

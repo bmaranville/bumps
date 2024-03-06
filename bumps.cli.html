@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.cli module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.cli module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.cli">
+<span id="bumps-cli-module"></span><h1>bumps.cli module<a class="headerlink" href="#module-bumps.cli" title="Link to this heading">¶</a></h1>
+<p>Bumps command line interface.</p>
+<p>The functions in this module are used by the bumps command to implement
+the command line interface.  Bumps plugin models can use them to create
+stand alone applications with a similar interface.  For example, the
+Refl1D application uses the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fitplugin</span>
+<span class="kn">import</span> <span class="nn">bumps.cli</span>
+<span class="n">bumps</span><span class="o">.</span><span class="n">cli</span><span class="o">.</span><span class="n">set_mplconfig</span><span class="p">(</span><span class="n">appdatadir</span><span class="o">=</span><span class="s1">&#39;Refl1D&#39;</span><span class="p">)</span>
+<span class="n">bumps</span><span class="o">.</span><span class="n">cli</span><span class="o">.</span><span class="n">install_plugin</span><span class="p">(</span><span class="n">fitplugin</span><span class="p">)</span>
+<span class="n">bumps</span><span class="o">.</span><span class="n">cli</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>After completing a set of fits on related systems, a post-analysis script
+can use <a class="reference internal" href="#bumps.cli.load_model" title="bumps.cli.load_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_model()</span></code></a> to load the problem definition and
+<a class="reference internal" href="#bumps.cli.load_best" title="bumps.cli.load_best"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_best()</span></code></a> to load the best value  found in the fit.  This can
+be used for example in experiment design, where you look at the expected
+parameter uncertainty when fitting simulated data from a range of experimental
+systems.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.config_matplotlib">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">config_matplotlib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#config_matplotlib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.config_matplotlib" title="Link to this definition">¶</a></dt>
+<dd><p>Setup matplotlib to use a particular backend.</p>
+<p>The backend should be ‘WXAgg’ for interactive use, or ‘Agg’ for batch.
+This distinction allows us to run in environments such as cluster computers
+which do not have wx installed on the compute nodes.</p>
+<p>This function must be called before any imports to pylab.  To allow
+this, modules should not import pylab at the module level, but instead
+import it for each function/method that uses it.  Exceptions can be made
+for modules which are completely dedicated to plotting, but these modules
+should never be imported at the module level.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.install_plugin">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">install_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#install_plugin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.install_plugin" title="Link to this definition">¶</a></dt>
+<dd><p>Replace symbols in <a class="reference internal" href="bumps.plugin.html#module-bumps.plugin" title="bumps.plugin"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.plugin</span></code></a> with application specific
+methods.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.load_best">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">load_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#load_best"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.load_best" title="Link to this definition">¶</a></dt>
+<dd><p>Reload individual parameter values from a saved .par file.</p>
+<p>If the label does not exist in the file, use the value from the model
+as the default value. Ignore labels that do not exist in the model. In
+that way we can load parameters from an old fit with minimal fuss, even
+as we add, delete and move parameters in the model. If any parameters
+are missing, set <em>problem.undefined</em> to the a boolean index of the
+undefined parameters.</p>
+<p>There is an interaction with –init=eps and the par file. If any parameters
+are missing from the par file they will be randomized across the
+entire parameter range using the equivalent of –init=lhs. That means
+you can drop a # at the beginning of the line in the .par file
+and that parameter will be shuffled on restart, with the remaining
+parameters starting near the initial value.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.load_model">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.load_model" title="Link to this definition">¶</a></dt>
+<dd><p>Load a model file.</p>
+<p><em>path</em> contains the path to the model file.</p>
+<p><em>model_options</em> are any additional arguments to the model.  The sys.argv
+variable will be set such that <em>sys.argv[1:] == model_options</em>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.main">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.main" title="Link to this definition">¶</a></dt>
+<dd><p>Run the bumps program with the command line interface.</p>
+<p>Input parameters are taken from sys.argv.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.preview">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">preview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#preview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.preview" title="Link to this definition">¶</a></dt>
+<dd><p>Show the problem plots and parameters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.resynth">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">resynth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitdriver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#resynth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.resynth" title="Link to this definition">¶</a></dt>
+<dd><p>Generate maximum likelihood fits to resynthesized data sets.</p>
+<p><em>fitdriver</em> is a <a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver" title="bumps.fitters.FitDriver"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.fitters.FitDriver</span></code></a> object with a fitter
+already chosen.</p>
+<p><em>problem</em> is a <a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">bumps.fitproblem.FitProblem()</span></code></a> object.  It should
+be initialized with optimal values for the parameters.</p>
+<p><em>mapper</em> is one of the available <a class="reference internal" href="bumps.mapper.html#module-bumps.mapper" title="bumps.mapper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.mapper</span></code></a> classes.</p>
+<p><em>opts</em> is a <a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts" title="bumps.options.BumpsOpts"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.options.BumpsOpts</span></code></a> object representing the command
+line parameters.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.save_best">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">save_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitdriver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#save_best"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.save_best" title="Link to this definition">¶</a></dt>
+<dd><p>Save the fit data, including parameter values, uncertainties and plots.</p>
+<p><em>fitdriver</em> is the fitter that was used to drive the fit.</p>
+<p><em>problem</em> is a FitProblem instance.</p>
+<p><em>best</em> is the parameter set to save.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.cli.set_mplconfig">
+<span class="sig-prename descclassname"><span class="pre">bumps.cli.</span></span><span class="sig-name descname"><span class="pre">set_mplconfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">appdatadir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/cli.html#set_mplconfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.cli.set_mplconfig" title="Link to this definition">¶</a></dt>
+<dd><p>Point the matplotlib config dir to %LOCALAPPDATA%{appdatadir}mplconfig.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.cli module</a><ul>
+<li><a class="reference internal" href="#bumps.cli.config_matplotlib"><code class="docutils literal notranslate"><span class="pre">config_matplotlib()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.install_plugin"><code class="docutils literal notranslate"><span class="pre">install_plugin()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.load_best"><code class="docutils literal notranslate"><span class="pre">load_best()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.load_model"><code class="docutils literal notranslate"><span class="pre">load_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.preview"><code class="docutils literal notranslate"><span class="pre">preview()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.resynth"><code class="docutils literal notranslate"><span class="pre">resynth()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.save_best"><code class="docutils literal notranslate"><span class="pre">save_best()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.cli.set_mplconfig"><code class="docutils literal notranslate"><span class="pre">set_mplconfig()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.cli.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.cli module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

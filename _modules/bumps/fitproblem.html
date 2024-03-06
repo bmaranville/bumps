@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.fitproblem &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.fitproblem</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.fitproblem</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Interface between the models and the fitters.</span>
+
+<span class="sd">:class:`Fitness` defines the interface that model evaluators can follow.</span>
+<span class="sd">These models can be bundled together into a :func:`FitProblem` and sent</span>
+<span class="sd">to :class:`bumps.fitters.FitDriver` for optimization and uncertainty</span>
+<span class="sd">analysis.</span>
+
+
+<span class="sd">Summary of problem attributes::</span>
+
+<span class="sd">    # Used by fitters</span>
+<span class="sd">    nllf(p: Optional[Vector]) -&gt; float  # main calculation</span>
+<span class="sd">    bounds() -&gt; Tuple(Vector, Vector)    # or equivalent sequence</span>
+<span class="sd">    setp(p: Vector) -&gt; None</span>
+<span class="sd">    getp() -&gt; Vector</span>
+<span class="sd">    residuals() -&gt; Vector  # for LM, MPFit</span>
+<span class="sd">    parameter_residuals() -&gt; Vector  # for LM, MPFit</span>
+<span class="sd">    constraints_nllf() -&gt; float # for LM, MPFit;  constraint cost is spread across the individual residuals</span>
+<span class="sd">    randomize() -&gt; None # for multistart</span>
+<span class="sd">    resynth_data() -&gt; None  # for Monte Carlo resampling of maximum likelihood</span>
+<span class="sd">    restore_data() -&gt; None # for Monte Carlo resampling of maximum likelihood</span>
+<span class="sd">    name: str  # DREAM uses this</span>
+<span class="sd">    chisq() -&gt; float</span>
+<span class="sd">    chisq_str() -&gt; str</span>
+<span class="sd">    labels() -&gt; List[str]</span>
+<span class="sd">    summarize() -&gt; str</span>
+<span class="sd">    show() -&gt; None</span>
+<span class="sd">    load(input_path: str) -&gt; None</span>
+<span class="sd">    save(output_path: str) -&gt; None</span>
+<span class="sd">    plot(figfile: str, view: str) -&gt; None</span>
+
+<span class="sd">    # Set/used by bumps.cli</span>
+<span class="sd">    model_reset() -&gt; None # called by load_model</span>
+<span class="sd">    path: str  # set by load_model</span>
+<span class="sd">    name: str # set by load_model</span>
+<span class="sd">    title: str = filename # set by load_moel</span>
+<span class="sd">    options: List[str]  # from sys.argv[1:]</span>
+<span class="sd">    undefined:List[int]  # when loading a save .par file, these parameters weren&#39;t defined</span>
+<span class="sd">    store: str # set by make_store</span>
+<span class="sd">    output_path: str # set by make_store</span>
+<span class="sd">    simulate_data(noise: float) -&gt; None # for --simulate in opts</span>
+<span class="sd">    cov() -&gt; Matrix   # for --cov in opts</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Don&#39;t include print_function in imports; since the model coded is exec&#39;d</span>
+<span class="c1"># in the __future__ context of this file, it would force the models to use the</span>
+<span class="c1"># new print function syntax.  load_problem() should be moved to its own file</span>
+<span class="c1"># to avoid this issue.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">with_statement</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Fitness&#39;</span><span class="p">,</span> <span class="s1">&#39;FitProblem&#39;</span><span class="p">,</span> <span class="s1">&#39;load_problem&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;BaseFitProblem&#39;</span><span class="p">,</span> <span class="s1">&#39;MultiFitProblem&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">NaN</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">bounds</span> <span class="k">as</span> <span class="n">mbounds</span>
+<span class="kn">from</span> <span class="nn">.parameter</span> <span class="kn">import</span> <span class="n">to_dict</span>
+<span class="kn">from</span> <span class="nn">.formatnum</span> <span class="kn">import</span> <span class="n">format_uncertainty</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+
+<span class="c1"># Abstract base class</span>
+<div class="viewcode-block" id="Fitness">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness">[docs]</a>
+<span class="k">class</span> <span class="nc">Fitness</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manage parameters, data, and theory function evaluation.</span>
+
+<span class="sd">    See :ref:`fitness` for a detailed explanation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Fitness.parameters">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return the parameters in the model.</span>
+
+<span class="sd">        model parameters are a hierarchical structure of lists and</span>
+<span class="sd">        dictionaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.to_dict">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.update">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when parameters have been updated.  Any cached values will need</span>
+<span class="sd">        to be cleared and the model reevaluated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.numpoints">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.numpoints">[docs]</a>
+    <span class="k">def</span> <span class="nf">numpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the number of data points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the negative log likelihood value of the current parameter set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.resynth_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.resynth_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">resynth_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate fake data based on uncertainties in the real data.  For</span>
+<span class="sd">        Monte Carlo resynth-refit uncertainty analysis.  Bootstrapping?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.restore_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.restore_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">restore_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restore the original data in the model (after resynth).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.residuals">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return residuals for current theory minus data.</span>
+
+<span class="sd">        Used for Levenburg-Marquardt, and for plotting.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Fitness.save">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the model to a file based on basename+extension.  This will point</span>
+<span class="sd">        to a path to a directory on a remote machine; don&#39;t make any</span>
+<span class="sd">        assumptions about information stored on the server.  Return the set of</span>
+<span class="sd">        files saved so that the monitor software can make a pretty web page.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Fitness.plot">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.Fitness.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the model to the current figure.  You only get one figure, but you</span>
+<span class="sd">        can make it as complex as you want.  This will be saved as a png on</span>
+<span class="sd">        the server, and composed onto a results web page.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">no_constraints</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;default constraints function for FitProblem&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="c1"># TODO: refactor FitProblem definition</span>
+<span class="c1"># deprecate the direct use of MultiFitProblem</span>
+<div class="viewcode-block" id="FitProblem">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.FitProblem">[docs]</a>
+<span class="k">def</span> <span class="nf">FitProblem</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a fit problem instance for the fitness function(s).</span>
+
+<span class="sd">    For an individual model:</span>
+
+<span class="sd">        *fitness* is a :class:`Fitness` instance.</span>
+
+<span class="sd">    For a set of models:</span>
+
+<span class="sd">        *models* is a sequence of :class:`Fitness` instances.</span>
+
+<span class="sd">        *weights* is an optional scale factor for each model. A weighted fit</span>
+<span class="sd">        returns nllf $L = \sum w_k^2 L_k$. If an individual nllf is the sum</span>
+<span class="sd">        squared residuals then this is equivalent to scaling the measurement</span>
+<span class="sd">        uncertainty by $1/w$. Unless the measurement uncertainty is unknown,</span>
+<span class="sd">        weights should be in [0, 1], representing an unknown systematic</span>
+<span class="sd">        uncertainty spread across the individual measurements.</span>
+
+<span class="sd">        *freevars* is :class:`.parameter.FreeVariables` instance defining the</span>
+<span class="sd">        per-model parameter assignments.  See :ref:`freevariables` for details.</span>
+
+
+<span class="sd">    Additional parameters:</span>
+
+<span class="sd">        *name* name of the problem</span>
+
+<span class="sd">        *constraints* is a function which returns the negative log likelihood</span>
+<span class="sd">        of seeing the parameters independent from the fitness function.  Use</span>
+<span class="sd">        this for example to check for feasible regions of the search space, or</span>
+<span class="sd">        to add constraints that cannot be easily calculated per parameter.</span>
+<span class="sd">        Ideally, the constraints nllf will increase as you go farther from</span>
+<span class="sd">        the feasible region so that the fit will be directed toward feasible</span>
+<span class="sd">        values.</span>
+
+<span class="sd">        *soft_limit* is the constraints function cutoff, beyond which the</span>
+<span class="sd">        *penalty_nllf* will be used and *fitness* nllf will not be calculated.</span>
+
+<span class="sd">        *penalty_nllf* is the nllf to use for *fitness* when *constraints*</span>
+<span class="sd">        is greater than *soft_limit*.</span>
+
+<span class="sd">    Total nllf is the sum of the parameter nllf, the constraints nllf and the</span>
+<span class="sd">    depending on whether constraints is greater than soft_limit, either the</span>
+<span class="sd">    fitness nllf or the penalty nllf.</span>
+
+<span class="sd">    New in 0.9.0: weights are now squared when computing the sum rather than</span>
+<span class="sd">    linear.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">MultiFitProblem</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BaseFitProblem</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;fitness&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BaseFitProblem</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MultiFitProblem</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BaseFitProblem">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem">[docs]</a>
+<span class="k">class</span> <span class="nc">BaseFitProblem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    See :func:`FitProblem`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fitness</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">penalty_nllf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">soft_limit</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">partial</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="o">=</span> <span class="n">constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span> <span class="o">=</span> <span class="n">fitness</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partial</span> <span class="o">=</span> <span class="n">partial</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">fitness</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;FitProblem&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span> <span class="o">=</span> <span class="n">soft_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span> <span class="o">=</span> <span class="n">penalty_nllf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_reset</span><span class="p">()</span>
+
+    <span class="c1"># noinspection PyAttributeOutsideInit</span>
+<div class="viewcode-block" id="BaseFitProblem.model_reset">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare for the fit.</span>
+
+<span class="sd">        This sets the parameters and the bounds properties that the</span>
+<span class="sd">        solver is expecting from the fittable object.  We also compute</span>
+<span class="sd">        the degrees of freedom so that we can return a normalized fit</span>
+<span class="sd">        likelihood.</span>
+
+<span class="sd">        If the set of fit parameters changes, then model_reset must</span>
+<span class="sd">        be called.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># print self.model_parameters()</span>
+        <span class="n">all_parameters</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">())</span>
+        <span class="c1"># print &quot;all_parameters&quot;,all_parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">varying</span><span class="p">(</span><span class="n">all_parameters</span><span class="p">)</span>
+        <span class="c1"># print &quot;varying&quot;,self._parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounded</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">all_parameters</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">Unbounded</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_points</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Need more data points than fitting parameters&quot;</span><span class="p">)</span></div>
+
+        <span class="c1">#self.constraints = pars.constraints()</span>
+
+<div class="viewcode-block" id="BaseFitProblem.model_parameters">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters associated with the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.to_dict">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s1">&#39;fitness&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">),</span>
+            <span class="s1">&#39;partial&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial</span><span class="p">,</span>
+            <span class="s1">&#39;soft_limit&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span><span class="p">,</span>
+            <span class="s1">&#39;penalty_nllf&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span><span class="p">,</span>
+            <span class="c1"># TODO: constraints may be a function.</span>
+            <span class="s1">&#39;constraints&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.model_points">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_points">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of data points associated with the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">numpoints</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.model_update">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the model according to the changed parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="s1">&#39;update&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.model_nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Negative log likelihood of seeing data given model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.simulate_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.simulate_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate data with added noise&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">simulate_data</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="n">noise</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.resynth_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.resynth_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">resynth_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resynthesize data with noise from the uncertainty estimates.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">resynth_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.restore_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.restore_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">restore_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore original data after resynthesis.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">restore_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.valid">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.valid">[docs]</a>
+    <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return true if the point is in the feasible region&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">bounds</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">,</span> <span class="n">pvec</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.setp">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.setp">[docs]</a>
+    <span class="k">def</span> <span class="nf">setp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for the parameters into the model.  If the model</span>
+<span class="sd">        is valid, calls model_update to signal that the model should be</span>
+<span class="sd">        recalculated.</span>
+
+<span class="sd">        Returns True if the value is valid and the parameters were set,</span>
+<span class="sd">        otherwise returns False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: do we have to leave the model in an invalid state?</span>
+        <span class="c1"># WARNING: don&#39;t try to conditionally update the model</span>
+        <span class="c1"># depending on whether any model parameters have changed.</span>
+        <span class="c1"># For one thing, the model_update below probably calls</span>
+        <span class="c1"># the subclass MultiFitProblem.model_update, which signals</span>
+        <span class="c1"># the individual models.  Furthermore, some parameters may</span>
+        <span class="c1"># related to others via expressions, and so a dependency</span>
+        <span class="c1"># tree needs to be generated.  Whether this is better than</span>
+        <span class="c1"># clicker() from SrFit I do not know.</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">):</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="c1"># TODO: setp_hook is a hack to support parameter expressions in sasview</span>
+        <span class="c1"># Don&#39;t depend on this existing long term.</span>
+        <span class="n">setp_hook</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;setp_hook&#39;</span><span class="p">,</span> <span class="n">no_constraints</span><span class="p">)</span>
+        <span class="n">setp_hook</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.getp">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.getp">[docs]</a>
+    <span class="k">def</span> <span class="nf">getp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the current value of the parameter vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">],</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.bounds">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the bounds fore each parameter a 2 x N array&quot;&quot;&quot;</span>
+        <span class="n">limits</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">limits</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="k">if</span> <span class="n">limits</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.randomize">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.randomize">[docs]</a>
+    <span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a random model.</span>
+
+<span class="sd">        *randomize()* sets the model to a random value.</span>
+
+<span class="sd">        *randomize(n)* returns a population of *n* random models.</span>
+
+<span class="sd">        For indefinite bounds, the random population distribution is centered</span>
+<span class="sd">        on initial value of the parameter, or 1. if the initial parameter is</span>
+<span class="sd">        not finite.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: split into two: randomize and random_pop</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">randomize</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span>   <span class="c1"># Not returning anything since no n is requested</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+        <span class="n">target</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="n">pop</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">,</span> <span class="n">target</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.parameter_nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.parameter_nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameter_nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns negative log likelihood of seeing parameters p.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounded</span><span class="p">)</span>
+        <span class="c1"># print &quot;; &quot;.join(&quot;%s %g %g&quot;%(p,p.value,p.nllf()) for p in</span>
+        <span class="c1"># self.bounded)</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.constraints_nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.constraints_nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">constraints_nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the cost of all constraints.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="k">else</span> <span class="mf">0.</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.parameter_residuals">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.parameter_residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameter_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns negative log likelihood of seeing parameters p.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">residual</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounded</span><span class="p">]</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if the underlying fitness function defines residuals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="s1">&#39;residuals&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseFitProblem.residuals">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the model residuals.</span>
+
+<span class="sd">        If the model is defined by $y = f(x) + \epsilon$ for normally</span>
+<span class="sd">        distributed error in the measurement $y$ equal to</span>
+<span class="sd">        $\epsilon \sim N(0, \sigma^2)$, then residuals will be defined by</span>
+<span class="sd">        $R = (y - f(x))/\sigma$.  If the measurement uncertainty is not normal,</span>
+<span class="sd">        then the normal equivalent residuals should be defined so that the</span>
+<span class="sd">        Levenberg-Marquardt fit behaves reasonably, and the plot of</span>
+<span class="sd">        residuals gives an indication of which points are driving the fit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="s1">&#39;residuals&#39;</span><span class="p">):</span>
+            <span class="c1">## Fake residuals by using single nllf value as residual</span>
+            <span class="c1">#return np.asarray([np.sqrt(self.nllf())])</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;model does not define residuals&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.chisq">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.chisq">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return sum squared residuals normalized by the degrees of freedom.</span>
+
+<span class="sd">        In the context of a composite fit, the reduced chisq on the individual</span>
+<span class="sd">        models only considers the points and the fitted parameters within</span>
+<span class="sd">        the individual model.</span>
+
+<span class="sd">        Note that this does not include cost factors due to constraints on</span>
+<span class="sd">        the parameters, such as sample_offset ~ N(0,0.01).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="s1">&#39;chisq&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">chisq</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span></div>
+
+        <span class="c1"># return 2*self.nllf()/self.dof</span>
+
+<div class="viewcode-block" id="BaseFitProblem.chisq_str">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.chisq_str">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representing the chisq equivalent of the nllf.</span>
+
+<span class="sd">        If the model has strictly gaussian independent uncertainties then the</span>
+<span class="sd">        negative log likelihood function will return 0.5*sum(residuals**2),</span>
+<span class="sd">        which is 1/2*chisq.  Since we are printing normalized chisq, we</span>
+<span class="sd">        multiply the model nllf by 2/DOF before displaying the value.  This</span>
+<span class="sd">        is different from the problem nllf function, which includes the</span>
+<span class="sd">        cost of the prior parameters and the cost of the penalty constraints</span>
+<span class="sd">        in the total nllf.  The constraint value is displayed separately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pparameter</span><span class="p">,</span> <span class="n">pconstraints</span><span class="p">,</span> <span class="n">pmodel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nllf_components</span><span class="p">()</span>
+        <span class="n">chisq_norm</span><span class="p">,</span> <span class="n">chisq_err</span> <span class="o">=</span> <span class="n">nllf_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">chisq</span> <span class="o">=</span> <span class="n">pmodel</span> <span class="o">*</span> <span class="n">chisq_norm</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">format_uncertainty</span><span class="p">(</span><span class="n">chisq</span><span class="p">,</span> <span class="n">chisq_err</span><span class="p">)</span>
+        <span class="n">constraints</span> <span class="o">=</span> <span class="n">pparameter</span> <span class="o">+</span> <span class="n">pconstraints</span>
+        <span class="k">if</span> <span class="n">constraints</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; constraints=</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">constraints</span>
+
+        <span class="k">return</span> <span class="n">text</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        compute the cost function for a new parameter set p.</span>
+
+<span class="sd">        this is not simply the sum-squared residuals, but instead is the</span>
+<span class="sd">        negative log likelihood of seeing the data given the model parameters</span>
+<span class="sd">        plus the negative log likelihood of seeing the model parameters.  the</span>
+<span class="sd">        value is used for a likelihood ratio test so normalization constants</span>
+<span class="sd">        can be ignored.  there is an additional penalty value provided by</span>
+<span class="sd">        the model which can be used to implement inequality constraints.  any</span>
+<span class="sd">        penalty should be large enough that it is effectively excluded from</span>
+<span class="sd">        the parameter space returned from uncertainty analysis.</span>
+
+<span class="sd">        the model is not actually calculated if the parameter nllf plus the</span>
+<span class="sd">        constraint nllf are bigger than *soft_limit*, but instead it is</span>
+<span class="sd">        assigned a value of *penalty_nllf*.  this will prevent expensive</span>
+<span class="sd">        models from spending time computing values in the unfeasible region.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pvec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="n">pvec</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">pvec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">inf</span>
+
+        <span class="n">pparameter</span><span class="p">,</span> <span class="n">pconstraints</span><span class="p">,</span> <span class="n">pmodel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nllf_components</span><span class="p">()</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="n">pparameter</span> <span class="o">+</span> <span class="n">pconstraints</span> <span class="o">+</span> <span class="n">pmodel</span>
+        <span class="c1"># print(pvec, &quot;cost=&quot;,pparameter,&quot;+&quot;,pconstraints,&quot;+&quot;,pmodel,&quot;=&quot;,cost)</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">cost</span><span class="p">):</span>
+            <span class="c1"># TODO: make sure errors get back to the user</span>
+            <span class="c1"># print &quot;point evaluates to nan&quot;</span>
+            <span class="c1"># print parameter.summarize(self._parameters)</span>
+            <span class="k">return</span> <span class="n">inf</span>
+        <span class="k">return</span> <span class="n">cost</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_nllf_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pparameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_nllf</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">pparameter</span><span class="p">):</span>
+                <span class="c1"># TODO: make sure errors get back to the user</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Parameter nllf is wrong&quot;</span><span class="p">]</span>
+                <span class="n">info</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">nllf</span><span class="p">())</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounded</span><span class="p">]</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="n">pconstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints_nllf</span><span class="p">()</span>
+            <span class="c1"># Note: for hard constraints (which return inf) avoid computing</span>
+            <span class="c1"># model even if soft_limit is inf by using strict comparison</span>
+            <span class="c1"># since inf &lt;= inf is True but inf &lt; inf is False.</span>
+            <span class="n">pmodel</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_nllf</span><span class="p">()</span>
+                      <span class="k">if</span> <span class="n">pparameter</span> <span class="o">+</span> <span class="n">pconstraints</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span>
+                      <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pparameter</span><span class="p">,</span> <span class="n">pconstraints</span><span class="p">,</span> <span class="n">pmodel</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># TODO: make sure errors get back to the user</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(),</span>
+                    <span class="n">parameter</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">))</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">NaN</span><span class="p">,</span> <span class="n">NaN</span><span class="p">,</span> <span class="n">NaN</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Problem cost function.</span>
+
+<span class="sd">        Returns the negative log likelihood scaled by DOF so that</span>
+<span class="sd">        the result looks like the familiar normalized chi-squared.  These</span>
+<span class="sd">        scale factors will not affect the value of the minimum, though some</span>
+<span class="sd">        care will be required when interpreting the uncertainty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">(</span><span class="n">pvec</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span>
+
+<div class="viewcode-block" id="BaseFitProblem.show">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.show">[docs]</a>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_subs</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print the available parameters to the console as a tree.&quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">parameter</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(),</span> <span class="n">freevars</span><span class="o">=</span><span class="n">_subs</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[chisq=</span><span class="si">%s</span><span class="s2">, nllf=</span><span class="si">%g</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisq_str</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()))</span></div>
+
+        <span class="c1">#print(self.summarize())</span>
+
+<div class="viewcode-block" id="BaseFitProblem.summarize">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.summarize">[docs]</a>
+    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a table of current parameter values with range bars.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">parameter</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.labels">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.labels">[docs]</a>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the list of labels, one per fitted parameter.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.save">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the problem state for the current parameter set.</span>
+
+<span class="sd">        The underlying Fitness object *save* method is called, if it exists,</span>
+<span class="sd">        so that theory values can be saved in a format suitable to the problem.</span>
+
+<span class="sd">        Uses *basename* as the base of any files that are created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="s1">&#39;save&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.plot">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fignum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the problem state for the current parameter set.</span>
+
+<span class="sd">        The underlying Fitness object *plot* method is called with *view*.</span>
+<span class="sd">        It should produce its plot on the current matplotlib figure.  This</span>
+<span class="sd">        method will add chisq to the plot and save it to a file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="s1">&#39;plot&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="kn">import</span> <span class="nn">pylab</span>
+        <span class="k">if</span> <span class="n">fignum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">fignum</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s1">&#39;chisq=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">chisq_str</span><span class="p">(),</span>
+                   <span class="n">transform</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">figfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">figfile</span> <span class="o">+</span> <span class="s2">&quot;-model.png&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.cov">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.cov">[docs]</a>
+    <span class="k">def</span> <span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the covariance matrix as computed from the Hessian matrix for</span>
+<span class="sd">        the problem at the current parameter values estimated by numerical</span>
+<span class="sd">        differentiation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: remove from model</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;use cov and stderr from FitDriver, not problem.&quot;</span><span class="p">,</span>
+                      <span class="ne">DeprecationWarning</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">lsqerror</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">H</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">perturbed_hessian</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">chol_cov</span><span class="p">(</span><span class="n">L</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseFitProblem.stderr">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.stderr">[docs]</a>
+    <span class="k">def</span> <span class="nf">stderr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the 1-sigma uncertainty estimate for each parameter and the</span>
+<span class="sd">        correlation matrix *R* as computed from the covariance returned by</span>
+<span class="sd">        *cov*.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: remove from model</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;use cov and stderr from FitDriver, not problem.&quot;</span><span class="p">,</span>
+                      <span class="ne">DeprecationWarning</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">lsqerror</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">stderr</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">c</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span><span class="p">,</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_reset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem">[docs]</a>
+<span class="k">class</span> <span class="nc">MultiFitProblem</span><span class="p">(</span><span class="n">BaseFitProblem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Weighted fits for multiple models. See :func:`FitProblem` for an</span>
+<span class="sd">    explanation of weights.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">constraints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">soft_limit</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">penalty_nllf</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span>
+                 <span class="n">freevars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partial</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="o">=</span> <span class="n">constraints</span>
+        <span class="k">if</span> <span class="n">freevars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;M</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">models</span><span class="p">)]</span>
+            <span class="n">freevars</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">FreeVariables</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span> <span class="o">=</span> <span class="n">freevars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">BaseFitProblem</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">partial</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">models</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">models</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span> <span class="o">=</span> <span class="n">penalty_nllf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span> <span class="o">=</span> <span class="n">soft_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_active_model</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Set the active model to model 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate over models, with free parameters set from model values&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_models</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">f</span>
+        <span class="c1"># Restore the active model after cycling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_model_index</span><span class="p">)</span>
+
+    <span class="c1"># noinspection PyAttributeOutsideInit</span>
+<div class="viewcode-block" id="MultiFitProblem.set_active_model">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.set_active_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_active_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Use free parameters from model *i*&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_model_index</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.model_parameters">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return parameters from all models&quot;&quot;&quot;</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;models&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">]}</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">free</span><span class="p">:</span>
+            <span class="n">pars</span><span class="p">[</span><span class="s1">&#39;freevars&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">free</span>
+        <span class="k">return</span> <span class="n">pars</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.to_dict">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s1">&#39;models&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_models</span><span class="p">),</span>
+            <span class="s1">&#39;weights&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
+            <span class="s1">&#39;partial&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial</span><span class="p">,</span>
+            <span class="s1">&#39;soft_limit&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">soft_limit</span><span class="p">,</span>
+            <span class="s1">&#39;penalty_nllf&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">penalty_nllf</span><span class="p">,</span>
+            <span class="c1"># TODO: constraints may be a function.</span>
+            <span class="s1">&#39;constraints&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">),</span>
+            <span class="s1">&#39;freevars&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freevars</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.model_points">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_points">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return number of points in all models&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">model_points</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.model_update">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Let all models know they need to be recalculated&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: consider an &quot;on changed&quot; signal for model updates.</span>
+        <span class="c1"># The update function would be associated with model parameters</span>
+        <span class="c1"># rather than always recalculating everything.  This</span>
+        <span class="c1"># allows us to set up fits with &#39;fast&#39; and &#39;slow&#39; parameters,</span>
+        <span class="c1"># where the fit can quickly explore a subspace where the</span>
+        <span class="c1"># computation is cheap before jumping to a more expensive</span>
+        <span class="c1"># subspace.  SrFit does this.</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">model_update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.model_nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return cost function for all data sets&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">model_nllf</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.constraints_nllf">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.constraints_nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">constraints_nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the cost function for all constraints&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">constraints_nllf</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">BaseFitProblem</span><span class="o">.</span><span class="n">constraints_nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.simulate_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.simulate_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">simulate_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate data with added noise&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">simulate_data</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="n">noise</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.resynth_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.resynth_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">resynth_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resynthesize data with noise from the uncertainty estimates.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">resynth_data</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.restore_data">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.restore_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">restore_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore original data after resynthesis.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">restore_data</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if all underlying fitness functions define residuals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">has_residuals</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiFitProblem.residuals">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">w</span> <span class="o">*</span> <span class="n">f</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span>
+                           <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">resid</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.save">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.save">[docs]</a>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">basename</span> <span class="o">+</span> <span class="s2">&quot;-</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.show">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.show">[docs]</a>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-- Model </span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="n">subs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">freevars</span> <span class="k">else</span> <span class="p">{}</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">_subs</span><span class="o">=</span><span class="n">subs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[overall chisq=</span><span class="si">%s</span><span class="s2">, nllf=</span><span class="si">%g</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisq_str</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="MultiFitProblem.plot">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fignum</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pylab</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fignum</span><span class="o">=</span><span class="n">i</span> <span class="o">+</span> <span class="n">fignum</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Model </span><span class="si">%d</span><span class="s1"> - </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">figfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pylab</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">figfile</span> <span class="o">+</span> <span class="s2">&quot;-model</span><span class="si">%d</span><span class="s2">.png&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Note: restore default behaviour of getstate/setstate rather than</span>
+    <span class="c1"># inheriting from BaseFitProblem</span>
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">state</span></div>
+
+
+
+<span class="c1"># TODO: consider adding nllf_scale to FitProblem.</span>
+<span class="n">ONE_SIGMA</span> <span class="o">=</span> <span class="mf">0.68268949213708585</span>
+<span class="k">def</span> <span class="nf">nllf_scale</span><span class="p">(</span><span class="n">problem</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the scale factor for reporting the problem nllf as an approximate</span>
+<span class="sd">    normalized chisq, along with an associated &quot;uncertainty&quot;.  The uncertainty</span>
+<span class="sd">    is the amount that chisq must change in order for the fit to be</span>
+<span class="sd">    significantly better.</span>
+
+<span class="sd">    From Numerical Recipes 15.6: *Confidence Limits on Estimated Model</span>
+<span class="sd">    Parameters*, the $1-\sigma$ contour in parameter space corresponds</span>
+<span class="sd">    to $\Delta\chi^2 = \text{invCDF}(1-\sigma,k)$ where</span>
+<span class="sd">    $1-\sigma \approx 0.6827$ and $k$ is the number of fitting parameters.</span>
+<span class="sd">    Since we are reporting the normalized $\chi^2$, this needs to be scaled</span>
+<span class="sd">    by the problem degrees of freedom, $n-k$, where $n$ is the number of</span>
+<span class="sd">    measurements.  To first approximation, the uncertainty in $\chi^2_N$</span>
+<span class="sd">    is $k/(n-k)$</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dof</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s1">&#39;dof&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dof</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dof</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">dof</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#return 2./dof, 1./dof</span>
+        <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">chi2</span>
+        <span class="n">npars</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">2.</span><span class="o">/</span><span class="n">dof</span><span class="p">,</span> <span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">ONE_SIGMA</span><span class="p">,</span> <span class="n">npars</span><span class="p">)</span><span class="o">/</span><span class="n">dof</span>
+
+<div class="viewcode-block" id="load_problem">
+<a class="viewcode-back" href="../../bumps.fitproblem.html#bumps.fitproblem.load_problem">[docs]</a>
+<span class="k">def</span> <span class="nf">load_problem</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a problem definition from a python script file.</span>
+
+<span class="sd">    sys.argv is set to ``[file] + options`` within the context of the script.</span>
+
+<span class="sd">    The user must define ``problem=FitProblem(...)`` within the script.</span>
+
+<span class="sd">    Raises ValueError if the script does not define problem.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Allow relative imports from the bumps model</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">relative_import</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">module_name</span><span class="o">=</span><span class="n">module_name</span><span class="p">)</span>
+
+    <span class="n">ctx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="vm">__file__</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">__package__</span><span class="o">=</span><span class="n">module</span><span class="p">,</span> <span class="vm">__name__</span><span class="o">=</span><span class="n">module_name</span><span class="p">)</span>
+    <span class="n">old_argv</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">+</span> <span class="n">options</span> <span class="k">if</span> <span class="n">options</span> <span class="k">else</span> <span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> <span class="o">=</span> <span class="n">old_argv</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;problem&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot; requires &#39;problem = FitProblem(...)&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">problem</span></div>
+
+
+<span class="k">def</span> <span class="nf">test_weighting</span><span class="p">():</span>
+
+    <span class="k">class</span> <span class="nc">SimpleFitness</span><span class="p">(</span><span class="n">Fitness</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fit&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; a&quot;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">}</span>
+        <span class="k">def</span> <span class="nf">numpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">def</span> <span class="nf">residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">y</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="c1"># fit to constant 0 +/- 1</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="n">dy</span><span class="p">])</span>
+        <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">())</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="n">weights</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="n">SimpleFitness</span><span class="p">(</span><span class="mf">4.0</span><span class="p">),</span> <span class="n">SimpleFitness</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)]</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="c1"># Need to use problem.models to cycle through models in case FreeVariables is used in problem</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">w</span><span class="o">*</span><span class="n">M</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">M</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">models</span><span class="p">)]))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">problem</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">M</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">M</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">models</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">problem</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.fitproblem</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

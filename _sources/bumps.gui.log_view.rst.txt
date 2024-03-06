@@ -1,0 +1,7 @@
+bumps.gui.log\_view module
+==========================
+
+.. automodule:: bumps.gui.log_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

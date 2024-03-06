@@ -1,0 +1,7 @@
+bumps.gui.app\_frame module
+===========================
+
+.. automodule:: bumps.gui.app_frame
+   :members:
+   :undoc-members:
+   :show-inheritance:

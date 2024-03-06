@@ -1,0 +1,7 @@
+bumps.gui.fit\_thread module
+============================
+
+.. automodule:: bumps.gui.fit_thread
+   :members:
+   :undoc-members:
+   :show-inheritance:

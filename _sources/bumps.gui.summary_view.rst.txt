@@ -1,0 +1,7 @@
+bumps.gui.summary\_view module
+==============================
+
+.. automodule:: bumps.gui.summary_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+bumps.wsolve module
+===================
+
+.. automodule:: bumps.wsolve
+   :members:
+   :undoc-members:
+   :show-inheritance:

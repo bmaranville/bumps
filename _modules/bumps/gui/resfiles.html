@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.gui.resfiles &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.gui.resfiles</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.gui.resfiles</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Package data files</span>
+<span class="sd">==================</span>
+
+<span class="sd">Some python packages, particularly gui packages, but also other packages</span>
+<span class="sd">with static data need to be able to ship the data with the package.  This</span>
+<span class="sd">is particularly a problem for py2exe since python does not provide any</span>
+<span class="sd">facilities for extracting the data files from the bundled exe at runtime.</span>
+<span class="sd">Instead, the setup.py process needs to ask for the package data files so</span>
+<span class="sd">it can bundle them separately from the exe.  When the application is running</span>
+<span class="sd">it will need to find the resource files so that it can load them, regardless</span>
+<span class="sd">if it is running directly from the source tree, from an installed package</span>
+<span class="sd">or from an exe or app.</span>
+
+<span class="sd">The Resources class handles both the setup and the runtime requirements</span>
+<span class="sd">for package resources.  You will need to put the resources in a path</span>
+<span class="sd">within your source tree and initialize a Resources object with the necessary</span>
+<span class="sd">information.  For example, assuming the resources are in a subdirectory</span>
+<span class="sd">named &quot;resources&quot;, and this package is stored as resfiles.py in the parent,</span>
+<span class="sd">you would set resources/__init__.py as follows::</span>
+
+<span class="sd">    from ..resfiles import Resources</span>
+<span class="sd">    resources = Resources(package=__name__,</span>
+<span class="sd">                          patterns=(&#39;*.png&#39;, &#39;*.jpg&#39;, &#39;*.ico&#39;, &#39;*.wav&#39;),</span>
+<span class="sd">                          datadir=&#39;bumps-data&#39;,</span>
+<span class="sd">                          check_file=&#39;reload.png&#39;,</span>
+<span class="sd">                          env=&#39;BUMPS_DATA&#39;)</span>
+
+<span class="sd">Now a resource file such as &#39;reload.png&#39; can be accessed from a parent module</span>
+<span class="sd">using::</span>
+
+<span class="sd">    from .resources import resources</span>
+<span class="sd">    resources.get_path(&#39;reload.png&#39;)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+
+
+<div class="viewcode-block" id="Resources">
+<a class="viewcode-back" href="../../../bumps.gui.resfiles.html#bumps.gui.resfiles.Resources">[docs]</a>
+<span class="k">class</span> <span class="nc">Resources</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Identify project resource files.</span>
+
+<span class="sd">    *package* : string</span>
+<span class="sd">        Name of the subpackage containing the resources.  From the __init__.py</span>
+<span class="sd">        file, for the resource directory, this is just __name__.</span>
+<span class="sd">    *patterns* : list or tuple</span>
+<span class="sd">        Set of glob patterns used to identify resource files in the resource</span>
+<span class="sd">        package.</span>
+<span class="sd">    *datadir* : string</span>
+<span class="sd">        Name of the installed resource directory.  This is used in setup to</span>
+<span class="sd">        prepare the resource directory and in the application to locate the</span>
+<span class="sd">        resources that have been installed.</span>
+<span class="sd">    *check_file*: string</span>
+<span class="sd">        Name of a resource file that should be in the resource directory.  This</span>
+<span class="sd">        is used to check that the resource directory exists in the installed</span>
+<span class="sd">        application.</span>
+<span class="sd">    *env* : string (optional)</span>
+<span class="sd">        Environment variable which contains the complete path to the resource</span>
+<span class="sd">        directory.  The environment variable overrides other methods of</span>
+<span class="sd">        accessing the resources except running directly from the source tree.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">package</span><span class="p">,</span> <span class="n">patterns</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">check_file</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">package</span> <span class="o">=</span> <span class="n">package</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span> <span class="o">=</span> <span class="n">patterns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datadir</span> <span class="o">=</span> <span class="n">datadir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_file</span> <span class="o">=</span> <span class="n">check_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Resources.package_data">
+<a class="viewcode-back" href="../../../bumps.gui.resfiles.html#bumps.gui.resfiles.Resources.package_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">package_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the data files associated with the package.</span>
+
+<span class="sd">        The format is a dictionary of {&#39;fully.qualified.package&#39;, [files...]}</span>
+<span class="sd">        used directly in the setup script as::</span>
+
+<span class="sd">            setup(...,</span>
+<span class="sd">                  package_data=package_data(),</span>
+<span class="sd">                  ...)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span> <span class="bp">self</span><span class="o">.</span><span class="n">package</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">)</span> <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Resources.data_files">
+<a class="viewcode-back" href="../../../bumps.gui.resfiles.html#bumps.gui.resfiles.Resources.data_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">data_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the data files associated with the package.</span>
+
+<span class="sd">        The format is a list of (directory, [files...]) pairs which can be</span>
+<span class="sd">        used directly in the py2exe setup script as::</span>
+
+<span class="sd">            setup(...,</span>
+<span class="sd">                  data_files=data_files(),</span>
+<span class="sd">                  ...)</span>
+
+<span class="sd">        Unlike package_data(), which only works from the source tree, data_files</span>
+<span class="sd">        uses installed data path to locate the resources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_files</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finddata</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="n">data_files</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_finddata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">patterns</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_dir</span><span class="p">()</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">+=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">p</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">files</span>
+
+<div class="viewcode-block" id="Resources.resource_dir">
+<a class="viewcode-back" href="../../../bumps.gui.resfiles.html#bumps.gui.resfiles.Resources.resource_dir">[docs]</a>
+    <span class="k">def</span> <span class="nf">resource_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the path to the application data.</span>
+
+<span class="sd">        This is either in an environment variable, in the source tree next to</span>
+<span class="sd">        this file, or beside the executable.  The environment key can be set</span>
+<span class="sd">        using</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If we already found it, then we are done</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span>
+
+        <span class="c1"># Check for data in the package itself (which will be the case when</span>
+        <span class="c1"># we are running from the source tree).</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">package</span><span class="p">]</span><span class="o">.</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span>
+
+        <span class="c1"># Check for data path in the environment.  If the environment variable</span>
+        <span class="c1"># is specified, then the resources have to be there, or the program fails.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_resource_path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Environment </span><span class="si">%s</span><span class="s1"> not a directory&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span>
+
+        <span class="c1"># Check for data next to exe/zip file.</span>
+        <span class="n">exepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">exepath</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span>
+
+        <span class="c1"># py2app puts the data in Contents/Resources, but the executable</span>
+        <span class="c1"># is in Contents/MacOS.</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">exepath</span><span class="p">,</span><span class="s1">&#39;..&#39;</span><span class="p">,</span><span class="s1">&#39;Resources&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_resource_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span>
+
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Could not find the GUI data files&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_cache_resource_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">check_file</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cached_path</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Resources.get_path">
+<a class="viewcode-back" href="../../../bumps.gui.resfiles.html#bumps.gui.resfiles.Resources.get_path">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resource_dir</span><span class="p">(),</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.gui.resfiles</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

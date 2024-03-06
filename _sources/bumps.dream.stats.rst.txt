@@ -1,0 +1,7 @@
+bumps.dream.stats module
+========================
+
+.. automodule:: bumps.dream.stats
+   :members:
+   :undoc-members:
+   :show-inheritance:

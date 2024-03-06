@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.parcoord module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.parcoord module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.parcoord">
+<span id="bumps-dream-parcoord-module"></span><h1>bumps.dream.parcoord module<a class="headerlink" href="#module-bumps.dream.parcoord" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.parcoord.best_in_bin">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.parcoord.</span></span><span class="sig-name descname"><span class="pre">best_in_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/parcoord.html#best_in_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.parcoord.best_in_bin" title="Link to this definition">¶</a></dt>
+<dd><p>Find the index of the minimum <em>value</em> in each bin for the data in <em>x</em>.</p>
+<p><em>x</em> are the coordinates to be binned.</p>
+<p><em>value</em> are the objective to be minimized in each bin, such as chisq.
+There is one value for each x coordinate.</p>
+<p><em>bins</em> are the number of bins within <em>range</em> or an array of bin edges
+if the bins are not uniform.</p>
+<p><em>range</em> is the data range for the bins. The default is (x.min(), x.max()).</p>
+<p><em>keep_empty</em> is True if empty bins will return an index of -1.  When
+False (the default), empty bins are removed.</p>
+<p>Returns indices of the elements which are the minimum within each bin.
+This list may be shorter than the number of bins if <em>keep_empty</em> is False.</p>
+<p>The algorithm works by assigning a bin number to each point then adding
+an offset in [0, 1) according to the scaled <em>value</em>.  These point values
+are then sorted, and searched by bin number.  The returned index will
+correspond to the first value in each bin, and therefore, the best value
+in that bin.  From this the index into the original list can be returned.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.parcoord.parallel_coordinates">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.parcoord.</span></span><span class="sig-name descname"><span class="pre">parallel_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/parcoord.html#parallel_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.parcoord.parallel_coordinates" title="Link to this definition">¶</a></dt>
+<dd><p>Produce a parallel coordinates plot.</p>
+<p><em>data</em> is a set of points to draw, one row per point.</p>
+<p><em>labels</em> is the label to assign to the dimensions, one per column in <em>data</em>.</p>
+<p><em>value</em> is an optional value to use to color the different lines. This
+could be the value of the control variable, or some additional dimension
+such as overall quality for the individual points.</p>
+<p><em>value_label</em> is the label to put on the colorbar for the line colors.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.parcoord.plot">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.parcoord.</span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">draw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">150</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/parcoord.html#plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.parcoord.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot parallel coordinates from a draw from the distribution.</p>
+<p><em>draw</em> is the draw from the sample</p>
+<p><em>nlines</em> is the number of lines to draw</p>
+<p>If <em>control_var</em> is provided, then the best value from each bin in the
+histogram for that variable will be chosen as a line to draw on the
+coordination plot. This will will produce a roughly equally spaced set of
+coordination points for that variable. If <em>control_var</em> is None, then
+lines will be picked at random.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.parcoord.scale">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.parcoord.</span></span><span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/parcoord.html#scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.parcoord.scale" title="Link to this definition">¶</a></dt>
+<dd><p>Returns <em>x</em> with values scaled to [0, 1].</p>
+<p>If <em>axis</em> is not None, then scale values within each axis independently,
+otherwise use the min/max value across all dimensions.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.parcoord module</a><ul>
+<li><a class="reference internal" href="#bumps.dream.parcoord.best_in_bin"><code class="docutils literal notranslate"><span class="pre">best_in_bin()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.parcoord.parallel_coordinates"><code class="docutils literal notranslate"><span class="pre">parallel_coordinates()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.parcoord.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.parcoord.scale"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.parcoord.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.parcoord module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

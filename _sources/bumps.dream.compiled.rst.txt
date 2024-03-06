@@ -1,0 +1,7 @@
+bumps.dream.compiled module
+===========================
+
+.. automodule:: bumps.dream.compiled
+   :members:
+   :undoc-members:
+   :show-inheritance:

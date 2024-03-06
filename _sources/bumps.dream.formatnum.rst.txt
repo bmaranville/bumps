@@ -1,0 +1,7 @@
+bumps.dream.formatnum module
+============================
+
+.. automodule:: bumps.dream.formatnum
+   :members:
+   :undoc-members:
+   :show-inheritance:

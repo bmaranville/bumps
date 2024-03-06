@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.parcoord &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.parcoord</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.parcoord</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="plot">
+<a class="viewcode-back" href="../../../dream/parcoord.html#bumps.dream.parcoord.plot">[docs]</a>
+<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">nlines</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">control_var</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot parallel coordinates from a draw from the distribution.</span>
+
+<span class="sd">    *draw* is the draw from the sample</span>
+
+<span class="sd">    *nlines* is the number of lines to draw</span>
+
+<span class="sd">    If *control_var* is provided, then the best value from each bin in the</span>
+<span class="sd">    histogram for that variable will be chosen as a line to draw on the</span>
+<span class="sd">    coordination plot. This will will produce a roughly equally spaced set of</span>
+<span class="sd">    coordination points for that variable. If *control_var* is None, then</span>
+<span class="sd">    lines will be picked at random.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">logp</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">logp</span>
+
+    <span class="c1"># TODO: confirm that plot is called with 95% interval draw</span>
+    <span class="c1"># Note: the 95% interval draw is based on the range of the data?</span>
+    <span class="c1"># Drop points outside the 95% interval of chisq</span>
+    <span class="c1">#index = np.argsort(logp)</span>
+    <span class="c1">#npoints = data.shape[0]</span>
+    <span class="c1">#maxn = int(npoints*0.95)</span>
+    <span class="c1">#index = index[:maxn]</span>
+    <span class="c1">#logp = logp[index]</span>
+    <span class="c1">#data = data[index]</span>
+
+    <span class="c1"># TODO: order data by strength of correlation</span>
+    <span class="c1"># Some options:</span>
+    <span class="c1">#    Pearson: only works for linear</span>
+    <span class="c1">#    Kendal, Spearman: only works for monotonic</span>
+    <span class="c1">#    distance (Szekely, 2005) doi:10.1214/009053607000000505</span>
+    <span class="c1">#    HGG (Heller, Heller, Gorfine, 2013) doi:10.1093/biomet/ass070</span>
+    <span class="c1"># estimate correlations</span>
+    <span class="c1">#corr = matrix_corr(data)</span>
+    <span class="c1">#order = list(range(data.shape[1]))</span>
+    <span class="c1">#data = data[order]</span>
+
+    <span class="k">if</span> <span class="n">control_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">nlines</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">best_in_bin</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="n">control_var</span><span class="p">],</span> <span class="o">-</span><span class="n">logp</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nlines</span><span class="p">)</span>
+    <span class="c1">#color_value, color_label = data[index, var], labels[var]</span>
+    <span class="n">color_value</span><span class="p">,</span> <span class="n">color_label</span> <span class="o">=</span> <span class="o">-</span><span class="n">logp</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="s2">&quot;-log(P)&quot;</span>
+    <span class="n">parallel_coordinates</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">color_value</span><span class="p">,</span> <span class="n">value_label</span><span class="o">=</span><span class="n">color_label</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="best_in_bin">
+<a class="viewcode-back" href="../../../dream/parcoord.html#bumps.dream.parcoord.best_in_bin">[docs]</a>
+<span class="k">def</span> <span class="nf">best_in_bin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the index of the minimum *value* in each bin for the data in *x*.</span>
+
+<span class="sd">    *x* are the coordinates to be binned.</span>
+
+<span class="sd">    *value* are the objective to be minimized in each bin, such as chisq.</span>
+<span class="sd">    There is one value for each x coordinate.</span>
+
+<span class="sd">    *bins* are the number of bins within *range* or an array of bin edges</span>
+<span class="sd">    if the bins are not uniform.</span>
+
+<span class="sd">    *range* is the data range for the bins. The default is (x.min(), x.max()).</span>
+
+<span class="sd">    *keep_empty* is True if empty bins will return an index of -1.  When</span>
+<span class="sd">    False (the default), empty bins are removed.</span>
+
+<span class="sd">    Returns indices of the elements which are the minimum within each bin.</span>
+<span class="sd">    This list may be shorter than the number of bins if *keep_empty* is False.</span>
+
+<span class="sd">    The algorithm works by assigning a bin number to each point then adding</span>
+<span class="sd">    an offset in [0, 1) according to the scaled *value*.  These point values</span>
+<span class="sd">    are then sorted, and searched by bin number.  The returned index will</span>
+<span class="sd">    correspond to the first value in each bin, and therefore, the best value</span>
+<span class="sd">    in that bin.  From this the index into the original list can be returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Find bin number for each value.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="c1"># Find intervals for x and use integer division to assign bin number.</span>
+        <span class="c1"># Don&#39;t worry that this might create bin numbers such as -3 or nbins+5</span>
+        <span class="c1"># since these will be ignored during bin lookup.</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="nb">range</span> <span class="k">if</span> <span class="nb">range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="n">bins</span>
+        <span class="n">value_in_bin</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span><span class="o">//</span><span class="n">dx</span> <span class="k">if</span> <span class="n">dx</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">bins</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">nbins</span> <span class="o">=</span> <span class="n">bins</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Lookup x in bin edges. searchsorted returns index 0 for elements</span>
+        <span class="c1"># before the first edge so we need to put an extra start edge and</span>
+        <span class="c1"># subtract one from the index so that bin number is -1 before first.</span>
+        <span class="n">value_in_bin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">bins</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">nbins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># Increment bin number offset using scaled value.  Limit the scaled</span>
+    <span class="c1"># value to 0.99 rather 1.0 so that the worst value isn&#39;t 1.0, which</span>
+    <span class="c1"># will be the best value in the next bin.</span>
+    <span class="n">value_in_bin</span> <span class="o">+=</span> <span class="n">scale</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">*</span><span class="mf">0.99</span>
+
+    <span class="c1"># Sort values, preserving original indices</span>
+    <span class="n">sort_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">value_in_bin</span><span class="p">)</span>
+    <span class="n">sorted_value_in_bin</span> <span class="o">=</span> <span class="n">value_in_bin</span><span class="p">[</span><span class="n">sort_index</span><span class="p">]</span>
+
+    <span class="c1"># Lookup first point in each bin, which will now by the min chisq in bin.</span>
+    <span class="n">bin_numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
+    <span class="n">min_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">sorted_value_in_bin</span><span class="p">,</span> <span class="n">bin_numbers</span><span class="p">)</span>
+
+    <span class="c1"># Find the point number for the best points in the original list.</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">sort_index</span><span class="p">[</span><span class="n">min_index</span><span class="p">]</span>
+
+    <span class="c1"># Indentify empty bins. This will occur if base value returned by</span>
+    <span class="c1"># search sorted does not match the bin number.</span>
+    <span class="n">empty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">sorted_value_in_bin</span><span class="p">[</span><span class="n">min_index</span><span class="p">])</span> <span class="o">!=</span> <span class="n">bin_numbers</span>
+
+    <span class="c1"># Process empty bins.</span>
+    <span class="k">if</span> <span class="n">keep_empty</span><span class="p">:</span>
+        <span class="n">index</span><span class="p">[</span><span class="n">empty</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="o">~</span><span class="n">empty</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">index</span></div>
+
+
+<div class="viewcode-block" id="parallel_coordinates">
+<a class="viewcode-back" href="../../../dream/parcoord.html#bumps.dream.parcoord.parallel_coordinates">[docs]</a>
+<span class="k">def</span> <span class="nf">parallel_coordinates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce a parallel coordinates plot.</span>
+
+<span class="sd">    *data* is a set of points to draw, one row per point.</span>
+
+<span class="sd">    *labels* is the label to assign to the dimensions, one per column in *data*.</span>
+
+<span class="sd">    *value* is an optional value to use to color the different lines. This</span>
+<span class="sd">    could be the value of the control variable, or some additional dimension</span>
+<span class="sd">    such as overall quality for the individual points.</span>
+
+<span class="sd">    *value_label* is the label to put on the colorbar for the line colors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">LineCollection</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;p</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">)]</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">scale</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># We need to set the plot limits, they will not autoscale</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">(),</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ndim</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">LineCollection</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">data</span><span class="p">],</span>
+                           <span class="n">linewidths</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s1">&#39;solid&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
+
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">value_label</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">sci</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="scale">
+<a class="viewcode-back" href="../../../dream/parcoord.html#bumps.dream.parcoord.scale">[docs]</a>
+<span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns *x* with values scaled to [0, 1].</span>
+
+<span class="sd">    If *axis* is not None, then scale values within each axis independently,</span>
+<span class="sd">    otherwise use the min/max value across all dimensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">high</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">high</span> <span class="o">-</span> <span class="n">low</span>
+    <span class="n">dx</span><span class="p">[</span><span class="n">dx</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">scaled</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span>
+    <span class="k">return</span> <span class="n">scaled</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.parcoord</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

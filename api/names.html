@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>names - External interface &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="options - Command line options processor" href="options.html" />
+    <link rel="prev" title="mono - Freeform - Monotonic Spline" href="mono.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="options.html" title="options - Command line options processor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mono.html" title="mono - Freeform - Monotonic Spline"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">names - External interface</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="names-external-interface">
+<h1>names - External interface<a class="headerlink" href="#names-external-interface" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+</tbody>
+</table>
+<p id="module-bumps.names">Exported names.</p>
+<p>In model definition scripts, rather than importing symbols one by one,
+you can simply perform:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>This is bad style for library and applications but convenient for
+model scripts.</p>
+<p>The following symbols are defined:</p>
+<ul class="simple">
+<li><p><em>np</em> for the <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference">numpy</a> array package</p></li>
+<li><p><em>sys</em> for the python <a class="reference external" href="https://docs.python.org/2/library/sys.html">sys</a> module</p></li>
+<li><p><em>inf</em> for infinity</p></li>
+<li><p><a class="reference internal" href="../bumps.pmath.html#module-bumps.pmath" title="bumps.pmath"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pmath</span></code></a> for parameter expressions like <em>2*pmath.sin(M.theta)</em></p></li>
+<li><p><a class="reference internal" href="../bumps.parameter.html#bumps.parameter.Parameter" title="bumps.parameter.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> for defining parameters</p></li>
+<li><p><a class="reference internal" href="../bumps.parameter.html#bumps.parameter.FreeVariables" title="bumps.parameter.FreeVariables"><code class="xref py py-class docutils literal notranslate"><span class="pre">FreeVariables</span></code></a> for defining shared parameters</p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="../bumps.bounds.html#bumps.bounds.Distribution" title="bumps.bounds.Distribution"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distribution</span></code></a> for indicating prior</dt><dd><p>probability for a model parameter</p>
+</dd>
+</dl>
+</li>
+<li><p><a class="reference internal" href="../bumps.curve.html#bumps.curve.Curve" title="bumps.curve.Curve"><code class="xref py py-class docutils literal notranslate"><span class="pre">Curve</span></code></a> for defining models from functions</p></li>
+<li><p><a class="reference internal" href="../bumps.curve.html#bumps.curve.PoissonCurve" title="bumps.curve.PoissonCurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">PoissonCurve</span></code></a> for modelling data with Poisson uncertainty</p></li>
+<li><p><a class="reference internal" href="../bumps.pdfwrapper.html#bumps.pdfwrapper.PDF" title="bumps.pdfwrapper.PDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PDF</span></code></a> for fitting a probability distribution directly</p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem</span></code></a> for defining the fit (see</dt><dd><p><a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem" title="bumps.fitproblem.BaseFitProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseFitProblem</span></code></a> or
+<a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem" title="bumps.fitproblem.MultiFitProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiFitProblem</span></code></a> for details,
+depending on whether you are fitting a single model or multiple models
+simultaneously).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="mono.html"
+                          title="previous chapter">mono - Freeform - Monotonic Spline</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="options.html"
+                          title="next chapter">options - Command line options processor</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/names.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="options.html" title="options - Command line options processor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mono.html" title="mono - Freeform - Monotonic Spline"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">names - External interface</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

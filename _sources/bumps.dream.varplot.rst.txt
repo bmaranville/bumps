@@ -1,0 +1,7 @@
+bumps.dream.varplot module
+==========================
+
+.. automodule:: bumps.dream.varplot
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+bumps.mpfit module
+==================
+
+.. automodule:: bumps.mpfit
+   :members:
+   :undoc-members:
+   :show-inheritance:

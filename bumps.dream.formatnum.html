@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.formatnum module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.formatnum module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.formatnum">
+<span id="bumps-dream-formatnum-module"></span><h1>bumps.dream.formatnum module<a class="headerlink" href="#module-bumps.dream.formatnum" title="Link to this heading">¶</a></h1>
+<p>Format values and uncertainties nicely for printing.</p>
+<p>The formatted value uses only the number of digits warranted by
+the uncertainty in the measurement.</p>
+<p><a class="reference internal" href="dream/formatnum.html#bumps.dream.formatnum.format_value" title="bumps.dream.formatnum.format_value"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_value()</span></code></a> shows the value without the uncertainty.</p>
+<p><a class="reference internal" href="dream/formatnum.html#bumps.dream.formatnum.format_uncertainty_pm" title="bumps.dream.formatnum.format_uncertainty_pm"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_uncertainty_pm()</span></code></a> shows the expanded format v +/- err.</p>
+<p><a class="reference internal" href="dream/formatnum.html#bumps.dream.formatnum.format_uncertainty_compact" title="bumps.dream.formatnum.format_uncertainty_compact"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_uncertainty_compact()</span></code></a> shows the compact format v(##),
+where the number in parenthesis is the uncertainty in the last two digits of v.</p>
+<p><a class="reference internal" href="dream/formatnum.html#bumps.dream.formatnum.format_uncertainty" title="bumps.dream.formatnum.format_uncertainty"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_uncertainty()</span></code></a> uses the compact format by default, but this
+can be changed to use the expanded +/- format by setting
+format_uncertainty.compact to False.  This is a global setting which should
+be considered a user preference.  Any library code that depends on a specific
+format style should use the corresponding formatting function.</p>
+<p>If the uncertainty is 0 or not otherwise provided, the simple
+%g floating point format option is used.</p>
+<p>Infinite and indefinite numbers are represented as inf and NaN.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">v</span><span class="p">,</span><span class="n">dv</span> <span class="o">=</span> <span class="mf">757.2356</span><span class="p">,</span><span class="mf">0.01032</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">format_uncertainty_pm</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">dv</span><span class="p">))</span>
+<span class="go">757.236 +/- 0.010</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">format_uncertainty_compact</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">dv</span><span class="p">))</span>
+<span class="go">757.236(10)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">format_uncertainty</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">dv</span><span class="p">))</span>
+<span class="go">757.236(10)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">format_uncertainty</span><span class="o">.</span><span class="n">compact</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">format_uncertainty</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">dv</span><span class="p">))</span>
+<span class="go">757.236 +/- 0.010</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">format_uncertainty</span><span class="o">.</span><span class="n">compact</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># restore default</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.formatnum.format_uncertainty">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.formatnum.</span></span><span class="sig-name descname"><span class="pre">format_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/formatnum.html#format_uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.formatnum.format_uncertainty" title="Link to this definition">¶</a></dt>
+<dd><p>Value and uncertainty formatter.</p>
+<p>Either the expanded v +/- dv form or the compact v(##) form will be
+used depending on whether <em>format_uncertainty.compact</em> is True or False.
+The default is True.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.formatnum.format_uncertainty_compact">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.formatnum.</span></span><span class="sig-name descname"><span class="pre">format_uncertainty_compact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/formatnum.html#format_uncertainty_compact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.formatnum.format_uncertainty_compact" title="Link to this definition">¶</a></dt>
+<dd><p>Given <em>value</em> v and <em>uncertainty</em> dv, return the compact
+representation v(##), where ## are the first two digits of
+the uncertainty.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.formatnum.format_uncertainty_pm">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.formatnum.</span></span><span class="sig-name descname"><span class="pre">format_uncertainty_pm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/formatnum.html#format_uncertainty_pm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.formatnum.format_uncertainty_pm" title="Link to this definition">¶</a></dt>
+<dd><p>Given <em>value</em> v and <em>uncertainty</em> dv, return a string v +/- dv.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.formatnum.format_value">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.formatnum.</span></span><span class="sig-name descname"><span class="pre">format_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/formatnum.html#format_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.formatnum.format_value" title="Link to this definition">¶</a></dt>
+<dd><p>Given <em>value</em> v and <em>uncertainty</em> dv, return a string v which is
+the value formatted with the appropriate number of digits.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.formatnum module</a><ul>
+<li><a class="reference internal" href="#bumps.dream.formatnum.format_uncertainty"><code class="docutils literal notranslate"><span class="pre">format_uncertainty()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.formatnum.format_uncertainty_compact"><code class="docutils literal notranslate"><span class="pre">format_uncertainty_compact()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.formatnum.format_uncertainty_pm"><code class="docutils literal notranslate"><span class="pre">format_uncertainty_pm()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.formatnum.format_value"><code class="docutils literal notranslate"><span class="pre">format_value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.formatnum.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.formatnum module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

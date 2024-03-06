@@ -1,0 +1,7 @@
+bumps.options module
+====================
+
+.. automodule:: bumps.options
+   :members:
+   :undoc-members:
+   :show-inheritance:

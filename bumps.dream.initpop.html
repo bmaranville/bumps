@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.initpop module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.initpop module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.initpop">
+<span id="bumps-dream-initpop-module"></span><h1>bumps.dream.initpop module<a class="headerlink" href="#module-bumps.dream.initpop" title="Link to this heading">¶</a></h1>
+<p>Population initialization routines.</p>
+<p>To start the analysis an initial population is required.  This will be
+an array of size M x N, where M is the number of dimensions in the fitting
+problem and N is the number of Markov chains.</p>
+<p>Two functions are provided:</p>
+<p>1. lhs_init(N, bounds) returns a latin hypercube sampling, which tests every
+parameter at each of N levels.</p>
+<p>2. cov_init(N, x, cov) returns a Gaussian sample along the ellipse
+defined by the covariance matrix, cov.  Covariance defaults to
+diag(dx) if dx is provided as a parameter, or to I if it is not.</p>
+<p>Additional options are random box: rand(M, N) or random scatter: randn(M, N).</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.initpop.cov_init">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.initpop.</span></span><span class="sig-name descname"><span class="pre">cov_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/initpop.html#cov_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.initpop.cov_init" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize <em>N</em> sets of random variables from a gaussian model.</p>
+<p>The center is at <em>x</em> with an uncertainty ellipse specified by the
+1-sigma independent uncertainty values <em>dx</em> or the full covariance
+matrix uncertainty <em>cov</em>.</p>
+<p>For example, create an initial population for 20 sequences for a
+model with local minimum x with covariance matrix C:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop</span> <span class="o">=</span> <span class="n">cov_init</span><span class="p">(</span><span class="n">cov</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.initpop.lhs_init">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.initpop.</span></span><span class="sig-name descname"><span class="pre">lhs_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/initpop.html#lhs_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.initpop.lhs_init" title="Link to this definition">¶</a></dt>
+<dd><p>Latin Hypercube Sampling</p>
+<p>Returns an array whose columns each have <em>N</em> samples from equally spaced
+bins between <em>bounds=(xmin, xmax)</em> for the column.  DREAM bounds
+objects, with bounds.low and bounds.high can be used as well.</p>
+<p>Note: Indefinite ranges are not supported.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.initpop module</a><ul>
+<li><a class="reference internal" href="#bumps.dream.initpop.cov_init"><code class="docutils literal notranslate"><span class="pre">cov_init()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.initpop.lhs_init"><code class="docutils literal notranslate"><span class="pre">lhs_init()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.initpop.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.initpop module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.plotutil module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plotutil module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.plotutil">
+<span id="bumps-plotutil-module"></span><h1>bumps.plotutil module<a class="headerlink" href="#module-bumps.plotutil" title="Link to this heading">¶</a></h1>
+<p>Pylab plotting utilities.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plotutil.auto_shift">
+<span class="sig-prename descclassname"><span class="pre">bumps.plotutil.</span></span><span class="sig-name descname"><span class="pre">auto_shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plotutil.html#auto_shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plotutil.auto_shift" title="Link to this definition">¶</a></dt>
+<dd><p>Return a y-offset coordinate transform for the current axes.</p>
+<p>Each call to auto_shift increases the y-offset for the next line by
+the given number of points (with 72 points per inch).</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">bumps.plotutil</span> <span class="kn">import</span> <span class="n">auto_shift</span>
+<span class="n">trans</span> <span class="o">=</span> <span class="n">auto_shift</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">())</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="n">trans</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plotutil.coordinated_colors">
+<span class="sig-prename descclassname"><span class="pre">bumps.plotutil.</span></span><span class="sig-name descname"><span class="pre">coordinated_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plotutil.html#coordinated_colors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plotutil.coordinated_colors" title="Link to this definition">¶</a></dt>
+<dd><p>Return a set of coordinated colors as c[‘base|light|dark’].</p>
+<p>If <em>base</em> is not provided, use the next color in the color cycle as
+the base.  Light is bright and pale, dark is dull and saturated.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plotutil.dhsv">
+<span class="sig-prename descclassname"><span class="pre">bumps.plotutil.</span></span><span class="sig-name descname"><span class="pre">dhsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">da</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plotutil.html#dhsv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plotutil.dhsv" title="Link to this definition">¶</a></dt>
+<dd><p>Modify color on hsv scale.</p>
+<p><em>dv</em> change intensity, e.g., +0.1 to brighten, -0.1 to darken.
+<em>dh</em> change hue
+<em>ds</em> change saturation
+<em>da</em> change transparency</p>
+<p>Color can be any valid matplotlib color.  The hsv scale is [0,1] in
+each dimension.  Saturation, value and alpha scales are clipped to [0,1]
+after changing.  The hue scale wraps between red to violet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>Make sea green 10% darker:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bumps.plotutil</span> <span class="kn">import</span> <span class="n">dhsv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">darker</span> <span class="o">=</span> <span class="n">dhsv</span><span class="p">(</span><span class="s1">&#39;seagreen&#39;</span><span class="p">,</span> <span class="n">dv</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">*</span><span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">darker</span><span class="p">])</span>
+<span class="go">[37, 113, 71, 255]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plotutil.form_quantiles">
+<span class="sig-prename descclassname"><span class="pre">bumps.plotutil.</span></span><span class="sig-name descname"><span class="pre">form_quantiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plotutil.html#form_quantiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plotutil.form_quantiles" title="Link to this definition">¶</a></dt>
+<dd><p>Return quantiles and values for a list of confidence intervals.</p>
+<p><em>contours</em> is a list of confidence interfaces [a, b,…] expressed as
+percents.</p>
+<p>Returns:</p>
+<p><em>quantiles</em> is a list of intervals [[a_low, a_high], [b_low, b_high], …]
+in [0,1].</p>
+<p><em>values</em> is a list of intervals [[A_low, A_high], …] with one entry in
+A for each row in y.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plotutil.next_color">
+<span class="sig-prename descclassname"><span class="pre">bumps.plotutil.</span></span><span class="sig-name descname"><span class="pre">next_color</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plotutil.html#next_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plotutil.next_color" title="Link to this definition">¶</a></dt>
+<dd><p>Return the next color in the plot color cycle.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">bumps.plotutil</span> <span class="kn">import</span> <span class="n">next_color</span><span class="p">,</span> <span class="n">dhsv</span>
+<span class="n">color</span> <span class="o">=</span> <span class="n">next_color</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">dy</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+<span class="c1"># Draw the theory line with the same color as the data, but darker</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">dhsv</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">dv</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plotutil.plot_quantiles">
+<span class="sig-prename descclassname"><span class="pre">bumps.plotutil.</span></span><span class="sig-name descname"><span class="pre">plot_quantiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contours</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plotutil.html#plot_quantiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plotutil.plot_quantiles" title="Link to this definition">¶</a></dt>
+<dd><p>Plot quantile curves for a set of lines.</p>
+<p><em>x</em> is the x coordinates for all lines.</p>
+<p><em>y</em> is the y coordinates, one row for each line.</p>
+<p><em>contours</em> is a list of confidence intervals expressed as percents.</p>
+<p><em>color</em> is the color to use for the quantiles.  Quantiles are draw as
+a filled region with alpha transparency.  Higher probability regions
+will be covered with multiple contours, which will make them lighter
+and more saturated.</p>
+<p><em>alpha</em> is the transparency level to use for all fill regions.  The
+default value, alpha=2./(#contours+1), works pretty well.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.plotutil module</a><ul>
+<li><a class="reference internal" href="#bumps.plotutil.auto_shift"><code class="docutils literal notranslate"><span class="pre">auto_shift()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plotutil.coordinated_colors"><code class="docutils literal notranslate"><span class="pre">coordinated_colors()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plotutil.dhsv"><code class="docutils literal notranslate"><span class="pre">dhsv()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plotutil.form_quantiles"><code class="docutils literal notranslate"><span class="pre">form_quantiles()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plotutil.next_color"><code class="docutils literal notranslate"><span class="pre">next_color()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plotutil.plot_quantiles"><code class="docutils literal notranslate"><span class="pre">plot_quantiles()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.plotutil.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plotutil module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

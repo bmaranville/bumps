@@ -1,0 +1,7 @@
+bumps.mystic.examples.corana module
+===================================
+
+.. automodule:: bumps.mystic.examples.corana
+   :members:
+   :undoc-members:
+   :show-inheritance:

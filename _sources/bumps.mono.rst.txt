@@ -1,0 +1,7 @@
+bumps.mono module
+=================
+
+.. automodule:: bumps.mono
+   :members:
+   :undoc-members:
+   :show-inheritance:

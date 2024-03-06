@@ -1,0 +1,7 @@
+bumps.errplot module
+====================
+
+.. automodule:: bumps.errplot
+   :members:
+   :undoc-members:
+   :show-inheritance:

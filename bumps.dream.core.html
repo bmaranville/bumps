@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.dream.core module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.core module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.dream.core">
+<span id="bumps-dream-core-module"></span><h1>bumps.dream.core module<a class="headerlink" href="#module-bumps.dream.core" title="Link to this heading">¶</a></h1>
+<p>DiffeRential Evolution Adaptive Metropolis algorithm</p>
+<p>DREAM runs multiple different chains simultaneously for global exploration,
+and automatically tunes the scale and orientation of the proposal
+distribution using differential evolution.  The algorithm maintains
+detailed balance and ergodicity and works well and efficient for a large
+range of problems, especially in the presence of high-dimensionality and
+multimodality.</p>
+<p>DREAM developed by Jasper A. Vrugt and Cajo ter Braak</p>
+<p>This algorithm has been described in:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Vrugt, J.A., C.J.F. ter Braak, M.P. Clark, J.M. Hyman, and B.A. Robinson,</dt><dd><p><em>Treatment of input uncertainty in hydrologic modeling: Doing hydrology
+backward with Markov chain Monte Carlo simulation</em>,
+Water Resources Research, 44, W00B09, 2008.
+<a class="reference external" href="http://dx.doi.org/10.1029/2007WR006720">doi:10.1029/2007WR006720</a></p>
+</dd>
+<dt>Vrugt, J.A., C.J.F. ter Braak, C.G.H. Diks, D. Higdon, B.A. Robinson,</dt><dd><p>and J.M. Hyman,
+<em>Accelerating Markov chain Monte Carlo simulation by differential
+evolution with self-adaptive randomized subspace sampling</em>,
+International Journal of Nonlinear Sciences and Numerical Simulation,
+10(3), 271-288, 2009.</p>
+</dd>
+<dt>Vrugt, J.A., C.J.F. ter Braak, H.V. Gupta, and B.A. Robinson,</dt><dd><p><em>Equifinality of formal (DREAM) and informal (GLUE) Bayesian approaches
+in hydrologic modeling</em>,
+Stochastic Environmental Research and Risk Assessment,
+1-16, 2009, In Press.
+<a class="reference external" href="http://dx.doi.org/10.1007/s00477-008-0274-y">doi:10.1007/s00477-008-0274-y</a></p>
+</dd>
+</dl>
+</div></blockquote>
+<p>For more information please read:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Ter Braak, C.J.F.,</dt><dd><p><em>A Markov Chain Monte Carlo version of the genetic algorithm Differential
+Evolution: easy Bayesian computing for real parameter spaces</em>,
+Stat. Comput., 16, 239 - 249, 2006.
+<a class="reference external" href="http://dx.doi.org/10.1007/s11222-006-8769-1">doi:10.1007/s11222-006-8769-1</a></p>
+</dd>
+<dt>Vrugt, J.A., H.V. Gupta, W. Bouten and S. Sorooshian,</dt><dd><p><em>A Shuffled Complex Evolution Metropolis algorithm for optimization
+and uncertainty assessment of hydrologic model parameters</em>,
+Water Resour. Res., 39 (8), 1201, 2003.
+<a class="reference external" href="http://dx.doi.org/10.1029/2002WR001642">doi:10.1029/2002WR001642</a></p>
+</dd>
+<dt>Ter Braak, C.J.F., and J.A. Vrugt,</dt><dd><p><em>Differential Evolution Markov Chain with snooker updater
+and fewer chains</em>,
+Statistics and Computing, 2008.
+<a class="reference external" href="http://dx.doi.org/2008.10.1007/s11222-008-9104-9">doi:10.1007/s11222-008-9104-9</a></p>
+</dd>
+<dt>Vrugt, J.A., C.J.F. ter Braak, and J.M. Hyman,</dt><dd><p><em>Differential evolution adaptive Metropolis with snooker update and
+sampling from past states</em>,
+SIAM journal on Optimization, 2009.</p>
+</dd>
+<dt>Vrugt, J.A., C.J.F. ter Braak, and J.M. Hyman,</dt><dd><p><em>Parallel Markov chain Monte Carlo simulation on distributed computing
+networks using multi-try Metropolis with sampling from past states</em>,
+SIAM journal on Scientific Computing, 2009.</p>
+</dd>
+</dl>
+<ol class="upperalpha simple" start="7">
+<li><dl class="simple">
+<dt>Schoups, and J.A. Vrugt,</dt><dd><p><em>A formal likelihood function for Bayesian inference of hydrologic
+models with correlated, heteroscedastic and non-Gaussian errors</em>,
+Water Resources Research, 2010, In Press.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<ol class="upperalpha simple" start="7">
+<li><dl class="simple">
+<dt>Schoups, J.A. Vrugt, F. Fenicia, and N.C. van de Giesen,</dt><dd><p><em>Inaccurate numerical solution of hydrologic models corrupts efficiency
+and robustness of MCMC simulation</em>,
+Water Resources Research, 2010, In Press.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
+<p>Copyright (c) 2008, Los Alamos National Security, LLC
+All rights reserved.</p>
+<p>Copyright 2008. Los Alamos National Security, LLC. This software was produced
+under U.S. Government contract DE-AC52-06NA25396 for Los Alamos National
+Laboratory (LANL), which is operated by Los Alamos National Security, LLC
+for the U.S. Department of Energy. The U.S. Government has rights to use,
+reproduce, and distribute this software.</p>
+<p>NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL SECURITY, LLC MAKES ANY
+WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE USE OF
+THIS SOFTWARE.  If software is modified to produce derivative works, such
+modified software should be clearly marked, so as not to confuse it with
+the version available from LANL.</p>
+<p>Additionally, redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:</p>
+<ul class="simple">
+<li><p>Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.</p></li>
+<li><p>Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.</p></li>
+<li><p>Neither the name of Los Alamos National Security, LLC, Los Alamos National
+Laboratory, LANL the U.S. Government, nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.</p></li>
+</ul>
+<p>THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND
+CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL
+SECURITY, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+<p>MATLAB code written by Jasper A. Vrugt, Center for NonLinear Studies (CNLS)</p>
+<p>Written by Jasper A. Vrugt: <a class="reference external" href="mailto:vrugt&#37;&#52;&#48;lanl&#46;gov">vrugt<span>&#64;</span>lanl<span>&#46;</span>gov</a></p>
+<p>Version 0.5: June 2008
+Version 1.0: October 2008  Adaption updated and generalized CR implementation</p>
+<p>2010-04-20 Paul Kienzle
+* Convert to python</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.core.</span></span><span class="sig-name descname"><span class="pre">Dream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/core.html#Dream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.core.Dream" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Data structure containing the details of the running DREAM analysis code.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.CR">
+<span class="sig-name descname"><span class="pre">CR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.core.Dream.CR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.CR_spacing">
+<span class="sig-name descname"><span class="pre">CR_spacing</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'linear'</span></em><a class="headerlink" href="#bumps.dream.core.Dream.CR_spacing" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.DE_eps">
+<span class="sig-name descname"><span class="pre">DE_eps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.05</span></em><a class="headerlink" href="#bumps.dream.core.Dream.DE_eps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.DE_noise">
+<span class="sig-name descname"><span class="pre">DE_noise</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></em><a class="headerlink" href="#bumps.dream.core.Dream.DE_noise" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.DE_pairs">
+<span class="sig-name descname"><span class="pre">DE_pairs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#bumps.dream.core.Dream.DE_pairs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.DE_snooker_rate">
+<span class="sig-name descname"><span class="pre">DE_snooker_rate</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#bumps.dream.core.Dream.DE_snooker_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.DE_steps">
+<span class="sig-name descname"><span class="pre">DE_steps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#bumps.dream.core.Dream.DE_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.DR_scale">
+<span class="sig-name descname"><span class="pre">DR_scale</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#bumps.dream.core.Dream.DR_scale" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.alpha">
+<span class="sig-name descname"><span class="pre">alpha</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.01</span></em><a class="headerlink" href="#bumps.dream.core.Dream.alpha" title="Link to this definition">¶</a></dt>
+<dd><p>convergence criteria</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.bounds_style">
+<span class="sig-name descname"><span class="pre">bounds_style</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reflect'</span></em><a class="headerlink" href="#bumps.dream.core.Dream.bounds_style" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.burn">
+<span class="sig-name descname"><span class="pre">burn</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#bumps.dream.core.Dream.burn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.draws">
+<span class="sig-name descname"><span class="pre">draws</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100000</span></em><a class="headerlink" href="#bumps.dream.core.Dream.draws" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.goalseek_interval">
+<span class="sig-name descname"><span class="pre">goalseek_interval</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e+100</span></em><a class="headerlink" href="#bumps.dream.core.Dream.goalseek_interval" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.goalseek_minburn">
+<span class="sig-name descname"><span class="pre">goalseek_minburn</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#bumps.dream.core.Dream.goalseek_minburn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.goalseek_optimizer">
+<span class="sig-name descname"><span class="pre">goalseek_optimizer</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.core.Dream.goalseek_optimizer" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.model">
+<span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.core.Dream.model" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.outlier_test">
+<span class="sig-name descname"><span class="pre">outlier_test</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#bumps.dream.core.Dream.outlier_test" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.population">
+<span class="sig-name descname"><span class="pre">population</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.core.Dream.population" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test=&lt;function</span> <span class="pre">Dream.&lt;lambda&gt;&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/dream/core.html#Dream.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.core.Dream.sample" title="Link to this definition">¶</a></dt>
+<dd><p>Pull the requisite number of samples from the distribution</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.state">
+<span class="sig-name descname"><span class="pre">state</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dream/state.html#bumps.dream.state.MCMCDraw" title="bumps.dream.state.MCMCDraw"><span class="pre">MCMCDraw</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.core.Dream.state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.thinning">
+<span class="sig-name descname"><span class="pre">thinning</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#bumps.dream.core.Dream.thinning" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.core.Dream.use_delayed_rejection">
+<span class="sig-name descname"><span class="pre">use_delayed_rejection</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.dream.core.Dream.use_delayed_rejection" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.dream.core module</a><ul>
+<li><a class="reference internal" href="#bumps.dream.core.Dream"><code class="docutils literal notranslate"><span class="pre">Dream</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.CR"><code class="docutils literal notranslate"><span class="pre">Dream.CR</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.CR_spacing"><code class="docutils literal notranslate"><span class="pre">Dream.CR_spacing</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.DE_eps"><code class="docutils literal notranslate"><span class="pre">Dream.DE_eps</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.DE_noise"><code class="docutils literal notranslate"><span class="pre">Dream.DE_noise</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.DE_pairs"><code class="docutils literal notranslate"><span class="pre">Dream.DE_pairs</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.DE_snooker_rate"><code class="docutils literal notranslate"><span class="pre">Dream.DE_snooker_rate</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.DE_steps"><code class="docutils literal notranslate"><span class="pre">Dream.DE_steps</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.DR_scale"><code class="docutils literal notranslate"><span class="pre">Dream.DR_scale</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.alpha"><code class="docutils literal notranslate"><span class="pre">Dream.alpha</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.bounds_style"><code class="docutils literal notranslate"><span class="pre">Dream.bounds_style</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.burn"><code class="docutils literal notranslate"><span class="pre">Dream.burn</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.draws"><code class="docutils literal notranslate"><span class="pre">Dream.draws</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.goalseek_interval"><code class="docutils literal notranslate"><span class="pre">Dream.goalseek_interval</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.goalseek_minburn"><code class="docutils literal notranslate"><span class="pre">Dream.goalseek_minburn</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.goalseek_optimizer"><code class="docutils literal notranslate"><span class="pre">Dream.goalseek_optimizer</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.model"><code class="docutils literal notranslate"><span class="pre">Dream.model</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.outlier_test"><code class="docutils literal notranslate"><span class="pre">Dream.outlier_test</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.population"><code class="docutils literal notranslate"><span class="pre">Dream.population</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.sample"><code class="docutils literal notranslate"><span class="pre">Dream.sample()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.state"><code class="docutils literal notranslate"><span class="pre">Dream.state</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.thinning"><code class="docutils literal notranslate"><span class="pre">Dream.thinning</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.core.Dream.use_delayed_rejection"><code class="docutils literal notranslate"><span class="pre">Dream.use_delayed_rejection</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.dream.core.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.core module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+bumps.gui.resources package
+===========================
+
+Module contents
+---------------
+
+.. automodule:: bumps.gui.resources
+   :members:
+   :undoc-members:
+   :show-inheritance:

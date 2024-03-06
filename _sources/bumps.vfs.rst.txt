@@ -1,0 +1,7 @@
+bumps.vfs module
+================
+
+.. automodule:: bumps.vfs
+   :members:
+   :undoc-members:
+   :show-inheritance:

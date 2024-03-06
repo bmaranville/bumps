@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.model &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.model</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MCMC model types</span>
+
+<span class="sd">Usage</span>
+<span class="sd">-----</span>
+
+<span class="sd">First create a :class:`bumps.dream.bounds.Bounds` object. This stores the</span>
+<span class="sd">ranges available on the parameters, and controls how values outside the</span>
+<span class="sd">range are handled::</span>
+
+<span class="sd">    M_bounds = bounds(minx, maxx, style=&#39;reflect|clip|fold|randomize|none&#39;)</span>
+
+<span class="sd">For simple functions you can use one of the existing models.</span>
+
+<span class="sd">If your model *f* computes the probability density, use :class:`Density`::</span>
+
+<span class="sd">    M = Density(f, bounds=M_bounds)</span>
+
+<span class="sd">If your model *f* computes the log probability density,</span>
+<span class="sd">use :class:`LogDensity`::</span>
+
+<span class="sd">    M = LogDensity(f, bounds=M_bounds)</span>
+
+<span class="sd">If your model *f* computes a simulation which returns a vector, and you</span>
+<span class="sd">have *data* associated with the simulation, use :class:`Simulation`::</span>
+
+<span class="sd">    M = Simulation(f, data=data, bounds=M_bounds)</span>
+
+<span class="sd">The measurement *data* can have a 1-sigma uncertainty associated with it, as</span>
+<span class="sd">well as a *gamma* factor if the uncertainty distribution has non-Gaussian</span>
+<span class="sd">kurtosis associated with it.</span>
+
+
+<span class="sd">Multivariate normal distribution::</span>
+
+<span class="sd">    M = MVNormal(mu, sigma)</span>
+
+<span class="sd">Mixture models::</span>
+
+<span class="sd">    M = Mixture(M1, w1, M2, w2, ...)</span>
+
+
+<span class="sd">For more complex functions, you can subclass MCMCModel::</span>
+
+<span class="sd">    class Model(MCMCModel):</span>
+<span class="sd">        def __init__(self, ..., bounds=None, ...):</span>
+<span class="sd">            ...</span>
+<span class="sd">            self.bounds = bounds</span>
+<span class="sd">            ...</span>
+<span class="sd">        def nnlf(self, x):</span>
+<span class="sd">            &quot;Return the negative log likelihood of seeing x&quot;</span>
+<span class="sd">            p = probability of seeing x</span>
+<span class="sd">            return -log(p)</span>
+
+<span class="sd">    M = Model(..., bounds=M_bounds, ...)</span>
+
+<span class="sd">The MCMC program uses only two methods from the model::</span>
+
+<span class="sd">    apply_bounds(pop)</span>
+<span class="sd">    log_density(pop)</span>
+
+<span class="sd">If your model provides these methods, you will not need to subclass MCMCModel</span>
+<span class="sd">in order to interact with DREAM.</span>
+
+
+<span class="sd">Compatibility with matlab DREAM</span>
+<span class="sd">-------------------------------</span>
+
+<span class="sd">First generate a bounds handling function::</span>
+
+<span class="sd">    M_bounds = bounds(ParRange.minn, ParRange.maxn)</span>
+
+<span class="sd">Then generate a model, depending on what kind of function you have.</span>
+
+<span class="sd">Option 1. Model directly computes posterior density::</span>
+
+<span class="sd">    model = Density(f, bounds=M_bounds)</span>
+
+<span class="sd">Option 2. Model computes simulation, data has known 1-sigma uncertainty::</span>
+
+<span class="sd">    model = Simulation(f, data=Measurement.MeasData, bounds=M_bounds,</span>
+<span class="sd">                       sigma=Measurement.Sigma, gamma = MCMCPar.Gamma)</span>
+
+<span class="sd">Option 3. Model computes simulation, data has unknown 1-sigma uncertainty::</span>
+
+<span class="sd">    model = Simulation(f, data=Measurement.MeasData, bounds=M_bounds,</span>
+<span class="sd">                       gamma = MCMCPar.Gamma)</span>
+
+
+<span class="sd">Option 4. Model directly computes log posterior density::</span>
+
+<span class="sd">    model = LogDensity(f, bounds=M_bounds)</span>
+
+<span class="sd">Option 5 is like option 2 but the reported likelihoods do not take the</span>
+<span class="sd">1-sigma uncertainty into account.  The metropolis steps are still based</span>
+<span class="sd">on the 1-sigma uncertainty, so use the style given in option 2 for this case.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MCMCModel&#39;</span><span class="p">,</span> <span class="s1">&#39;Density&#39;</span><span class="p">,</span> <span class="s1">&#39;LogDensity&#39;</span><span class="p">,</span> <span class="s1">&#39;Simulation&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;MVNormal&#39;</span><span class="p">,</span> <span class="s1">&#39;Mixture&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">diag</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">inv</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exppow</span>
+
+
+<div class="viewcode-block" id="MCMCModel">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MCMCModel">[docs]</a>
+<span class="k">class</span> <span class="nc">MCMCModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MCMCM model abstract base class.</span>
+
+<span class="sd">    Each model must have a negative log likelihood function which operates</span>
+<span class="sd">    on a point x, returning the negative log likelihood, or inf if the point</span>
+<span class="sd">    is outside the domain.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MCMCModel.nllf">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MCMCModel.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span></div>
+
+
+<div class="viewcode-block" id="MCMCModel.log_density">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MCMCModel.log_density">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MCMCModel.plot">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MCMCModel.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="MCMCModel.map">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MCMCModel.map">[docs]</a>
+    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pop</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Density">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Density">[docs]</a>
+<span class="k">class</span> <span class="nc">Density</span><span class="p">(</span><span class="n">MCMCModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct an MCMC model from a probablility density function.</span>
+
+<span class="sd">    *f* is the density function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">labels</span>
+
+<div class="viewcode-block" id="Density.nllf">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Density.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LogDensity">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.LogDensity">[docs]</a>
+<span class="k">class</span> <span class="nc">LogDensity</span><span class="p">(</span><span class="n">MCMCModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct an MCMC model from a log probablility density function.</span>
+
+<span class="sd">    *f* is the log density function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">labels</span>
+
+<div class="viewcode-block" id="LogDensity.nllf">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.LogDensity.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Simulation">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Simulation">[docs]</a>
+<span class="k">class</span> <span class="nc">Simulation</span><span class="p">(</span><span class="n">MCMCModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct an MCMC model from a simulation function.</span>
+
+<span class="sd">    *f* is the function which simulates the data</span>
+<span class="sd">    *data* is the measurement(s) to compare it to</span>
+<span class="sd">    *sigma* is the 1-sigma uncertainty of the measurement(s).</span>
+<span class="sd">    *gamma* in (-1, 1] represents kurtosis on the data measurement uncertainty.</span>
+
+<span class="sd">    Data is assumed to come from an exponential power density::</span>
+
+<span class="sd">        p(v|S, G) = w(G)/S exp(-c(G) |v/S|^(2/(1+G)))</span>
+
+<span class="sd">    where S is *sigma* and G is *gamma*.</span>
+
+<span class="sd">    The values of *sigma* and *gamma* can be uniform or can vary with the</span>
+<span class="sd">    individual measurement points.</span>
+
+<span class="sd">    Certain values of *gamma* select particular distributions::</span>
+<span class="sd">        G = 0: normal</span>
+<span class="sd">        G = 1: double exponential</span>
+<span class="sd">        G -&gt; -1: uniform</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">gamma</span>
+        <span class="n">cb</span><span class="p">,</span> <span class="n">wb</span> <span class="o">=</span> <span class="n">exppow</span><span class="o">.</span><span class="n">exppow_pars</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">wb</span><span class="o">/</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cb</span> <span class="o">=</span> <span class="n">cb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pow</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="c1">#print &quot;cb&quot;, cb, &quot;sqrt(2pi)*wb&quot;, sqrt(2*pi)*wb</span>
+        <span class="c1">#print &quot;offset&quot;, self._offset</span>
+
+<div class="viewcode-block" id="Simulation.nllf">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Simulation.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">log_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cb</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">err</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_pow</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log_p</span></div>
+
+
+<div class="viewcode-block" id="Simulation.plot">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Simulation.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pylab</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MVNormal">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MVNormal">[docs]</a>
+<span class="k">class</span> <span class="nc">MVNormal</span><span class="p">(</span><span class="n">MCMCModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    multivariate normal negative log likelihood function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="c1"># Precompute sigma contributions</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rinv</span> <span class="o">=</span> <span class="n">inv</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diag</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+
+<div class="viewcode-block" id="MVNormal.nllf">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.MVNormal.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">rinv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rinv</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">,</span> <span class="n">rinv</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Mixture">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Mixture">[docs]</a>
+<span class="k">class</span> <span class="nc">Mixture</span><span class="p">(</span><span class="n">MCMCModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a mixture model from a list of weighted density models.</span>
+
+<span class="sd">    MixtureModel( M1, w1, M2, w2, ...)</span>
+
+<span class="sd">    Models M1, M2, ... are MCMC models with M.nllf(x) returning the negative</span>
+<span class="sd">    log likelihood of x.  Weights w1, w2, ... are arbitrary scalars.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+
+        <span class="n">models</span> <span class="o">=</span> <span class="n">args</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="s1">&#39;nllf&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">M</span> <span class="ow">in</span> <span class="n">models</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expected MixtureModel(M1, w1, M2, w2, ...)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Mixture.nllf">
+<a class="viewcode-back" href="../../../dream/model.html#bumps.dream.model.Mixture.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">M</span><span class="o">.</span><span class="n">nllf</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.model</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

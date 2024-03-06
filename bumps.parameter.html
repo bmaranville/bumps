@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.parameter module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.parameter module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.parameter">
+<span id="bumps-parameter-module"></span><h1>bumps.parameter module<a class="headerlink" href="#module-bumps.parameter" title="Link to this heading">¶</a></h1>
+<p>Fitting parameter objects.</p>
+<p>Parameters are a big part of the interface between the model and the fitting
+engine.  By saving and retrieving values and ranges from the parameter, the
+fitting engine does not need to be aware of the structure of the model.</p>
+<p>Users can also perform calculations with parameters, tying together different
+parts of the model, or different models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Alias">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Alias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Alias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Alias" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Parameter alias.</p>
+<p>Rather than modifying a model to contain a parameter slot,
+allow the parameter to exist outside the model. The resulting
+parameter will have the full parameter semantics, including
+the ability to replace a fixed value with a parameter expression.</p>
+<p><strong>Deprecated</strong> <a class="reference internal" href="#bumps.parameter.Reference" title="bumps.parameter.Reference"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reference</span></code></a> does this better.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Alias.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Alias.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Alias.parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Alias.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Alias.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Alias.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Alias.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Alias.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Alias.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">BaseParameter</span></span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Root of the parameter class, defining arithmetic on parameters</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.arccos">
+<span class="sig-name descname"><span class="pre">arccos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.arccos" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc cosine (measured in radians) of x.</p>
+<p>The result is between 0 and pi.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.arccosh">
+<span class="sig-name descname"><span class="pre">arccosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.arccosh" title="Link to this definition">¶</a></dt>
+<dd><p>Return the inverse hyperbolic cosine of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.arcsin">
+<span class="sig-name descname"><span class="pre">arcsin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.arcsin" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc sine (measured in radians) of x.</p>
+<p>The result is between -pi/2 and pi/2.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.arcsinh">
+<span class="sig-name descname"><span class="pre">arcsinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.arcsinh" title="Link to this definition">¶</a></dt>
+<dd><p>Return the inverse hyperbolic sine of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.arctan">
+<span class="sig-name descname"><span class="pre">arctan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.arctan" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc tangent (measured in radians) of x.</p>
+<p>The result is between -pi/2 and pi/2.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.arctanh">
+<span class="sig-name descname"><span class="pre">arctanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.arctanh" title="Link to this definition">¶</a></dt>
+<dd><p>Return the inverse hyperbolic tangent of x.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.bounds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#bumps.parameter.BaseParameter.bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Fit bounds</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.ceil">
+<span class="sig-name descname"><span class="pre">ceil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.ceil" title="Link to this definition">¶</a></dt>
+<dd><p>Return the ceiling of x as an Integral.</p>
+<p>This is the smallest integer &gt;= x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.cos">
+<span class="sig-name descname"><span class="pre">cos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.cos" title="Link to this definition">¶</a></dt>
+<dd><p>Return the cosine of x (measured in radians).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.cosh">
+<span class="sig-name descname"><span class="pre">cosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.cosh" title="Link to this definition">¶</a></dt>
+<dd><p>Return the hyperbolic cosine of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.degrees">
+<span class="sig-name descname"><span class="pre">degrees</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.degrees" title="Link to this definition">¶</a></dt>
+<dd><p>Convert angle x from radians to degrees.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.dev">
+<span class="sig-name descname"><span class="pre">dev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.dev"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.dev" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the parameter to vary according to a normal distribution, with
+deviations from the mean added to the overall cost function for the
+model.</p>
+<p>If <em>mean</em> is None, then it defaults to the current parameter value.</p>
+<p>If <em>limits</em> are provide, then use a truncated normal distribution.</p>
+<p>Note: <em>sigma</em> and <em>mu</em> have been replaced by <em>std</em> and <em>mean</em>, but
+are left in for backward compatibility.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.discrete">
+<span class="sig-name descname"><span class="pre">discrete</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.parameter.BaseParameter.discrete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.exp">
+<span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.exp" title="Link to this definition">¶</a></dt>
+<dd><p>Return e raised to the power of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.expm1">
+<span class="sig-name descname"><span class="pre">expm1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.expm1" title="Link to this definition">¶</a></dt>
+<dd><p>Return exp(x)-1.</p>
+<p>This function avoids the loss of precision involved in the direct evaluation of exp(x)-1 for small x.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.fittable">
+<span class="sig-name descname"><span class="pre">fittable</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.parameter.BaseParameter.fittable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.fixed">
+<span class="sig-name descname"><span class="pre">fixed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#bumps.parameter.BaseParameter.fixed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.floor">
+<span class="sig-name descname"><span class="pre">floor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.floor" title="Link to this definition">¶</a></dt>
+<dd><p>Return the floor of x as an Integral.</p>
+<p>This is the largest integer &lt;= x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.format" title="Link to this definition">¶</a></dt>
+<dd><p>Format the parameter, value and range as a string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">base=math.e</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.log" title="Link to this definition">¶</a></dt>
+<dd><p>Return the logarithm of x to the given base.</p>
+<p>If the base not specified, returns the natural logarithm (base e) of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.log10">
+<span class="sig-name descname"><span class="pre">log10</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.log10" title="Link to this definition">¶</a></dt>
+<dd><p>Return the base 10 logarithm of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.log1p">
+<span class="sig-name descname"><span class="pre">log1p</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.log1p" title="Link to this definition">¶</a></dt>
+<dd><p>Return the natural logarithm of 1+x (base e).</p>
+<p>The result is computed in a way which is accurate for x near zero.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.parameter.BaseParameter.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return -log(P) for the current parameter value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.pdf">
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.pdf" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the parameter to vary according to any continuous scipy.stats
+distribution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.pm">
+<span class="sig-name descname"><span class="pre">pm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.pm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.pm" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the parameter to vary as value +/- delta.</p>
+<p>pm(<em>delta</em>) -&gt; [value-delta, value+delta]</p>
+<p>pm(<em>plus</em>, <em>minus</em>) -&gt; [value+minus, value+plus]</p>
+<p>In the <em>plus/minus</em> form, one of the numbers should be plus and the
+other minus, but it doesn’t matter which.</p>
+<p>If <em>limits</em> are provided, bound the end points of the range to lie
+within the limits.</p>
+<p>The resulting range is converted to “nice” numbers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.pmp">
+<span class="sig-name descname"><span class="pre">pmp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.pmp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.pmp" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the parameter to vary as value +/- percent.</p>
+<p>pmp(<em>percent</em>) -&gt; [value*(1-percent/100), value*(1+percent/100)]</p>
+<p>pmp(<em>plus</em>, <em>minus</em>) -&gt; [value*(1+minus/100), value*(1+plus/100)]</p>
+<p>In the <em>plus/minus</em> form, one of the numbers should be plus and the
+other minus, but it doesn’t matter which.</p>
+<p>If <em>limits</em> are provided, bound the end points of the range to lie
+within the limits.</p>
+<p>The resulting range is converted to “nice” numbers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.radians">
+<span class="sig-name descname"><span class="pre">radians</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.radians" title="Link to this definition">¶</a></dt>
+<dd><p>Convert angle x from degrees to radians.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.range">
+<span class="sig-name descname"><span class="pre">range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.range" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the parameter to vary within the given range.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the z score equivalent for the current parameter value.</p>
+<p>That is, the given the value of the parameter in the underlying
+distribution, find the equivalent value in the standard normal.
+For a gaussian, this is the z score, in which you subtract the
+mean and divide by the standard deviation to get the number of
+sigmas away from the mean.  For other distributions, you need to
+compute the cdf of value in the parameter distribution and invert
+it using the ppf from the standard normal distribution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.sin">
+<span class="sig-name descname"><span class="pre">sin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.sin" title="Link to this definition">¶</a></dt>
+<dd><p>Return the sine of x (measured in radians).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.sinh">
+<span class="sig-name descname"><span class="pre">sinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.sinh" title="Link to this definition">¶</a></dt>
+<dd><p>Return the hyperbolic sine of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.soft_range">
+<span class="sig-name descname"><span class="pre">soft_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.soft_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.soft_range" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the parameter to vary within the given range, or with Gaussian
+probability, stray from the range.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.sqrt">
+<span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.sqrt" title="Link to this definition">¶</a></dt>
+<dd><p>Return the square root of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.tan">
+<span class="sig-name descname"><span class="pre">tan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.tan" title="Link to this definition">¶</a></dt>
+<dd><p>Return the tangent of x (measured in radians).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.tanh">
+<span class="sig-name descname"><span class="pre">tanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.tanh" title="Link to this definition">¶</a></dt>
+<dd><p>Return the hyperbolic tangent of x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.to_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Return a dict represention of the object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.trunc">
+<span class="sig-name descname"><span class="pre">trunc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.BaseParameter.trunc" title="Link to this definition">¶</a></dt>
+<dd><p>Truncates the Real x to the nearest Integral toward 0.</p>
+<p>Uses the __trunc__ magic method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.valid">
+<span class="sig-name descname"><span class="pre">valid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#BaseParameter.valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.BaseParameter.valid" title="Link to this definition">¶</a></dt>
+<dd><p>Return true if the parameter is within the valid range.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.BaseParameter.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.parameter.BaseParameter.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Constant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Constant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Constant" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.parameter.BaseParameter" title="bumps.parameter.BaseParameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParameter</span></code></a></p>
+<p>An unmodifiable value.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.Constant.fittable">
+<span class="sig-name descname"><span class="pre">fittable</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.parameter.Constant.fittable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.Constant.fixed">
+<span class="sig-name descname"><span class="pre">fixed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#bumps.parameter.Constant.fixed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.Constant.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#bumps.parameter.Constant.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Constraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Constraint" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.FreeVariables">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">FreeVariables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#FreeVariables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.FreeVariables" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A collection of parameter sets for a group of models.</p>
+<p><em>names</em> is the set of model names.</p>
+<p>The parameters themselves are specified as key=value pairs, with key
+being the attribute name which is used to retrieve the parameter set
+and value being a <a class="reference internal" href="#bumps.parameter.Parameter" title="bumps.parameter.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> containing the parameter that is
+shared between the models.</p>
+<p>In order to evaluate the log likelihood of all models simultaneously,
+the fitting program will need to call set_model with the model index
+for each model in turn in order to substitute the values from the free
+variables into the model.  This allows us to share a common sample
+across multiple data sets, with each dataset having its own values for
+some of the sample parameters.  The alternative is to copy the entire
+sample structure, sharing references to common parameters and creating
+new parameters for each model for the free parameters.  Setting up
+these copies was inconvenient.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.FreeVariables.get_model">
+<span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#FreeVariables.get_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.FreeVariables.get_model" title="Link to this definition">¶</a></dt>
+<dd><p>Get the parameters for model <em>i</em> as {reference: substitution}</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.FreeVariables.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#FreeVariables.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.FreeVariables.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>Return the set of free variables for all the models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.FreeVariables.set_model">
+<span class="sig-name descname"><span class="pre">set_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#FreeVariables.set_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.FreeVariables.set_model" title="Link to this definition">¶</a></dt>
+<dd><p>Set the reference parameters for model <em>i</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.FreeVariables.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#FreeVariables.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.FreeVariables.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Function">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Function" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.parameter.BaseParameter" title="bumps.parameter.BaseParameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParameter</span></code></a></p>
+<p>Delayed function evaluator.</p>
+<p>f.value evaluates the function with the values of the
+parameter arguments at the time f.value is referenced rather
+than when the function was invoked.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.Function.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#bumps.parameter.Function.args" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.Function.kw">
+<span class="sig-name descname"><span class="pre">kw</span></span><a class="headerlink" href="#bumps.parameter.Function.kw" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.Function.op">
+<span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#bumps.parameter.Function.op" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Function.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Function.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Function.parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Function.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Function.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Function.to_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Return a dict represention of the object.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.Function.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#bumps.parameter.Function.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.IntegerParameter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">IntegerParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#IntegerParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.IntegerParameter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.parameter.Parameter" title="bumps.parameter.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.IntegerParameter.discrete">
+<span class="sig-name descname"><span class="pre">discrete</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#bumps.parameter.IntegerParameter.discrete" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.IntegerParameter.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#bumps.parameter.IntegerParameter.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Operator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Operator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.parameter.BaseParameter" title="bumps.parameter.BaseParameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParameter</span></code></a></p>
+<p>Parameter operator</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.Operator.dvalue">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dvalue</span></span><a class="headerlink" href="#bumps.parameter.Operator.dvalue" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Operator.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Operator.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Operator.parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Operator.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Operator.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Operator.to_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Return a dict represention of the object.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.Operator.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#bumps.parameter.Operator.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Parameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Parameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Parameter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.parameter.BaseParameter" title="bumps.parameter.BaseParameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParameter</span></code></a></p>
+<p>A parameter is a symbolic value.</p>
+<p>It can be fixed or it can vary within bounds.</p>
+<p>p = Parameter(3).pmp(10)    # 3 +/- 10%
+p = Parameter(3).pmp(-5,10) # 3 in [2.85,3.3] rounded to 2 digits
+p = Parameter(3).pm(2)      # 3 +/- 2
+p = Parameter(3).pm(-1,2)   # 3 in [2,5]
+p = Parameter(3).range(0,5) # 3 in [0,5]</p>
+<p>It has hard limits on the possible values, and a range that should live
+within those hard limits.  The value should lie within the range for
+it to be valid.  Some algorithms may drive the value outside the range
+in order to satisfy soft It has a value which should lie within the range.</p>
+<p>Other properties can decorate the parameter, such as tip for tool tip
+and units for units.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter.clip_set">
+<span class="sig-name descname"><span class="pre">clip_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Parameter.clip_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Parameter.clip_set" title="Link to this definition">¶</a></dt>
+<dd><p>Set a new value for the parameter, clipping it to the bounds.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter.default">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Parameter.default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Parameter.default" title="Link to this definition">¶</a></dt>
+<dd><p>Create a new parameter with the <em>value</em> and <em>kw</em> attributes, or return
+the existing parameter if <em>value</em> is already a parameter.</p>
+<p>The attributes are the same as those for Parameter, or whatever
+subclass <em>cls</em> of Parameter is being created.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter.feasible">
+<span class="sig-name descname"><span class="pre">feasible</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Parameter.feasible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Parameter.feasible" title="Link to this definition">¶</a></dt>
+<dd><p>Value is within the limits defined by the model</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter.fittable">
+<span class="sig-name descname"><span class="pre">fittable</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#bumps.parameter.Parameter.fittable" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter.randomize">
+<span class="sig-name descname"><span class="pre">randomize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Parameter.randomize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Parameter.randomize" title="Link to this definition">¶</a></dt>
+<dd><p>Set a random value for the parameter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Parameter.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Parameter.set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Parameter.set" title="Link to this definition">¶</a></dt>
+<dd><p>Set a new value for the parameter, ignoring the bounds.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">ParameterSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A parameter that depends on the model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.get_model">
+<span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet.get_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet.get_model" title="Link to this definition">¶</a></dt>
+<dd><p>Get the reference and underlying model parameter for the nth model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.pm">
+<span class="sig-name descname"><span class="pre">pm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet.pm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet.pm" title="Link to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="api/parameter.html#bumps.parameter.Parameter.pm" title="bumps.parameter.Parameter.pm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parameter.pm()</span></code></a>, but applied to all models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.pmp">
+<span class="sig-name descname"><span class="pre">pmp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet.pmp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet.pmp" title="Link to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="api/parameter.html#bumps.parameter.Parameter.pmp" title="bumps.parameter.Parameter.pmp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parameter.pmp()</span></code></a>, but applied to all models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.range">
+<span class="sig-name descname"><span class="pre">range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet.range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet.range" title="Link to this definition">¶</a></dt>
+<dd><p>Like <a class="reference internal" href="api/parameter.html#bumps.parameter.Parameter.range" title="bumps.parameter.Parameter.range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parameter.range()</span></code></a>, but applied to all models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.set_model">
+<span class="sig-name descname"><span class="pre">set_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet.set_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet.set_model" title="Link to this definition">¶</a></dt>
+<dd><p>Set the underlying model parameter to the value of the nth model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#ParameterSet.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.ParameterSet.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.ParameterSet.values">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#bumps.parameter.ParameterSet.values" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.parameter.Reference">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">Reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Reference" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.parameter.Parameter" title="bumps.parameter.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a></p>
+<p>Create an adaptor so that a model attribute can be treated as if it
+were a parameter.  This allows only direct access, wherein the
+storage for the parameter value is provided by the underlying model.</p>
+<p>Indirect access, wherein the storage is provided by the parameter, cannot
+be supported since the parameter has no way to detect that the model
+is asking for the value of the attribute.  This means that model
+attributes cannot be assigned to parameter expressions without some
+trigger to update the values of the attributes in the model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.parameter.Reference.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#Reference.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.Reference.to_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Return a dict represention of the object.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bumps.parameter.Reference.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#bumps.parameter.Reference.value" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.acosd">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">acosd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#acosd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.acosd" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc cosine (measured in in degrees) of x.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.arccosd">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">arccosd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.arccosd" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc cosine (measured in in degrees) of x.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.arcsind">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">arcsind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.arcsind" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc sine (measured in in degrees) of x.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.arctan2d">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">arctan2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.arctan2d" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc tangent (measured in in degrees) of y/x.
+Unlike atan(y/x), the signs of both x and y are considered.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.arctand">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">arctand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.parameter.arctand" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc tangent (measured in in degrees) of x.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.asind">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">asind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#asind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.asind" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc sine (measured in in degrees) of x.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.atan2d">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">atan2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#atan2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.atan2d" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc tangent (measured in in degrees) of y/x.
+Unlike atan(y/x), the signs of both x and y are considered.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.atand">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">atand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#atand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.atand" title="Link to this definition">¶</a></dt>
+<dd><p>Return the arc tangent (measured in in degrees) of x.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.boxed_function">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">boxed_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#boxed_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.boxed_function" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.cosd">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">cosd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#cosd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.cosd" title="Link to this definition">¶</a></dt>
+<dd><p>Return the cosine of x (measured in in degrees).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.current">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">current</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#current"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.current" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.fittable">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">fittable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#fittable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.fittable" title="Link to this definition">¶</a></dt>
+<dd><p>Return the list of fittable parameters in no paraticular order.</p>
+<p>Note that some fittable parameters may be fixed during the fit.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.flatten">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#flatten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.flatten" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.format">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freevars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.format" title="Link to this definition">¶</a></dt>
+<dd><p>Format parameter set for printing.</p>
+<p>Note that this only says how the parameters are arranged, not how they
+relate to each other.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.function">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.function" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a function into a delayed evaluator.</p>
+<p>The value of the function is computed from the values of the parameters
+at the time that the function value is requested rather than when the
+function is created.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.randomize">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">randomize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#randomize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.randomize" title="Link to this definition">¶</a></dt>
+<dd><p>Set random values to the parameters in the parameter set, with
+values chosen according to the bounds.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.sind">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">sind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#sind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.sind" title="Link to this definition">¶</a></dt>
+<dd><p>Return the sine of x (measured in in degrees).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.substitute">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">substitute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#substitute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.substitute" title="Link to this definition">¶</a></dt>
+<dd><p>Return structure a with values substituted for all parameters.</p>
+<p>The function traverses lists, tuples and dicts recursively.  Things
+which are not parameters are returned directly.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.summarize">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">summarize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#summarize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.summarize" title="Link to this definition">¶</a></dt>
+<dd><p>Return a stylized list of parameter names and values with range bars
+suitable for printing.</p>
+<p>If sorted, then print the parameters sorted alphabetically by name.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.tand">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">tand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#tand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.tand" title="Link to this definition">¶</a></dt>
+<dd><p>Return the tangent of x (measured in in degrees).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.test_operator">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">test_operator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#test_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.test_operator" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.to_dict">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.unique">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">unique</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#unique"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.unique" title="Link to this definition">¶</a></dt>
+<dd><p>Return the unique set of parameters</p>
+<p>The ordering is stable.  The same parameters/dependencies will always
+return the same ordering, with the first occurrence first.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.parameter.varying">
+<span class="sig-prename descclassname"><span class="pre">bumps.parameter.</span></span><span class="sig-name descname"><span class="pre">varying</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/parameter.html#varying"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.parameter.varying" title="Link to this definition">¶</a></dt>
+<dd><p>Return the list of fitted parameters in the model.</p>
+<p>This is the set of parameters that will vary during the fit.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.parameter module</a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Alias"><code class="docutils literal notranslate"><span class="pre">Alias</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Alias.parameters"><code class="docutils literal notranslate"><span class="pre">Alias.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Alias.to_dict"><code class="docutils literal notranslate"><span class="pre">Alias.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Alias.update"><code class="docutils literal notranslate"><span class="pre">Alias.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter"><code class="docutils literal notranslate"><span class="pre">BaseParameter</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.arccos"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arccos()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.arccosh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arccosh()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.arcsin"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arcsin()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.arcsinh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arcsinh()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.arctan"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arctan()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.arctanh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arctanh()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.bounds"><code class="docutils literal notranslate"><span class="pre">BaseParameter.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.ceil"><code class="docutils literal notranslate"><span class="pre">BaseParameter.ceil()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.cos"><code class="docutils literal notranslate"><span class="pre">BaseParameter.cos()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.cosh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.cosh()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.degrees"><code class="docutils literal notranslate"><span class="pre">BaseParameter.degrees()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.dev"><code class="docutils literal notranslate"><span class="pre">BaseParameter.dev()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.discrete"><code class="docutils literal notranslate"><span class="pre">BaseParameter.discrete</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.exp"><code class="docutils literal notranslate"><span class="pre">BaseParameter.exp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.expm1"><code class="docutils literal notranslate"><span class="pre">BaseParameter.expm1()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.fittable"><code class="docutils literal notranslate"><span class="pre">BaseParameter.fittable</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.fixed"><code class="docutils literal notranslate"><span class="pre">BaseParameter.fixed</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.floor"><code class="docutils literal notranslate"><span class="pre">BaseParameter.floor()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.format"><code class="docutils literal notranslate"><span class="pre">BaseParameter.format()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.log"><code class="docutils literal notranslate"><span class="pre">BaseParameter.log()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.log10"><code class="docutils literal notranslate"><span class="pre">BaseParameter.log10()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.log1p"><code class="docutils literal notranslate"><span class="pre">BaseParameter.log1p()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.name"><code class="docutils literal notranslate"><span class="pre">BaseParameter.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.nllf"><code class="docutils literal notranslate"><span class="pre">BaseParameter.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.parameters"><code class="docutils literal notranslate"><span class="pre">BaseParameter.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.pdf"><code class="docutils literal notranslate"><span class="pre">BaseParameter.pdf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.pm"><code class="docutils literal notranslate"><span class="pre">BaseParameter.pm()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.pmp"><code class="docutils literal notranslate"><span class="pre">BaseParameter.pmp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.radians"><code class="docutils literal notranslate"><span class="pre">BaseParameter.radians()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.range"><code class="docutils literal notranslate"><span class="pre">BaseParameter.range()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.residual"><code class="docutils literal notranslate"><span class="pre">BaseParameter.residual()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.sin"><code class="docutils literal notranslate"><span class="pre">BaseParameter.sin()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.sinh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.sinh()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.soft_range"><code class="docutils literal notranslate"><span class="pre">BaseParameter.soft_range()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.sqrt"><code class="docutils literal notranslate"><span class="pre">BaseParameter.sqrt()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.tan"><code class="docutils literal notranslate"><span class="pre">BaseParameter.tan()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.tanh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.tanh()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.to_dict"><code class="docutils literal notranslate"><span class="pre">BaseParameter.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.trunc"><code class="docutils literal notranslate"><span class="pre">BaseParameter.trunc()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.valid"><code class="docutils literal notranslate"><span class="pre">BaseParameter.valid()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.BaseParameter.value"><code class="docutils literal notranslate"><span class="pre">BaseParameter.value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Constant.fittable"><code class="docutils literal notranslate"><span class="pre">Constant.fittable</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Constant.fixed"><code class="docutils literal notranslate"><span class="pre">Constant.fixed</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Constant.value"><code class="docutils literal notranslate"><span class="pre">Constant.value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.FreeVariables"><code class="docutils literal notranslate"><span class="pre">FreeVariables</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.FreeVariables.get_model"><code class="docutils literal notranslate"><span class="pre">FreeVariables.get_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.FreeVariables.parameters"><code class="docutils literal notranslate"><span class="pre">FreeVariables.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.FreeVariables.set_model"><code class="docutils literal notranslate"><span class="pre">FreeVariables.set_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.FreeVariables.to_dict"><code class="docutils literal notranslate"><span class="pre">FreeVariables.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.Function"><code class="docutils literal notranslate"><span class="pre">Function</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Function.args"><code class="docutils literal notranslate"><span class="pre">Function.args</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Function.kw"><code class="docutils literal notranslate"><span class="pre">Function.kw</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Function.op"><code class="docutils literal notranslate"><span class="pre">Function.op</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Function.parameters"><code class="docutils literal notranslate"><span class="pre">Function.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Function.to_dict"><code class="docutils literal notranslate"><span class="pre">Function.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Function.value"><code class="docutils literal notranslate"><span class="pre">Function.value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.IntegerParameter"><code class="docutils literal notranslate"><span class="pre">IntegerParameter</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.IntegerParameter.discrete"><code class="docutils literal notranslate"><span class="pre">IntegerParameter.discrete</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.IntegerParameter.value"><code class="docutils literal notranslate"><span class="pre">IntegerParameter.value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Operator.dvalue"><code class="docutils literal notranslate"><span class="pre">Operator.dvalue</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Operator.parameters"><code class="docutils literal notranslate"><span class="pre">Operator.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Operator.to_dict"><code class="docutils literal notranslate"><span class="pre">Operator.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Operator.value"><code class="docutils literal notranslate"><span class="pre">Operator.value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.Parameter"><code class="docutils literal notranslate"><span class="pre">Parameter</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Parameter.clip_set"><code class="docutils literal notranslate"><span class="pre">Parameter.clip_set()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Parameter.default"><code class="docutils literal notranslate"><span class="pre">Parameter.default()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Parameter.feasible"><code class="docutils literal notranslate"><span class="pre">Parameter.feasible()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Parameter.fittable"><code class="docutils literal notranslate"><span class="pre">Parameter.fittable</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Parameter.randomize"><code class="docutils literal notranslate"><span class="pre">Parameter.randomize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Parameter.set"><code class="docutils literal notranslate"><span class="pre">Parameter.set()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet"><code class="docutils literal notranslate"><span class="pre">ParameterSet</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.get_model"><code class="docutils literal notranslate"><span class="pre">ParameterSet.get_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.pm"><code class="docutils literal notranslate"><span class="pre">ParameterSet.pm()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.pmp"><code class="docutils literal notranslate"><span class="pre">ParameterSet.pmp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.range"><code class="docutils literal notranslate"><span class="pre">ParameterSet.range()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.set_model"><code class="docutils literal notranslate"><span class="pre">ParameterSet.set_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.to_dict"><code class="docutils literal notranslate"><span class="pre">ParameterSet.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.ParameterSet.values"><code class="docutils literal notranslate"><span class="pre">ParameterSet.values</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.Reference"><code class="docutils literal notranslate"><span class="pre">Reference</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.parameter.Reference.to_dict"><code class="docutils literal notranslate"><span class="pre">Reference.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.Reference.value"><code class="docutils literal notranslate"><span class="pre">Reference.value</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.parameter.acosd"><code class="docutils literal notranslate"><span class="pre">acosd()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.arccosd"><code class="docutils literal notranslate"><span class="pre">arccosd()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.arcsind"><code class="docutils literal notranslate"><span class="pre">arcsind()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.arctan2d"><code class="docutils literal notranslate"><span class="pre">arctan2d()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.arctand"><code class="docutils literal notranslate"><span class="pre">arctand()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.asind"><code class="docutils literal notranslate"><span class="pre">asind()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.atan2d"><code class="docutils literal notranslate"><span class="pre">atan2d()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.atand"><code class="docutils literal notranslate"><span class="pre">atand()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.boxed_function"><code class="docutils literal notranslate"><span class="pre">boxed_function()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.cosd"><code class="docutils literal notranslate"><span class="pre">cosd()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.current"><code class="docutils literal notranslate"><span class="pre">current()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.fittable"><code class="docutils literal notranslate"><span class="pre">fittable()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.flatten"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.format"><code class="docutils literal notranslate"><span class="pre">format()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.function"><code class="docutils literal notranslate"><span class="pre">function()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.randomize"><code class="docutils literal notranslate"><span class="pre">randomize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.substitute"><code class="docutils literal notranslate"><span class="pre">substitute()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.summarize"><code class="docutils literal notranslate"><span class="pre">summarize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.test_operator"><code class="docutils literal notranslate"><span class="pre">test_operator()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.to_dict"><code class="docutils literal notranslate"><span class="pre">to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.unique"><code class="docutils literal notranslate"><span class="pre">unique()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.parameter.varying"><code class="docutils literal notranslate"><span class="pre">varying()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.parameter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.parameter module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+bumps.mystic.optimizer.de module
+================================
+
+.. automodule:: bumps.mystic.optimizer.de
+   :members:
+   :undoc-members:
+   :show-inheritance:

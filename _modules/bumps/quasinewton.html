@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.quasinewton &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.quasinewton</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.quasinewton</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2009-2010, University of Maryland</span>
+<span class="c1">#</span>
+<span class="c1"># Permission is hereby granted, free of charge, to any person obtaining a copy</span>
+<span class="c1"># of this software and associated documentation files (the &quot;Software&quot;), to deal</span>
+<span class="c1"># in the Software without restriction, including without limitation the rights</span>
+<span class="c1"># to use, copy, modify, merge, publish, distribute, sublicense, and/ or sell</span>
+<span class="c1"># copies of the Software, and to permit persons to whom the Software is</span>
+<span class="c1"># furnished to do so, subject to the following conditions:</span>
+<span class="c1">#</span>
+<span class="c1"># The above copyright notice and this permission notice shall be included in</span>
+<span class="c1"># all copies or substantial portions of the Software.</span>
+<span class="c1">#</span>
+<span class="c1"># THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
+<span class="c1"># IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
+<span class="c1"># AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
+<span class="c1"># LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
+<span class="c1"># OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN</span>
+<span class="c1"># THE SOFTWARE.</span>
+
+<span class="c1"># Author: Ismet Sahin</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">BFGS quasi-newton optimizer.</span>
+
+<span class="sd">All modules in this file are implemented from the book</span>
+<span class="sd">&quot;Numerical Methods for Unconstrained Optimization and Nonlinear Equations&quot; by</span>
+<span class="sd">J.E. Dennis and Robert B. Schnabel (Only a few minor modifications are done).</span>
+
+<span class="sd">The interface is through the :func:`quasinewton` function.  Here is an</span>
+<span class="sd">example call::</span>
+
+<span class="sd">    n = 2</span>
+<span class="sd">    x0 = [-0.9 0.9]&#39;</span>
+<span class="sd">    fn = lambda p: (1-p[0])**2 + 100*(p[1]-p[0]**2)**2</span>
+<span class="sd">    grad = lambda p: array([-2*(1-p[0]) - 400*(p[1]-p[0]**2)*p[0], 200*p[1]])</span>
+<span class="sd">    Sx = ones(n,1)</span>
+<span class="sd">    typf = 1                       # todo. see what default value is the best</span>
+<span class="sd">    macheps = eps</span>
+<span class="sd">    eta = eps</span>
+<span class="sd">    maxstep = 100</span>
+<span class="sd">    gradtol = 1e-6</span>
+<span class="sd">    steptol = 1e-12                # do not let steptol larger than 1e-9</span>
+<span class="sd">    itnlimit = 1000</span>
+<span class="sd">    result = quasinewton(fn, x0, grad, Sx, typf,</span>
+<span class="sd">                         macheps, eta, maxstep, gradtola, steptol, itnlimit)</span>
+<span class="sd">    print(&quot;status code %d&quot;%result[&#39;status&#39;])</span>
+<span class="sd">    print(&quot;x_min=%s, f(x_min)=%g&quot;%(str(result[&#39;x&#39;]),result[&#39;fx&#39;]))</span>
+<span class="sd">    print(&quot;iterations, function calls, linesearch function calls&quot;,</span>
+<span class="sd">          result[&#39;iterations&#39;],result[&#39;evals&#39;],result[&#39;linesearch_evals&#39;])</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;quasinewton&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">isinf</span><span class="p">,</span> <span class="n">finfo</span><span class="p">,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">linalg</span><span class="p">,</span> <span class="n">inner</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">amax</span><span class="p">,</span> <span class="n">maximum</span>
+
+<span class="n">STATUS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Gradient &lt; tolerance&quot;</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Step size &lt; tolerance&quot;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Invalid point in line search&quot;</span><span class="p">,</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;Iterations exceeded&quot;</span><span class="p">,</span>
+    <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Max step taken --- function unbounded?&quot;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;User abort&quot;</span><span class="p">,</span>
+    <span class="mi">7</span><span class="p">:</span> <span class="s2">&quot;Iterations exceeded in line search&quot;</span><span class="p">,</span>
+    <span class="mi">8</span><span class="p">:</span> <span class="s2">&quot;Line search step size is too small&quot;</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s2">&quot;Singular Hessian&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="quasinewton">
+<a class="viewcode-back" href="../../bumps.quasinewton.html#bumps.quasinewton.quasinewton">[docs]</a>
+<span class="k">def</span> <span class="nf">quasinewton</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Sx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">typf</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">macheps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">maxstep</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">gradtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">steptol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">itnlimit</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+                <span class="n">abort_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="k">lambda</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run a quasinewton optimization on the problem.</span>
+
+<span class="sd">    *fn(x)* is the cost function, which takes a point x and returns a scalar fx.</span>
+
+<span class="sd">    *x0* is the initial point</span>
+
+<span class="sd">    *grad* is the analytic gradient (if available)</span>
+
+<span class="sd">    *Sx* is a scale vector indicating the typical values for parameters in</span>
+<span class="sd">    the fitted result. This is used for a variety of things such as setting</span>
+<span class="sd">    the step size in the finite difference approximation to the gradient, and</span>
+<span class="sd">    controlling numerical accuracy in calculating the Hessian matrix.  If for</span>
+<span class="sd">    example some of your model parameters are in the order of 1e-6, then Sx</span>
+<span class="sd">    for those parameters should be set to 1e-6. Default: [1, ...]</span>
+
+<span class="sd">    *typf* is the typical value for f(x) near the minimum.  This is used along</span>
+<span class="sd">    with gradtol to check the gradient stopping condition.  Default: 1</span>
+
+<span class="sd">    *macheps* is the minimum value that can be added to 1 to produce a number</span>
+<span class="sd">    not equal to 1.  Default: numpy.finfo(float).eps</span>
+
+<span class="sd">    *eta* adapts the numerical gradient calculations to machine precision.</span>
+<span class="sd">    Default: *macheps*</span>
+
+<span class="sd">    *maxstep* is the maximum step size in any gradient step, after normalizing</span>
+<span class="sd">    by *Sx*. Default: 100</span>
+
+<span class="sd">    *gradtol* is a stopping condition for the fit based on the amount of</span>
+<span class="sd">    improvement expected at the next step.  Default: 1e-6</span>
+
+<span class="sd">    *steptol* is a stopping condition for the fit based on the size</span>
+<span class="sd">    of the step. Default: 1e-12</span>
+
+<span class="sd">    *itnlimit* is the maximum number of steps to take before stopping.</span>
+<span class="sd">    Default: 2000</span>
+
+<span class="sd">    *abort_test* is a function which tests whether the user has requested</span>
+<span class="sd">    abort. Default: None.</span>
+
+<span class="sd">    *monitor(x,fx,step)* is called every iteration so that a user interface</span>
+<span class="sd">    function can monitor the progress of the fit.  Default: lambda \*\*kw: True</span>
+
+
+<span class="sd">    Returns the fit result as a dictionary:</span>
+
+<span class="sd">    *status* is a status code indicating why the fit terminated.  Turn the</span>
+<span class="sd">    status code into a string with *STATUS[result.status]*.  Status values</span>
+<span class="sd">    vary from 1 to 9, with 1 and 2 indicating convergence and the remaining</span>
+<span class="sd">    codes indicating some form of premature termination.</span>
+
+<span class="sd">    *x* is the minimum point</span>
+
+<span class="sd">    *fx* is the value fn(x) at the minimum</span>
+
+<span class="sd">    *H* is the approximate Hessian matrix, which is the inverse of the</span>
+<span class="sd">    covariance matrix</span>
+
+<span class="sd">    *L* is the cholesky decomposition of H+D, where D is a small correction</span>
+<span class="sd">    to force H+D to be positive definite.  To compute parameter uncertainty</span>
+
+<span class="sd">    *iterations* is the number of iterations</span>
+
+<span class="sd">    *evals* is the number of function evaluations</span>
+
+<span class="sd">    *linesearch_evals* is the number of function evaluations for line search</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># print(&quot;starting QN&quot;)</span>
+    <span class="c1"># If some input parameters are not specified, define default values for them</span>
+    <span class="c1"># here. First and second parameters fn and x0 must be defined, others may be</span>
+    <span class="c1"># passed.  If you want to set a value to a parameter, say to typf, make</span>
+    <span class="c1"># sure all the parameters before this parameter are specified, in this</span>
+    <span class="c1"># case fn, x0, grad, and Sx if you want to have default values for grad</span>
+    <span class="c1"># and Sx, for each enter [].</span>
+    <span class="c1"># important for also computing fcount (function count)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">grad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">analgrad</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">analgrad</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">Sx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Sx</span> <span class="o">=</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="c1">#Sx = x0 + (x0==0.)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">Sx</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;sizes of x0 and Sx must be the same&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">macheps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># PAK: use finfo rather than macheps</span>
+        <span class="n">macheps</span> <span class="o">=</span> <span class="n">finfo</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+
+    <span class="k">if</span> <span class="n">eta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">macheps</span>
+
+    <span class="n">fcount</span> <span class="o">=</span> <span class="mi">0</span>                    <span class="c1"># total function count</span>
+    <span class="n">fcount_ls</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1"># funciton count due to line search</span>
+
+    <span class="c1"># If analytic gradient is available then fn will return both function</span>
+    <span class="c1"># value and analytic gradient.  Otherwise, use finite difference method</span>
+    <span class="c1"># for estimating the gradient</span>
+    <span class="k">if</span> <span class="n">analgrad</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">fc</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="n">gc</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="n">fcount</span> <span class="o">=</span> <span class="n">fcount</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fc</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="n">gc</span> <span class="o">=</span> <span class="n">fdgrad</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">fc</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
+        <span class="n">fcount</span> <span class="o">=</span> <span class="n">fcount</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># Check if the initial guess is a local minimizer</span>
+    <span class="n">termcode</span> <span class="o">=</span> <span class="n">umstop0</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">fc</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span> <span class="n">gradtol</span><span class="p">)</span>
+    <span class="n">consecmax</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Value to return if we fail early</span>
+    <span class="c1"># Approximately x0 is a critical point</span>
+    <span class="n">xf</span> <span class="o">=</span> <span class="n">x0</span>
+    <span class="n">ff</span> <span class="o">=</span> <span class="n">fc</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">L</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">termcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">inithessunfac</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">fc</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span> <span class="n">Sx</span><span class="p">)</span>
+
+    <span class="c1"># STEP 9.</span>
+    <span class="n">xc</span> <span class="o">=</span> <span class="n">x0</span>
+
+    <span class="c1"># Iterate until convergence in the following loop</span>
+    <span class="n">itncount</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">termcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># todo. increase itncount</span>
+        <span class="c1"># print(&quot;update&quot;,itncount)</span>
+        <span class="n">itncount</span> <span class="o">=</span> <span class="n">itncount</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># disp([&#39;Iteration = &#39; num2str(itncount)])</span>
+        <span class="c1"># Find Newton step sN</span>
+        <span class="n">H</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">modelhess</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">macheps</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+        <span class="c1"># the vector obtained in the middle</span>
+        <span class="n">middle_step_v</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="o">-</span><span class="n">gc</span><span class="p">)</span>
+        <span class="n">sN</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">middle_step_v</span><span class="p">)</span>   <span class="c1"># the last step</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">sN</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="c1"># print(&quot;H&quot;,H)</span>
+            <span class="c1"># print(&quot;L&quot;,L)</span>
+            <span class="c1"># print(&quot;v&quot;,middle_step_v)</span>
+            <span class="c1"># print(&quot;Sx&quot;,Sx)</span>
+            <span class="c1"># print(&quot;gc&quot;,gc)</span>
+            <span class="n">termcode</span> <span class="o">=</span> <span class="mi">9</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Perform line search (Alg.6.3.1). todo. put param order as in the book</span>
+        <span class="c1"># print(&quot;calling linesearch&quot;,xc,fc,gc,sN,Sx,H,L,middle_step_v)</span>
+        <span class="c1"># print(&quot;linesearch&quot;,xc,fc)</span>
+        <span class="n">retcode</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">maxtaken</span><span class="p">,</span> <span class="n">fcnt</span> \
+            <span class="o">=</span> <span class="n">linesearch</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">fc</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="n">sN</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">maxstep</span><span class="p">,</span> <span class="n">steptol</span><span class="p">)</span>
+        <span class="n">fcount</span> <span class="o">+=</span> <span class="n">fcnt</span>
+        <span class="n">fcount_ls</span> <span class="o">+=</span> <span class="n">fcnt</span>
+        <span class="c1">#plot(xp(1), xp(2), &#39;g.&#39;)</span>
+
+        <span class="c1"># Evaluate gradient at new point xp</span>
+        <span class="k">if</span> <span class="n">analgrad</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="n">xp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="n">fdgrad</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
+            <span class="n">fcount</span> <span class="o">=</span> <span class="n">fcount</span> <span class="o">+</span> <span class="n">n</span>
+
+        <span class="c1"># Check stopping criteria (alg.7.2.1)</span>
+        <span class="n">consecmax</span> <span class="o">=</span> <span class="n">consecmax</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">maxtaken</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="n">umstop</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">gp</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span> <span class="n">retcode</span><span class="p">,</span> <span class="n">gradtol</span><span class="p">,</span>
+                          <span class="n">steptol</span><span class="p">,</span> <span class="n">itncount</span><span class="p">,</span> <span class="n">itnlimit</span><span class="p">,</span> <span class="n">consecmax</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">abort_test</span><span class="p">():</span>
+            <span class="n">termcode</span> <span class="o">=</span> <span class="mi">6</span>
+
+        <span class="c1"># STEP 10.6</span>
+        <span class="c1"># If termcode is larger than zero, we found a point satisfying one</span>
+        <span class="c1"># of the termination criteria, return from here.  Otherwise evaluate</span>
+        <span class="c1"># the next Hessian approximation (Alg. 9.4.1).</span>
+        <span class="k">if</span> <span class="n">termcode</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">xf</span> <span class="o">=</span> <span class="n">xp</span>                                        <span class="c1"># x final</span>
+            <span class="n">ff</span> <span class="o">=</span> <span class="n">fp</span>                                        <span class="c1"># f final</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">monitor</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span> <span class="n">fx</span><span class="o">=</span><span class="n">fp</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">itncount</span><span class="p">):</span>
+            <span class="n">termcode</span> <span class="o">=</span> <span class="mi">6</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="n">bfgsunfac</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="n">gp</span><span class="p">,</span> <span class="n">macheps</span><span class="p">,</span> <span class="n">eta</span><span class="p">,</span> <span class="n">analgrad</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+            <span class="n">xc</span> <span class="o">=</span> <span class="n">xp</span>
+            <span class="n">fc</span> <span class="o">=</span> <span class="n">fp</span>
+            <span class="n">gc</span> <span class="o">=</span> <span class="n">gp</span>
+        <span class="c1"># STOPHERE</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">termcode</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">xf</span><span class="p">,</span> <span class="n">fx</span><span class="o">=</span><span class="n">ff</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="n">L</span><span class="p">,</span>
+                  <span class="n">iterations</span><span class="o">=</span><span class="n">itncount</span><span class="p">,</span> <span class="n">evals</span><span class="o">=</span><span class="n">fcount</span><span class="p">,</span> <span class="n">linesearch_evals</span><span class="o">=</span><span class="n">fcount_ls</span><span class="p">)</span>
+    <span class="c1">#print(&quot;result&quot;,result, steptol, macheps)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1">#@author: Ismet Sahin</span>
+<span class="c1"># Alg. 9.4.1</span>
+
+<span class="c1"># NOTE:</span>
+<span class="c1"># BFCG Hessian update is performed unless the following two conditions hold</span>
+<span class="c1">#    (i) y&#39;*s &lt; sqrt(macheps)*norm(s)*norm(y)</span>
+<span class="c1">#    (ii)</span>
+
+
+<span class="k">def</span> <span class="nf">bfgsunfac</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="n">gp</span><span class="p">,</span> <span class="n">macheps</span><span class="p">,</span> <span class="n">eta</span><span class="p">,</span> <span class="n">analgrad</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">xp</span> <span class="o">-</span> <span class="n">xc</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">gp</span> <span class="o">-</span> <span class="n">gc</span>
+    <span class="n">temp1</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="c1"># ISMET : I added condition of having temp1 != 0</span>
+    <span class="k">if</span> <span class="n">temp1</span> <span class="o">&gt;=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">macheps</span><span class="p">)</span> <span class="o">*</span> <span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="ow">and</span> <span class="n">temp1</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">analgrad</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">eta</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span>
+
+        <span class="c1"># deal with noise levels in y</span>
+        <span class="n">skipupdate</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">temp_logicals</span> <span class="o">=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">tol</span> <span class="o">*</span> <span class="n">maximum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">gc</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">gp</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">temp_logicals</span><span class="p">):</span>
+            <span class="n">skipupdate</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># do the BFGS update if skipdate is false</span>
+        <span class="k">if</span> <span class="n">skipupdate</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">temp2</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="n">H</span> <span class="o">+</span> <span class="n">outer</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">temp1</span> <span class="o">-</span> <span class="n">outer</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="n">temp2</span>
+
+    <span class="k">return</span> <span class="n">H</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">@author: Ismet Sahin</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">choldecomp</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">maxoffl</span><span class="p">,</span> <span class="n">macheps</span><span class="p">):</span>
+    <span class="n">minl</span> <span class="o">=</span> <span class="p">(</span><span class="n">macheps</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">)</span> <span class="o">*</span> <span class="n">maxoffl</span>
+
+    <span class="k">if</span> <span class="n">maxoffl</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># H is known to be a positive definite matrix</span>
+        <span class="n">maxoffl</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">diag</span><span class="p">(</span><span class="n">H</span><span class="p">))))</span>
+
+    <span class="n">minl2</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">macheps</span><span class="p">)</span> <span class="o">*</span> <span class="n">maxoffl</span>
+
+    <span class="c1"># 3. maxadd is the number (R) specifying the maximum amount added to any</span>
+    <span class="c1"># diagonal entry of Hessian matrix H</span>
+    <span class="n">maxadd</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># 4. form column j of L</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">minljj</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">L</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> \
+                <span class="nb">sum</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">minljj</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">minljj</span><span class="p">)</span>
+
+        <span class="c1"># 4.4</span>
+        <span class="n">minljj</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minljj</span> <span class="o">/</span> <span class="n">maxoffl</span><span class="p">,</span> <span class="n">minl</span><span class="p">)</span>
+
+        <span class="c1"># 4.5</span>
+        <span class="k">if</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">minljj</span> <span class="o">**</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># normal Cholesky iteration</span>
+            <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># augment H[j-1,j-1]</span>
+            <span class="k">if</span> <span class="n">minljj</span> <span class="o">&lt;</span> <span class="n">minl2</span><span class="p">:</span>
+                <span class="n">minljj</span> <span class="o">=</span> <span class="n">minl2</span>    <span class="c1"># occurs only if maxoffl = 0</span>
+
+            <span class="n">maxadd</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxadd</span><span class="p">,</span> <span class="n">minljj</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">minljj</span>
+
+        <span class="c1"># 4.6</span>
+        <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">n</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">n</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">L</span><span class="p">,</span> <span class="n">maxadd</span>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1"># ALGORITHM 5.6.3</span>
+
+<span class="c1"># Ismet Sahin</span>
+
+<span class="c1"># function g = fdgrad(n, xc, fc, objfunc, sx, eta)</span>
+<span class="c1"># g = fdgrad(@obj_function1, 2, [1 -1]&#39;, 10, [1 1], eps)</span>
+
+<span class="c1"># NOTATION:</span>
+<span class="c1">#    N : Natural number</span>
+<span class="c1">#    R : Real number</span>
+<span class="c1">#    Rn: nx1 real vector</span>
+<span class="c1">#    Rnxm : nxm real matrix</span>
+
+<span class="c1"># INPUTS:</span>
+<span class="c1">#    n  : the dimension of the gradient vector (N)</span>
+<span class="c1">#    xc : the current point at which the value of gradient is computed (Rn)</span>
+<span class="c1">#    fc : function value at xc (R)</span>
+<span class="c1">#    objfunc : a function handle which is used to compute function values</span>
+<span class="c1">#    Sx : a n-dim vector, jth entry specifies the typical value of jth param.</span>
+<span class="c1"># (Rn)</span>
+<span class="c1">#    eta: equals to 1e-DIGITS where DIGITS is an integer specifying the</span>
+<span class="c1"># number of reliable digits (R)</span>
+<span class="c1"># OUTPUT:</span>
+<span class="c1">#    g : the n-dim finite difference gradient vector (Rn)</span>
+
+<span class="c1"># NOTES :</span>
+<span class="c1">#    hj : is the constant specifying the step size in the direction of jth</span>
+<span class="c1"># coordinate (R)</span>
+<span class="c1">#    ej : the unit vector, jth column of the identity matrix (Rn)</span>
+
+<span class="c1"># COMMENTS:</span>
+<span class="c1">#--- FIND STEP SIZE hj</span>
+<span class="c1">#    1.a : sign(x) does not work for us when x = 0 since this makes the step</span>
+<span class="c1"># size hj zero which is not allowed. (Step size = 0 =&gt; gj = inf.)</span>
+<span class="c1">#    1.b : evaluation of the step size</span>
+<span class="c1">#    1.c : a trick to reduce error due to finite precision.  The line xc(j) =</span>
+<span class="c1"># xc(j) + hj is equivalent to xc = xc + hj * ej where ej is the jth column</span>
+<span class="c1"># of identity matrix.</span>
+<span class="c1">#</span>
+<span class="c1">#--- EVALUATE APPR. GRADIENT</span>
+<span class="c1"># First evaluate function at xc + hj * ej and then estimate jth entry of</span>
+<span class="c1"># the gradient.</span>
+
+
+<span class="k">def</span> <span class="nf">fdgrad</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">fc</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+
+    <span class="c1"># create memory for gradient</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="n">sqrteta</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1">#--- FIND STEP SIZE hj</span>
+        <span class="k">if</span> <span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">signxcj</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">signxcj</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>                <span class="c1"># 1.a</span>
+
+        <span class="c1"># 1.b</span>
+        <span class="n">hj</span> <span class="o">=</span> <span class="n">sqrteta</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Sx</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">signxcj</span>
+
+        <span class="c1"># 1.c</span>
+        <span class="n">tempj</span> <span class="o">=</span> <span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">hj</span>
+        <span class="n">hj</span> <span class="o">=</span> <span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">tempj</span>
+
+        <span class="c1">#--- EVALUATE APPR. GRADIENT</span>
+        <span class="n">fj</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">xc</span><span class="p">)</span>
+        <span class="c1"># PAK: hack for infeasible region: point the other way</span>
+        <span class="k">if</span> <span class="n">isinf</span><span class="p">(</span><span class="n">fj</span><span class="p">):</span>
+            <span class="n">fj</span> <span class="o">=</span> <span class="n">fc</span> <span class="o">+</span> <span class="n">hj</span>
+        <span class="n">g</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">fj</span> <span class="o">-</span> <span class="n">fc</span><span class="p">)</span> <span class="o">/</span> <span class="n">hj</span>
+        <span class="c1"># if isinf(g[j-1]):</span>
+        <span class="c1">#    print(&quot;fc,fj,hj,Sx,xc&quot;,fc,fj,hj,Sx[j-1],xc[j-1])</span>
+
+        <span class="c1"># now reset the current</span>
+        <span class="n">xc</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempj</span>
+
+    <span class="c1">#print(&quot;gradient&quot;, g)</span>
+    <span class="k">return</span> <span class="n">g</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1"># @author: Ismet Sahin</span>
+<span class="c1"># Example call:</span>
+<span class="c1"># H = inithessunfac(2, f, 1, [1 0.1]&#39;)</span>
+
+<span class="k">def</span> <span class="nf">inithessunfac</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span> <span class="n">Sx</span><span class="p">):</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">typf</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">temp</span> <span class="o">*</span> <span class="n">Sx</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">H</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">linesearch</span><span class="p">(</span><span class="n">cost_func</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">fc</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">maxstep</span><span class="p">,</span> <span class="n">steptol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ALGORITHM 6.3.1</span>
+
+<span class="sd">Ismet Sahin</span>
+
+<span class="sd">THE PURPOSE</span>
+
+<span class="sd">    is to find a step size which yields the new function value smaller than the</span>
+<span class="sd">    current function value, i.e. f(xc + alfa*p) &lt;= f(xc) + alfa * lambda * g&#39;p</span>
+
+<span class="sd">CONDITIONS</span>
+
+<span class="sd">    g&#39;p &lt; 0</span>
+<span class="sd">    alfa &lt; 0.5</span>
+
+<span class="sd">NOTATION:</span>
+<span class="sd">    N : Natural number</span>
+<span class="sd">    R : Real number</span>
+<span class="sd">    Rn: nx1 real vector</span>
+<span class="sd">    Rnxm : nxm real matrix</span>
+<span class="sd">    Str: a string</span>
+
+<span class="sd">INPUTS</span>
+<span class="sd">    n : dimensionality (N)</span>
+<span class="sd">    xc : the current point ( Rn)</span>
+<span class="sd">    fc : the function value at xc (R)</span>
+<span class="sd">    obj_func : the function handle to evaluate function values (str like :</span>
+<span class="sd">       &#39;@costfunction1&#39;)</span>
+<span class="sd">    g : gradient (Rn)</span>
+<span class="sd">    p : the descent direction (Rn)</span>
+<span class="sd">    Sx : scale factors (Rn)</span>
+<span class="sd">    maxstep : maximum step size allowed (R)</span>
+<span class="sd">    steptol : step tolerance in order to break infinite loop in line search (R)</span>
+
+<span class="sd">OUTPUTS</span>
+<span class="sd">    retcode : boolean indicating a new point xp found (0) or not (1)    (N).</span>
+<span class="sd">    xp : the new point (Rn)</span>
+<span class="sd">    fp : function value at xp (R)</span>
+<span class="sd">    maxtaken : boolean (N)</span>
+
+<span class="sd">NOTES:</span>
+<span class="sd">    alfa : is used to prevent function value reductions which are too small.</span>
+<span class="sd">       Here we&#39;ll use a very small number in order to accept very small</span>
+<span class="sd">       reductions but not too small.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="n">maxtaken</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># alfa specifies how much function value reduction is allowable.  The</span>
+    <span class="c1"># smaller the alfa, the smaller the function value reduction we allow.</span>
+    <span class="n">alfa</span> <span class="o">=</span> <span class="mf">1e-4</span>
+
+    <span class="c1"># the magnitude of the Newton step</span>
+    <span class="n">Newtlen</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">Sx</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">Newtlen</span> <span class="o">&gt;</span> <span class="n">maxstep</span><span class="p">:</span>
+        <span class="c1"># Newton step is larger than the max acceptable step size (maxstep).</span>
+        <span class="c1"># Make it equal or smaller than maxstep</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">maxstep</span> <span class="o">/</span> <span class="n">Newtlen</span><span class="p">)</span>
+        <span class="n">Newtlen</span> <span class="o">=</span> <span class="n">maxstep</span>
+
+    <span class="n">initslope</span> <span class="o">=</span> <span class="n">inner</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="c1"># &quot;Relative length of p as calculated in the stopping routine&quot;</span>
+    <span class="c1"># rellength = amax(abs(p) / maximum(abs(xc), Sx))    # this was a bug</span>
+    <span class="n">rellength</span> <span class="o">=</span> <span class="n">amax</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="n">maximum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">xc</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Sx</span><span class="p">))</span>
+
+    <span class="n">minlambda</span> <span class="o">=</span> <span class="n">steptol</span> <span class="o">/</span> <span class="n">rellength</span>
+
+    <span class="n">lambdaM</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="c1"># In this loop, we try to find an acceptable next point</span>
+    <span class="c1"># xp = xc + lambda * p by finding an optimal lambda based on one</span>
+    <span class="c1"># dimensional quadratic and cubic models</span>
+    <span class="n">fcount</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>                <span class="c1"># 10 starts.</span>
+        <span class="c1"># next point candidate</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="n">xc</span> <span class="o">+</span> <span class="n">lambdaM</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="k">if</span> <span class="n">isnan</span><span class="p">(</span><span class="n">xp</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="c1">#print(&quot;nan xp&quot;)</span>
+            <span class="n">retcode</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">=</span> <span class="n">xc</span><span class="p">,</span> <span class="n">fc</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">fcount</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="c1">#print(&quot;too many cycles in linesearch&quot;,xp)</span>
+            <span class="n">retcode</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">=</span> <span class="n">xc</span><span class="p">,</span> <span class="n">fc</span>
+            <span class="k">break</span>
+        <span class="c1"># function value at xp</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">cost_func</span><span class="p">(</span><span class="n">xp</span><span class="p">)</span>
+        <span class="c1">#print(&quot;linesearch&quot;,fcount,xp,xc,lambdaM,p,fp,fc)</span>
+        <span class="k">if</span> <span class="n">isinf</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+            <span class="n">fp</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">fc</span>  <span class="c1"># PAK: infeasible region hack</span>
+        <span class="n">fcount</span> <span class="o">=</span> <span class="n">fcount</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">fp</span> <span class="o">&lt;=</span> <span class="n">fc</span> <span class="o">+</span> <span class="n">alfa</span> <span class="o">*</span> <span class="n">lambdaM</span> <span class="o">*</span> <span class="n">initslope</span><span class="p">:</span>
+            <span class="c1"># satisfactory xp is found</span>
+            <span class="n">retcode</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">lambdaM</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="ow">and</span> <span class="n">Newtlen</span> <span class="o">&gt;</span> <span class="mf">0.99</span> <span class="o">*</span> <span class="n">maxstep</span><span class="p">:</span>
+                <span class="n">maxtaken</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># return from here</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">lambdaM</span> <span class="o">&lt;</span> <span class="n">minlambda</span><span class="p">:</span>
+            <span class="c1"># step length is too small, so a satisfactory xp cannot be found</span>
+            <span class="c1">#print(&quot;step&quot;,lambdaM,minlambda,steptol,rellength)</span>
+            <span class="n">retcode</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">=</span> <span class="n">xc</span><span class="p">,</span> <span class="n">fc</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>                            <span class="c1"># 10.3c starts</span>
+            <span class="c1"># reduce lambda by a factor between 0.1 and 0.5</span>
+            <span class="k">if</span> <span class="n">lambdaM</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="c1"># first backtrack with one dimensional quadratic fit</span>
+                <span class="n">lambda_temp</span> <span class="o">=</span> <span class="o">-</span><span class="n">initslope</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">fp</span> <span class="o">-</span> <span class="n">fc</span> <span class="o">-</span> <span class="n">initslope</span><span class="p">))</span>
+                <span class="c1">#print(&quot;L1&quot;,lambda_temp)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># perform second and following backtracks with cubic fit</span>
+                <span class="n">Mt</span> <span class="o">=</span> <span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="o">/</span><span class="n">lambdaM</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">lambda_prev</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">lambda_prev</span><span class="o">/</span><span class="n">lambdaM</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">lambdaM</span><span class="o">/</span><span class="n">lambda_prev</span><span class="o">**</span><span class="mi">2</span><span class="p">]])</span>
+                <span class="n">vt</span> <span class="o">=</span> <span class="n">array</span><span class="p">([[</span><span class="n">fp</span> <span class="o">-</span> <span class="n">fc</span> <span class="o">-</span> <span class="n">lambdaM</span> <span class="o">*</span> <span class="n">initslope</span><span class="p">],</span>
+                            <span class="p">[</span><span class="n">fp_prev</span> <span class="o">-</span> <span class="n">fc</span> <span class="o">-</span> <span class="n">lambda_prev</span> <span class="o">*</span> <span class="n">initslope</span><span class="p">]])</span>
+                <span class="n">ab</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">lambdaM</span> <span class="o">-</span> <span class="n">lambda_prev</span><span class="p">))</span> <span class="o">*</span> <span class="n">dot</span><span class="p">(</span><span class="n">Mt</span><span class="p">,</span> <span class="n">vt</span><span class="p">)</span>
+                <span class="c1"># a = ab(1) and b = ab(2)</span>
+                <span class="n">disc</span> <span class="o">=</span> <span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">initslope</span>
+                <span class="c1">#print(&quot;Mt,vt,ab,disc&quot;,Mt,vt,ab,disc)</span>
+                <span class="k">if</span> <span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="c1"># cubic model turn out to be a quadratic</span>
+                    <span class="n">lambda_temp</span> <span class="o">=</span> <span class="o">-</span><span class="n">initslope</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+                    <span class="c1">#print(&quot;L2&quot;,lambda_temp)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># the model is a legitimate cubic</span>
+                    <span class="n">lambda_temp</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">disc</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+                    <span class="c1">#print(&quot;L3&quot;,lambda_temp)</span>
+
+                <span class="k">if</span> <span class="n">lambda_temp</span> <span class="o">&gt;</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">lambdaM</span><span class="p">:</span>
+                    <span class="c1"># larger than half of previous lambda is not allowed.</span>
+                    <span class="n">lambda_temp</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">lambdaM</span>
+                    <span class="c1">#print(&quot;L4&quot;,lambda_temp)</span>
+
+            <span class="n">lambda_prev</span> <span class="o">=</span> <span class="n">lambdaM</span>
+            <span class="n">fp_prev</span> <span class="o">=</span> <span class="n">fp</span>
+            <span class="k">if</span> <span class="n">lambda_temp</span> <span class="o">&lt;=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">lambdaM</span><span class="p">:</span>
+                <span class="c1"># smaller than 1/10 th of previous lambda is not allowed.</span>
+                <span class="n">lambdaM</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">lambdaM</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lambdaM</span> <span class="o">=</span> <span class="n">lambda_temp</span>
+
+            <span class="c1">#print(&#39;lambda = &#39;, lambdaM)</span>
+
+    <span class="c1"># return xp, fp, retcode</span>
+    <span class="k">return</span> <span class="n">retcode</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">maxtaken</span><span class="p">,</span> <span class="n">fcount</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<span class="c1"># @author: Ismet Sahin</span>
+<span class="c1"># ALGORITHM 1.3.1</span>
+<span class="k">def</span> <span class="nf">machineeps</span><span class="p">():</span>
+    <span class="n">macheps</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">macheps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">macheps</span> <span class="o">=</span> <span class="n">macheps</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="n">macheps</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">macheps</span>
+    <span class="k">return</span> <span class="n">macheps</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">modelhess</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">macheps</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@author: Ismet Sahin.</span>
+<span class="sd">Thanks to Christopher Meeting for his help in converting this module from</span>
+<span class="sd">Matlab to Python</span>
+
+<span class="sd">ALGORITHM 5.5.1</span>
+
+<span class="sd">NOTES:</span>
+<span class="sd">    Currently we are not implementing steps 1, 14, and 15 (TODO)</span>
+
+<span class="sd">This function performs perturbed Cholesky decomposition (CD) as if the input</span>
+<span class="sd">Hessian matrix is positive definite.  The code for perturbed CD resides in</span>
+<span class="sd">choldecomp.m file which returns the factored lower triangle matrix L and a</span>
+<span class="sd">number, maxadd, specifying the largest number added to a diagonal element of</span>
+<span class="sd">H during the CD decomposition.  This function checks if the decomposition is</span>
+<span class="sd">completed without adding any positive number to the diagonal elements of H,</span>
+<span class="sd">i.e. maxadd &lt;= 0.  Otherwise, this function adds the least number to the</span>
+<span class="sd">diagonals of H which makes it positive definite based on maxadd and other</span>
+<span class="sd">entries in H.</span>
+<span class="sd">EXAMPLE CALLS::</span>
+
+<span class="sd">         A1 =[2     0    2.4</span>
+<span class="sd">              0     2     0</span>
+<span class="sd">              2.4     0     3]</span>
+
+<span class="sd">         A2 =[2     0    2.5</span>
+<span class="sd">               0     2     0</span>
+<span class="sd">              2.5     0     3]</span>
+
+<span class="sd">         A3 =[2     0    10</span>
+<span class="sd">               0     2     0</span>
+<span class="sd">              10     0     3]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="c1"># SCALING</span>
+    <span class="n">scale_needed</span> <span class="o">=</span> <span class="mi">0</span>                        <span class="c1"># ISMET uses this parameter</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Sx</span> <span class="o">-</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># scaling is requested by the user</span>
+        <span class="n">scale_needed</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">Dx</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">Sx</span><span class="p">)</span>
+        <span class="n">Dx_inv</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">Sx</span><span class="p">)</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">Dx_inv</span><span class="p">,</span> <span class="n">dot</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">Dx_inv</span><span class="p">))</span>
+
+    <span class="c1"># STEP I.</span>
+    <span class="n">sqrteps</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">macheps</span><span class="p">)</span>
+
+    <span class="c1"># 2-4.</span>
+    <span class="n">H_diag</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">maxdiag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">H_diag</span><span class="p">)</span>
+    <span class="n">mindiag</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">H_diag</span><span class="p">)</span>
+
+    <span class="c1"># 5.</span>
+    <span class="n">maxposdiag</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxdiag</span><span class="p">)</span>
+
+    <span class="c1"># 6. mu is the amount to be added to diagonal of H before the</span>
+    <span class="c1"># Cholesky decomp. If the minimum diagonal is much much smaller than</span>
+    <span class="c1"># the maximum diagonal element then adjust mu accordingly otherwise mu = 0.</span>
+    <span class="k">if</span> <span class="n">mindiag</span> <span class="o">&lt;=</span> <span class="n">sqrteps</span> <span class="o">*</span> <span class="n">maxposdiag</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">maxposdiag</span> <span class="o">-</span> <span class="n">mindiag</span><span class="p">)</span> <span class="o">*</span> <span class="n">sqrteps</span> <span class="o">-</span> <span class="n">mindiag</span>
+        <span class="n">maxdiag</span> <span class="o">=</span> <span class="n">maxdiag</span> <span class="o">+</span> <span class="n">mu</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># 7. maximum of off-diagonal elements of H</span>
+    <span class="n">diag_infinite</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">inf</span> <span class="o">*</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">maxoff</span> <span class="o">=</span> <span class="p">(</span><span class="n">H</span> <span class="o">-</span> <span class="n">diag_infinite</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="c1"># 8. if maximum off diagonal element is much much larger than the maximum</span>
+    <span class="c1"># diagonal element of the Hessian H</span>
+    <span class="k">if</span> <span class="n">maxoff</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sqrteps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">maxdiag</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="p">(</span><span class="n">maxoff</span> <span class="o">-</span> <span class="n">maxdiag</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sqrteps</span> <span class="o">*</span> <span class="n">maxoff</span>
+        <span class="n">maxdiag</span> <span class="o">=</span> <span class="n">maxoff</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sqrteps</span><span class="p">)</span>
+
+    <span class="c1"># 9.</span>
+    <span class="k">if</span> <span class="n">maxdiag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>            <span class="c1"># if H == 0</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">maxdiag</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># 10. mu&gt;0 =&gt; need to add mu amount to the diagonal elements: H = H + mu*I</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">diag_mu</span> <span class="o">=</span> <span class="n">diag</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">H</span> <span class="o">+</span> <span class="n">diag_mu</span>
+
+    <span class="c1"># 11.</span>
+    <span class="n">maxoffl</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">maxdiag</span><span class="p">,</span> <span class="n">maxoff</span> <span class="o">/</span> <span class="n">n</span><span class="p">))</span>
+
+    <span class="c1"># STEP II. Perform perturbed Cholesky decomposition H + D = LL&#39; where D is</span>
+    <span class="c1"># a diagonal matrix which is implicitly added to H if H is not positive</span>
+    <span class="c1"># definite. Matrix D has only positive elements. The output variable maxadd</span>
+    <span class="c1"># indicates the maximum number added to a diagonal entry of the Hesian,</span>
+    <span class="c1"># i.e. the maximum of D. If maxadd is returned 0, then H was indeed pd</span>
+    <span class="c1"># and L is the resulting factor.</span>
+    <span class="c1"># 12.</span>
+    <span class="n">L</span><span class="p">,</span> <span class="n">maxadd</span> <span class="o">=</span> <span class="n">choldecomp</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">maxoffl</span><span class="p">,</span> <span class="n">macheps</span><span class="p">)</span>
+
+    <span class="c1"># STEP III.</span>
+    <span class="c1"># 13. If maxadd &lt;= 0, we are done H was positive definite.</span>
+    <span class="k">if</span> <span class="n">maxadd</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># H was not positive definite</span>
+        <span class="c1"># print(&#39;WARNING: Hessian is not pd. Max number added to H is &#39;,maxadd)</span>
+        <span class="n">maxev</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">minev</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">offrow</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span><span class="n">n</span><span class="p">]))</span>
+            <span class="n">maxev</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxev</span><span class="p">,</span> <span class="n">H</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">offrow</span><span class="p">)</span>
+            <span class="n">minev</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">minev</span><span class="p">,</span> <span class="n">H</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">offrow</span><span class="p">)</span>
+
+        <span class="n">sdd</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxev</span> <span class="o">-</span> <span class="n">minev</span><span class="p">)</span> <span class="o">*</span> <span class="n">sqrteps</span> <span class="o">-</span> <span class="n">minev</span>
+        <span class="n">sdd</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">sdd</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">maxadd</span><span class="p">,</span> <span class="n">sdd</span><span class="p">)</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">H</span> <span class="o">+</span> <span class="n">diag</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">L</span><span class="p">,</span> <span class="n">maxadd</span> <span class="o">=</span> <span class="n">choldecomp</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">macheps</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scale_needed</span><span class="p">:</span>                <span class="c1"># todo. this calculation can be done faster</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">Dx</span><span class="p">,</span> <span class="n">dot</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">Dx</span><span class="p">))</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">Dx</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">L</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">umstop</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span> <span class="n">retcode</span><span class="p">,</span> <span class="n">gradtol</span><span class="p">,</span> <span class="n">steptol</span><span class="p">,</span>
+           <span class="n">itncount</span><span class="p">,</span> <span class="n">itnlimit</span><span class="p">,</span> <span class="n">consecmax</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">#@author: Ismet Sahin</span>
+
+<span class="sd">ALGORITHM 7.2.1</span>
+
+<span class="sd">Return codes:</span>
+<span class="sd">Note that return codes are nonnegative integers. When it is not zero, there is</span>
+<span class="sd">a termination condition which is satisfied.</span>
+<span class="sd">   0 : None of the termination conditions is satisfied</span>
+<span class="sd">   1 : Magnitude of scaled grad is less than gradtol; this is the primary</span>
+<span class="sd">       condition. The new point xp is most likely a local minimizer.  If gradtol</span>
+<span class="sd">       is too large, then this condition can be satisfied easier and therefore</span>
+<span class="sd">       xp may not be a local minimizer</span>
+<span class="sd">   2 : Scaled distance between last two points is less than steptol; xp might be</span>
+<span class="sd">       a local minimizer.  This condition may also be satisfied if step is</span>
+<span class="sd">       chosen too large or the algorithm is far from the minimizer and making</span>
+<span class="sd">       small progress</span>
+<span class="sd">   3 : The algorithm cannot find a new point giving smaller function value than</span>
+<span class="sd">       the current point.  The current may be a local minimizer, or analytic</span>
+<span class="sd">       gradient implementation has some mistakes, or finite difference gradient</span>
+<span class="sd">       estimation is not accurate, or steptol is too large.</span>
+<span class="sd">   4 : Maximum number of iterations are completed</span>
+<span class="sd">   5 : The maximum step length maxstep is taken for last ten consecutive</span>
+<span class="sd">       iterations.  This may happen if the function is not bounded from below,</span>
+<span class="sd">       or the function has a finite asymptote in some direction, or maxstep is</span>
+<span class="sd">       too small.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">termcode</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">retcode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">elif</span> <span class="n">retcode</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="k">elif</span> <span class="n">retcode</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="k">elif</span> <span class="n">retcode</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown linesearch return code&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="n">maximum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">xp</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Sx</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">typf</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">gradtol</span><span class="p">:</span>
+        <span class="c1"># maximum component of scaled gradient is smaller than gradtol.</span>
+        <span class="c1"># TODO: make sure not to use a too large typf value which leads to the</span>
+        <span class="c1"># satisfaction of this algorithm easily.</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">xp</span> <span class="o">-</span> <span class="n">xc</span><span class="p">)</span> <span class="o">/</span> <span class="n">maximum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">xp</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Sx</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">steptol</span><span class="p">:</span>
+        <span class="c1"># maximum component of scaled step is smaller than steptol</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">itncount</span> <span class="o">&gt;=</span> <span class="n">itnlimit</span><span class="p">:</span>
+        <span class="c1"># maximum number of iterations are performed</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">consecmax</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="c1"># not more than 10 steps will be taken consecutively.</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="k">return</span> <span class="n">termcode</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1">#@author: Ismet Sahin</span>
+
+<span class="c1"># This function checks whether initial conditions are acceptable for</span>
+<span class="c1"># continuing unconstrained optimization</span>
+
+<span class="c1"># f : the function value at x0, i.e. f = f(x0),  (R)</span>
+<span class="c1"># g : the gradient at x0, (Rn)</span>
+
+<span class="c1"># termcode = 0 : x0 is not a critical point of f(x), (Z)</span>
+<span class="c1"># termcode = 1 : x0 is a critical point of f(x), (Z)</span>
+
+<span class="c1"># Note that x0 may be a critical point of the function; in this case, it is</span>
+<span class="c1"># either a local minimizer or a saddle point of the function.  If the Hessian</span>
+<span class="c1"># at x0 is positive definite than it is indeed a local minimizer.  Instead of</span>
+<span class="c1"># checking Hessian, we can also restart the driver program umexample from</span>
+<span class="c1"># another point which is close to x0.  If x0 is the local minimizer, the</span>
+<span class="c1"># algorithm will approach it.</span>
+
+<span class="k">def</span> <span class="nf">umstop0</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">typf</span><span class="p">,</span> <span class="n">gradtol</span><span class="p">):</span>
+    <span class="c1">#consecmax = 0</span>
+    <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="n">maximum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x0</span><span class="p">),</span> <span class="mf">1.</span><span class="o">/</span><span class="n">Sx</span><span class="p">)</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">typf</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="mf">1e-3</span><span class="o">*</span><span class="n">gradtol</span><span class="p">:</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">termcode</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">termcode</span>
+
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">example_call</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;***********************************&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Rosenbrock function</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">400</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="mi">200</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)])</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="mf">2.320894</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.534223</span><span class="p">])</span>
+    <span class="c1"># x0 = array([2.0,1.0])</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">quasinewton</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">)</span>
+    <span class="c1">#result = quasinewton(fn=fn, x0=x0)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Initial point x0 = &#39;</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="s1">&#39;, f(x0) = &#39;</span><span class="p">,</span> <span class="n">fn</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">example_call</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.quasinewton</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

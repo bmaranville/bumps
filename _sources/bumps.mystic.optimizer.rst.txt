@@ -1,0 +1,19 @@
+bumps.mystic.optimizer package
+==============================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.mystic.optimizer.de
+   bumps.mystic.optimizer.diffev_compat
+
+Module contents
+---------------
+
+.. automodule:: bumps.mystic.optimizer
+   :members:
+   :undoc-members:
+   :show-inheritance:

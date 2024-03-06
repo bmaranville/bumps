@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.lsqerror &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.lsqerror</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.lsqerror</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Least squares error analysis.</span>
+
+<span class="sd">Given a data set with gaussian uncertainty on the points, and a model which</span>
+<span class="sd">is differentiable at the minimum, the parameter uncertainty can be estimated</span>
+<span class="sd">from the covariance matrix at the minimum.  The model and data are wrapped in</span>
+<span class="sd">a problem object, which must define the following methods:</span>
+
+<span class="sd">    ============ ============================================</span>
+<span class="sd">    getp()       get the current value of the model</span>
+<span class="sd">    setp(p)      set a new value in the model</span>
+<span class="sd">    nllf(p)      negative log likelihood function</span>
+<span class="sd">    residuals(p) residuals around its current value</span>
+<span class="sd">    bounds()     get the bounds on the parameter p [optional]</span>
+<span class="sd">    ============ ============================================</span>
+
+<span class="sd">:func:`jacobian` computes the Jacobian matrix $J$ using numerical</span>
+<span class="sd">differentiation on residuals. Derivatives are computed using the center</span>
+<span class="sd">point formula, with two evaluations per dimension.  If the problem has</span>
+<span class="sd">analytic derivatives with respect to the fitting parameters available,</span>
+<span class="sd">then these should be used to compute the Jacobian instead.</span>
+
+<span class="sd">:func:`hessian` computes the Hessian matrix $H$ using numerical</span>
+<span class="sd">differentiation on nllf.</span>
+
+<span class="sd">:func:`jacobian_cov` takes the Jacobian and computes the covariance matrix $C$.</span>
+<span class="sd">:func:`hessian_cov` takes the Hessian and computes the covariance matrix $C$.</span>
+
+<span class="sd">:func:`corr` uses the off-diagonal elements of $C$ to compute correlation</span>
+<span class="sd">coefficients $R^2_{ij}$ between the parameters.</span>
+
+<span class="sd">:func:`stderr` computes the uncertain $\sigma_i$ from covariance matrix $C$,</span>
+<span class="sd">assuming that the $C_\text{diag}$ contains $\sigma_i^2$, which should be</span>
+<span class="sd">the case for functions which are approximately linear near the minimum.</span>
+
+<span class="sd">:func:`max_correlation` takes $R^2$ and returns the maximum correlation.</span>
+
+<span class="sd">The user should be shown the uncertainty $\sigma_i$ for each parameter,</span>
+<span class="sd">and if there are strong parameter correlations (e.g., $R^2_\text{max} &gt; 0.2$),</span>
+<span class="sd">the correlation matrix as well.</span>
+
+<span class="sd">The bounds method for the problem is optional, and is used only to determine</span>
+<span class="sd">the step size needed for the numerical derivative.  If bounds are not present</span>
+<span class="sd">and finite, the current value for the parameter is used as a basis to</span>
+<span class="sd">estimate step size.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="gradient">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.gradient">[docs]</a>
+<span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">jacobian</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span></div>
+
+
+<span class="c1"># TODO: restructure lsqerror to use mapper for evaluating multiple f</span>
+<span class="c1"># doesn&#39;t work for jacobian since mapper returns nllf; would need to</span>
+<span class="c1"># expand mapper to implement a variety of different functions.</span>
+<div class="viewcode-block" id="jacobian">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.jacobian">[docs]</a>
+<span class="k">def</span> <span class="nf">jacobian</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the derivative wrt the fit parameters at point p.</span>
+
+<span class="sd">    Numeric derivatives are calculated based on step, where step is</span>
+<span class="sd">    the portion of the total range for parameter j, or the portion of</span>
+<span class="sd">    point value p_j if the range on parameter j is infinite.</span>
+
+<span class="sd">    The current point is preserved.</span>
+
+<span class="sd">    Note that the problem.residuals() method should not reuse memory for the</span>
+<span class="sd">    returned value otherwise the derivative calculation (f(x+dx) - f(x))/dx</span>
+<span class="sd">    will always be zero. The returned value need not be 1D, but it should be</span>
+<span class="sd">    contiguous so that it can be reshaped to 1D without an extra copy. This</span>
+<span class="sd">    will only be an issue for very large datasets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p_init</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">p_init</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)()</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="c1"># Return residuals as a vector even if f(x) returns a matrix otherwise</span>
+        <span class="c1"># we cannot build a stacked Jacobian. We use reshape() rather than</span>
+        <span class="c1"># flatten since this will avoid an unnecessary copy.</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">residuals</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">_jacobian_forward</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+    <span class="c1">#J = nd.Jacobian(problem.residuals)(p)</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p_init</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">J</span></div>
+
+
+<span class="k">def</span> <span class="nf">_jacobian_forward</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="c1"># TODO: default to double precision epsilon</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="k">if</span> <span class="n">eps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span>
+
+    <span class="c1">#print(&quot;p&quot;,p,&quot;step&quot;,step)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">step</span>
+    <span class="n">h</span><span class="p">[</span><span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+    <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">h</span><span class="p">[</span><span class="n">h</span><span class="o">+</span><span class="n">p</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1.0</span>  <span class="c1"># step backward if forward step is out of bounds</span>
+    <span class="n">ee</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="c1"># Maybe fx.copy() to protect against reuse</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">fx_plus</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">J</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fx_plus</span> <span class="o">-</span> <span class="n">fx</span><span class="p">)</span><span class="o">/</span><span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">J</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+<span class="k">def</span> <span class="nf">_jacobian_central</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="c1"># TODO: default to double precision epsilon</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="k">if</span> <span class="n">eps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span>
+
+    <span class="c1">#print(&quot;p&quot;,p,&quot;step&quot;,step)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">step</span>
+    <span class="n">h</span><span class="p">[</span><span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+    <span class="c1">#if bounds is not None:</span>
+    <span class="c1">#    h[h+p&gt;bounds[1]] *= -1.0  # step backward if forward step is out of bounds</span>
+    <span class="n">ee</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="n">J</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">fx_minus</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span> <span class="c1"># Maybe fx.copy() to protect against reuse</span>
+        <span class="n">fx_plus</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">J</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fx_plus</span> <span class="o">-</span> <span class="n">fx_minus</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">J</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+
+<div class="viewcode-block" id="hessian">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.hessian">[docs]</a>
+<span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the derivative wrt to the fit parameters at point p.</span>
+
+<span class="sd">    The current point is preserved.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p_init</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">p_init</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)()</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">_hessian_forward</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">nllf</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+    <span class="c1">#H = nd.Hessian(problem.nllf)(p)</span>
+    <span class="c1">#print(&quot;Hessian&quot;,H)</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p_init</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">H</span></div>
+
+
+<span class="k">def</span> <span class="nf">_hessian_forward</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># type: (Callable[[np.ndarray], float], np.ndarray, Optional[np.ndarray]) -&gt; np.ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forward difference Hessian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="c1"># TODO: default to double precision epsilon</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="k">if</span> <span class="n">eps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="c1">#print(&quot;p&quot;,p,&quot;step&quot;,step)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">step</span>
+    <span class="n">h</span><span class="p">[</span><span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+    <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">h</span><span class="p">[</span><span class="n">h</span><span class="o">+</span><span class="n">p</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1.0</span>  <span class="c1"># step backward if forward step is out of bounds</span>
+    <span class="n">ee</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">g</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="c1">#print(&quot;fx&quot;,fx)</span>
+    <span class="c1">#print(&quot;h&quot;,h, h[0])</span>
+    <span class="c1">#print(&quot;g&quot;,g)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">fx_ij</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="c1">#print(&quot;fx_%d%d=%g&quot;%(i,j,fx_ij))</span>
+            <span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx_ij</span> <span class="o">-</span> <span class="n">g</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">g</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">fx</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">h</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">H</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">H</span>
+
+<span class="k">def</span> <span class="nf">_hessian_central</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># type: (Callable[[np.ndarray], float], np.ndarray, Optional[np.ndarray]) -&gt; np.ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Central difference Hessian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="c1"># TODO: default to double precision epsilon</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">1e-4</span> <span class="k">if</span> <span class="n">eps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span>
+    <span class="c1">#step = np.sqrt(step)</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">step</span>
+    <span class="n">h</span><span class="p">[</span><span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+    <span class="c1"># TODO: handle bounds on central difference formula</span>
+    <span class="c1">#if bounds is not None:</span>
+    <span class="c1">#    h[h+p&gt;bounds[1]] *= -1.0  # step backward if forward step is out of bounds</span>
+    <span class="n">ee</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="n">gp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">gm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">gp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">gm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">fp_ij</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">ee</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="n">fm_ij</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">ee</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">ee</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="c1">#print(&quot;fx_%d%d=%g&quot;%(i,j,fx_ij))</span>
+            <span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">fp_ij</span> <span class="o">-</span> <span class="n">gp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">gp</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">fm_ij</span> <span class="o">-</span> <span class="n">gm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">gm</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">fx</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">h</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">h</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">H</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">H</span>
+
+
+<div class="viewcode-block" id="perturbed_hessian">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.perturbed_hessian">[docs]</a>
+<span class="k">def</span> <span class="nf">perturbed_hessian</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    **DEPRECATED** Numerical testing has shown that the perturbed Hessian</span>
+<span class="sd">    is too aggressive with its perturbation, and it is distorting the error</span>
+<span class="sd">    too much, so use hessian_cov(H) instead.</span>
+
+<span class="sd">    Adjust Hessian matrix to be positive definite.</span>
+
+<span class="sd">    Returns the adjusted Hessian and its Cholesky decomposition.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.quasinewton</span> <span class="kn">import</span> <span class="n">modelhess</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">macheps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+    <span class="k">return</span> <span class="n">modelhess</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">macheps</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="chol_stderr">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.chol_stderr">[docs]</a>
+<span class="k">def</span> <span class="nf">chol_stderr</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return parameter uncertainty from the Cholesky decomposition of the</span>
+<span class="sd">    Hessian matrix, as returned, e.g., from the quasi-Newton optimizer BFGS</span>
+<span class="sd">    or as calculated from :func:`perturbed_hessian` on the output of</span>
+<span class="sd">    :func:`hessian` applied to the cost function problem.nllf.</span>
+
+<span class="sd">    Note that this calls chol_cov to compute the inverse from the Cholesky</span>
+<span class="sd">    decomposition, so use stderr(C) if you are already computing C = chol_cov().</span>
+
+<span class="sd">    **Warning:** assumes H = L@L.T (numpy default) not H = U.T@U (scipy default).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: are there numerical tricks to get the diagonal without the full inv?</span>
+    <span class="k">return</span> <span class="n">stderr</span><span class="p">(</span><span class="n">chol_cov</span><span class="p">(</span><span class="n">L</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="chol_cov">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.chol_cov">[docs]</a>
+<span class="k">def</span> <span class="nf">chol_cov</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given the cholesky decomposition of the Hessian matrix H, compute</span>
+<span class="sd">    the covariance matrix $C = H^{-1}$</span>
+
+<span class="sd">    **Warning:** assumes H = L@L.T (numpy default) not H = U.T@U (scipy default).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Linv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Linv</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Linv</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="jacobian_cov">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.jacobian_cov">[docs]</a>
+<span class="k">def</span> <span class="nf">jacobian_cov</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given Jacobian J, return the covariance matrix inv(J&#39;J).</span>
+
+<span class="sd">    We provide some protection against singular matrices by setting</span>
+<span class="sd">    singular values smaller than tolerance *tol* to the tolerance</span>
+<span class="sd">    value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find cov of f at p</span>
+    <span class="c1">#     cov(f,p) = inv(J&#39;J)</span>
+    <span class="c1"># Use SVD</span>
+    <span class="c1">#     J = U S V&#39;</span>
+    <span class="c1">#     J&#39;J = (U S V&#39;)&#39; (U S V&#39;)</span>
+    <span class="c1">#         = V S&#39; U&#39; U S V&#39;</span>
+    <span class="c1">#         = V S S V&#39;</span>
+    <span class="c1">#     inv(J&#39;J) = inv(V S S V&#39;)</span>
+    <span class="c1">#              = inv(V&#39;) inv(S S) inv(V)</span>
+    <span class="c1">#              = V inv (S S) V&#39;</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">s</span><span class="p">[</span><span class="n">s</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">]</span> <span class="o">=</span> <span class="n">tol</span>
+    <span class="n">JTJinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">/</span> <span class="n">s</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">vh</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JTJinv</span></div>
+
+
+<div class="viewcode-block" id="hessian_cov">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.hessian_cov">[docs]</a>
+<span class="k">def</span> <span class="nf">hessian_cov</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-15</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given Hessian H, return the covariance matrix inv(H).</span>
+
+<span class="sd">    We provide some protection against singular matrices by setting</span>
+<span class="sd">    singular values smaller than tolerance *tol* (relative to the largest</span>
+<span class="sd">    singular value) to zero (see np.linalg.pinv for details).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find cov of f at p</span>
+    <span class="c1">#     cov(f,p) = inv(H)</span>
+    <span class="c1"># Use SVD</span>
+    <span class="c1">#     H = U S V&#39;</span>
+    <span class="c1">#     inv(H) = inv(U S V&#39;)</span>
+    <span class="c1">#            = inv(V&#39;) inv(S S) inv(U)</span>
+    <span class="c1">#            = V inv(S S) U&#39;</span>
+    <span class="c1">#     J&#39;J = (U S V&#39;)&#39; (U S V&#39;)</span>
+    <span class="c1">#         = V S&#39; U&#39; U S V&#39;</span>
+    <span class="c1">#         = V S S V&#39;</span>
+    <span class="c1">#     inv(J&#39;J) = inv(V S S V&#39;)</span>
+    <span class="c1">#              = inv(V&#39;) inv(S S) inv(V)</span>
+    <span class="c1">#              = V inv (S S) V&#39;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">hermitian</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="corr">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.corr">[docs]</a>
+<span class="k">def</span> <span class="nf">corr</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert covariance matrix $C$ to correlation matrix $R^2$.</span>
+
+<span class="sd">    Uses $R = D^{-1} C D^{-1}$ where $D$ is the square root of the diagonal</span>
+<span class="sd">    of the covariance matrix, or the standard error of each variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Dinv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">stderr</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Dinv</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Dinv</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="max_correlation">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.max_correlation">[docs]</a>
+<span class="k">def</span> <span class="nf">max_correlation</span><span class="p">(</span><span class="n">Rsq</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the maximum correlation coefficient for any pair of variables</span>
+<span class="sd">    in correlation matrix Rsq.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">Rsq</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="stderr">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.stderr">[docs]</a>
+<span class="k">def</span> <span class="nf">stderr</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return parameter uncertainty from the covariance matrix C.</span>
+
+<span class="sd">    This is just the square root of the diagonal, without any correction</span>
+<span class="sd">    for covariance.</span>
+
+<span class="sd">    If measurement uncertainty is unknown, scale the returned uncertainties</span>
+<span class="sd">    by $\sqrt{\chi^2_N}$, where $\chi^2_N$ is the sum squared residuals</span>
+<span class="sd">    divided by the degrees  of freedom.  This will match the uncertainty on</span>
+<span class="sd">    the parameters to the observed scatter assuming the model is correct and</span>
+<span class="sd">    the fit is optimal.  This will also be appropriate for weighted fits</span>
+<span class="sd">    when the true measurement uncertainty dy_i is known up to a scaling</span>
+<span class="sd">    constant for all y_i.</span>
+
+<span class="sd">    Standard error on scipy.optimize.curve_fit always includes the chisq</span>
+<span class="sd">    correction, whereas scipy.optimize.leastsq never does.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">C</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="demo_hessian">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.demo_hessian">[docs]</a>
+<span class="k">def</span> <span class="nf">demo_hessian</span><span class="p">():</span>
+    <span class="n">rosen</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">105</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">_hessian_forward</span><span class="p">(</span><span class="n">rosen</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;forward difference H&quot;</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">_hessian_central</span><span class="p">(</span><span class="n">rosen</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;central difference H&quot;</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="demo_jacobian">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.demo_jacobian">[docs]</a>
+<span class="k">def</span> <span class="nf">demo_jacobian</span><span class="p">():</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">])</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">])</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">_jacobian_forward</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;forward difference J&quot;</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">_jacobian_central</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;central difference J&quot;</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span></div>
+
+
+<span class="c1"># https://en.wikipedia.org/wiki/Hilbert_matrix</span>
+<span class="c1"># Note: 1-origin indices translated to 0-origin</span>
+<div class="viewcode-block" id="hilbert">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.hilbert">[docs]</a>
+<span class="k">def</span> <span class="nf">hilbert</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate ill-conditioned Hilbert matrix of size n x n&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<span class="c1"># https://en.wikipedia.org/wiki/Hilbert_matrix#Properties</span>
+<span class="c1"># Note: 1-origin indices translated to 0-origin</span>
+<div class="viewcode-block" id="hilbertinv">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.hilbertinv">[docs]</a>
+<span class="k">def</span> <span class="nf">hilbertinv</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analytical inverse for ill-conditioned Hilbert matrix of size n x n&quot;&quot;&quot;</span>
+    <span class="n">Hinv</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">comb</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">comb</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">comb</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Hinv</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">)</span></div>
+
+
+<span class="c1"># From dheerosaur</span>
+<span class="c1"># https://stackoverflow.com/questions/4941753/is-there-a-math-ncr-function-in-python/4941932#4941932</span>
+<div class="viewcode-block" id="comb">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.comb">[docs]</a>
+<span class="k">def</span> <span class="nf">comb</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;n choose r combination function&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">operator</span> <span class="k">as</span> <span class="nn">op</span>
+    <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">numer</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">denom</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numer</span> <span class="o">//</span> <span class="n">denom</span></div>
+
+
+<div class="viewcode-block" id="demo_stderr_hilbert">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.demo_stderr_hilbert">[docs]</a>
+<span class="k">def</span> <span class="nf">demo_stderr_hilbert</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">hilbert</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">hilbertinv</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">stderr</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+    <span class="n">Hp</span><span class="p">,</span> <span class="n">Lp</span> <span class="o">=</span> <span class="n">perturbed_hessian</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">Cp</span> <span class="o">=</span> <span class="n">chol_cov</span><span class="p">(</span><span class="n">Lp</span><span class="p">)</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="n">chol_stderr</span><span class="p">(</span><span class="n">Lp</span><span class="p">)</span>
+    <span class="n">Cdirect</span> <span class="o">=</span> <span class="n">hessian_cov</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">sdirect</span> <span class="o">=</span> <span class="n">stderr</span><span class="p">(</span><span class="n">Cdirect</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;s &quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sp&quot;</span><span class="p">,</span> <span class="n">sp</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sd&quot;</span><span class="p">,</span> <span class="n">sdirect</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">corr</span><span class="p">(</span><span class="n">C</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="demo_stderr_perturbed">
+<a class="viewcode-back" href="../../bumps.lsqerror.html#bumps.lsqerror.demo_stderr_perturbed">[docs]</a>
+<span class="k">def</span> <span class="nf">demo_stderr_perturbed</span><span class="p">():</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+    <span class="c1">#D = np.exp(10*np.random.rand(n)**2)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">Hp</span><span class="p">,</span> <span class="n">Lp</span> <span class="o">=</span> <span class="n">perturbed_hessian</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">chol_cov</span><span class="p">(</span><span class="n">Lp</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">chol_stderr</span><span class="p">(</span><span class="n">Lp</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">inv</span>
+    <span class="n">Ldirect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">Cdirect</span> <span class="o">=</span> <span class="n">inv</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">Cp</span> <span class="o">=</span> <span class="n">inv</span><span class="p">(</span><span class="n">Hp</span><span class="p">)</span>
+
+    <span class="n">sdirect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Cdirect</span><span class="p">))</span>
+    <span class="n">sp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Cp</span><span class="p">))</span>
+    <span class="n">sdirect_chol</span> <span class="o">=</span> <span class="n">chol_stderr</span><span class="p">(</span><span class="n">Ldirect</span><span class="p">)</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">L_original</span><span class="o">=</span><span class="n">L</span><span class="p">,</span>
+        <span class="n">L_direct</span><span class="o">=</span><span class="n">Ldirect</span><span class="p">,</span>
+        <span class="n">L_perturbed</span><span class="o">=</span><span class="n">Lp</span><span class="p">,</span>
+        <span class="c1">#H=H,</span>
+        <span class="c1">#H_perturbed=Hp,</span>
+        <span class="c1">#C_direct=Cdirect,</span>
+        <span class="c1">#C_from_Hp=Cp,</span>
+        <span class="c1">#C_from_Lp=C,</span>
+    <span class="p">)</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%20s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="s1">&#39;perturbation&#39;</span><span class="p">),</span> <span class="n">hp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%20s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s1">&#39; diag&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="c1">#print(&quot;eigc&quot;, list(sorted(np.linalg.eigvals(c))))</span>
+        <span class="c1">#print(&quot;eigcp&quot;, list(sorted(np.linalg.eigvals(cp))))</span>
+        <span class="c1">#print(&quot;eigh&quot;, list(sorted(1/np.linalg.eigvals(h))))</span>
+        <span class="c1">#print(&quot;eighp&quot;, list(sorted(1/np.linalg.eigvals(hp))))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;h cond     &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">h</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rel err dc &quot;</span><span class="p">,</span> <span class="nb">abs</span><span class="p">((</span><span class="n">c</span> <span class="o">-</span> <span class="n">cdirect</span><span class="p">)</span><span class="o">/</span><span class="n">cdirect</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;de         &quot;</span><span class="p">,</span> <span class="n">sp</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;s direct   &quot;</span><span class="p">,</span> <span class="n">sdirect</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;s chol     &quot;</span><span class="p">,</span> <span class="n">sdirect_chol</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;s perturbed&quot;</span><span class="p">,</span> <span class="n">sp</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;s          &quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rel err ds &quot;</span><span class="p">,</span> <span class="nb">abs</span><span class="p">((</span><span class="n">s</span> <span class="o">-</span> <span class="n">sdirect</span><span class="p">)</span><span class="o">/</span><span class="n">sdirect</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;unperturbed ds&quot;</span><span class="p">,</span> <span class="nb">abs</span><span class="p">((</span><span class="n">sdirect_chol</span> <span class="o">-</span> <span class="n">sdirect</span><span class="p">)</span><span class="o">/</span><span class="n">sdirect</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1">#demo_hessian()</span>
+    <span class="c1">#demo_jacobian()</span>
+    <span class="c1">#demo_stderr_perturbed()</span>
+    <span class="n">demo_stderr_hilbert</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.lsqerror</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

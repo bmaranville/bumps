@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.outliers &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.outliers</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.outliers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Chain outlier tests.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;identify_outliers&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">argmin</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">array</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sort</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">t</span> <span class="k">as</span> <span class="n">student_t</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">scoreatpercentile</span>
+
+<span class="kn">from</span> <span class="nn">.mahal</span> <span class="kn">import</span> <span class="n">mahalanobis</span>
+<span class="kn">from</span> <span class="nn">.acr</span> <span class="kn">import</span> <span class="n">ACR</span>
+
+<span class="n">tinv</span> <span class="o">=</span> <span class="n">student_t</span><span class="o">.</span><span class="n">ppf</span>
+
+<span class="c1"># Hack to adjust the aggressiveness of the interquartile range test.</span>
+<span class="c1"># TODO: Document/remove BUMPS_INTERQUARTILES or replace with command option.</span>
+<span class="n">BUMPS_INTERQUARTILES</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BUMPS_INTERQUARTILES&quot;</span><span class="p">,</span> <span class="s2">&quot;2.0&quot;</span><span class="p">))</span>
+
+<span class="c1"># CRUFT: scoreatpercentile not accepting array arguments in older scipy</span>
+<span class="k">def</span> <span class="nf">prctile</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Q</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">sort</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">scoreatpercentile</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Qi</span><span class="p">)</span> <span class="k">for</span> <span class="n">Qi</span> <span class="ow">in</span> <span class="n">Q</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="identify_outliers">
+<a class="viewcode-back" href="../../../dream/outliers.html#bumps.dream.outliers.identify_outliers">[docs]</a>
+<span class="k">def</span> <span class="nf">identify_outliers</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">llf</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine which chains have converged on a local maximum much lower than</span>
+<span class="sd">    the maximum likelihood.</span>
+
+<span class="sd">    *test* is the name of the test to use (one of IQR, Grubbs, Mahal or none).</span>
+<span class="sd">    IQR rejects any chains with mean log likelihood more than than twice the</span>
+<span class="sd">    inter-quartile range below the value of the 25% quartile.  The Grubbs</span>
+<span class="sd">    method uses a t-test to determine which chains have a mean log likelihood</span>
+<span class="sd">    extremely far below the mean across all the chains.  The Mahal test looks</span>
+<span class="sd">    at the head of the chain with the worst mean log likelihood and marks</span>
+<span class="sd">    it as an outlier if it is far from the centroid of the population.  This</span>
+<span class="sd">    assumes that the posterior is approximately gaussian, which is not true</span>
+<span class="sd">    in general.</span>
+
+<span class="sd">    *llf* is a set of log likelihood values for all chains, which is</span>
+<span class="sd">    an array of shape (chain len, num chains)</span>
+
+<span class="sd">    *x* is the current population with one point for each each, which is</span>
+<span class="sd">    an array of shape (num chains, num vars).  This is only used for the</span>
+<span class="sd">    Mahal test.</span>
+
+<span class="sd">    Returns an integer array of outlier indices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check whether any of these active chains are outlier chains</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s1">&#39;iqr&#39;</span><span class="p">:</span>
+        <span class="c1"># Determine the mean log density of the active chains</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">llf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Derive the upper and lower quartile of the chain averages</span>
+        <span class="n">q1</span><span class="p">,</span> <span class="n">q3</span> <span class="o">=</span> <span class="n">prctile</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">[</span><span class="mf">25.</span><span class="p">,</span> <span class="mf">75.</span><span class="p">])</span>
+        <span class="c1"># Derive the Inter Quartile Range (IQR)</span>
+        <span class="n">iqr</span> <span class="o">=</span> <span class="n">q3</span> <span class="o">-</span> <span class="n">q1</span>
+        <span class="c1"># See whether there are any outlier chains</span>
+        <span class="c1"># 2017-10-06 [PAK] test against chain max rather than chain mean.</span>
+        <span class="c1"># Chains wandering inside the active region should not be punished.</span>
+        <span class="c1"># Since removing outliers will delay convergence tests until the</span>
+        <span class="c1"># outlier removal effects have disappeared (i.e., an entire frame),</span>
+        <span class="c1"># a less aggressive test will speed completion.</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="n">llf</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">outliers</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">vmax</span> <span class="o">&lt;</span> <span class="n">q1</span> <span class="o">-</span> <span class="n">BUMPS_INTERQUARTILES</span><span class="o">*</span><span class="n">iqr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">test</span> <span class="o">==</span> <span class="s1">&#39;grubbs&#39;</span><span class="p">:</span>
+        <span class="c1"># Determine the mean log density of the active chains</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">llf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Compute zscore for chain averages</span>
+        <span class="n">zscore</span> <span class="o">=</span> <span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Determine t-value of one-sided interval</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">tinv</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.01</span><span class="o">/</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># 95% interval</span>
+        <span class="c1"># Determine the critical value</span>
+        <span class="n">gcrit</span> <span class="o">=</span> <span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">t2</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span> <span class="o">+</span> <span class="n">t2</span><span class="p">))</span>
+        <span class="c1"># Then check against this</span>
+        <span class="n">outliers</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">zscore</span> <span class="o">&gt;</span> <span class="n">gcrit</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">test</span> <span class="o">==</span> <span class="s1">&#39;mahal&#39;</span><span class="p">:</span>
+        <span class="c1"># Determine the mean log density of the active chains</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">llf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Find which chain has minimum log_density</span>
+        <span class="n">minidx</span> <span class="o">=</span> <span class="n">argmin</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="c1"># Use the Mahalanobis distance to find outliers in the population</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.01</span>
+        <span class="n">npop</span><span class="p">,</span> <span class="n">nvar</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">gcrit</span> <span class="o">=</span> <span class="n">ACR</span><span class="p">(</span><span class="n">nvar</span><span class="p">,</span> <span class="n">npop</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="c1">#print &quot;alpha&quot;, alpha, &quot;nvar&quot;, nvar, &quot;npop&quot;, npop, &quot;gcrit&quot;, gcrit</span>
+        <span class="c1"># check the Mahalanobis distance of the current point to other chains</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">mahalanobis</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">minidx</span><span class="p">,</span> <span class="p">:],</span> <span class="n">x</span><span class="p">[</span><span class="n">minidx</span> <span class="o">!=</span> <span class="n">arange</span><span class="p">(</span><span class="n">npop</span><span class="p">),</span> <span class="p">:])</span>
+        <span class="c1">#print &quot;d1&quot;, d1, &quot;minidx&quot;, minidx</span>
+        <span class="c1"># and see if it is an outlier</span>
+        <span class="n">outliers</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">minidx</span><span class="p">])</span> <span class="k">if</span> <span class="n">d1</span> <span class="o">&gt;</span> <span class="n">gcrit</span> <span class="k">else</span> <span class="n">array</span><span class="p">([])</span>
+
+    <span class="k">elif</span> <span class="n">test</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span><span class="p">:</span>
+        <span class="n">outliers</span> <span class="o">=</span> <span class="n">array</span><span class="p">([])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown outlier test &quot;</span><span class="o">+</span><span class="n">test</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">outliers</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">test_outliers</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">.walk</span> <span class="kn">import</span> <span class="n">walk</span>
+    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">multivariate_normal</span><span class="p">,</span> <span class="n">seed</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">vstack</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">eye</span>
+    <span class="n">seed</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Remove uncertainty on tests</span>
+    <span class="c1"># Set a number of good and bad chains</span>
+    <span class="n">ngood</span><span class="p">,</span> <span class="n">nbad</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">2</span>
+
+    <span class="c1"># Make chains mean-reverting chains with widely separated values for</span>
+    <span class="c1"># bad and good; put bad chains first.</span>
+    <span class="n">chains</span> <span class="o">=</span> <span class="n">walk</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">nbad</span><span class="o">+</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">*</span><span class="n">ngood</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+    <span class="c1"># Check IQR and Grubbs</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">identify_outliers</span><span class="p">(</span><span class="s1">&#39;IQR&#39;</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">arange</span><span class="p">(</span><span class="n">nbad</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">identify_outliers</span><span class="p">(</span><span class="s1">&#39;Grubbs&#39;</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">arange</span><span class="p">(</span><span class="n">nbad</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Put points for &#39;bad&#39; chains at [-1,...,-1] and &#39;good&#39; chains at [1,...,1]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">vstack</span><span class="p">((</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="o">-</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">nbad</span><span class="p">),</span>
+                <span class="n">multivariate_normal</span><span class="p">(</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">ngood</span><span class="p">)))</span>
+    <span class="k">assert</span> <span class="n">identify_outliers</span><span class="p">(</span><span class="s1">&#39;Mahal&#39;</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbad</span><span class="p">)</span>
+
+    <span class="c1"># Put points for _all_ chains at [1,...,1] and check that mahal return []</span>
+    <span class="n">xsame</span> <span class="o">=</span> <span class="n">multivariate_normal</span><span class="p">(</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mf">0.2</span><span class="o">*</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">ngood</span><span class="o">+</span><span class="n">nbad</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">identify_outliers</span><span class="p">(</span><span class="s1">&#39;Mahal&#39;</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">xsame</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># Check again with large variance</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">vstack</span><span class="p">((</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">nbad</span><span class="p">),</span>
+                <span class="n">multivariate_normal</span><span class="p">(</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mi">10</span><span class="o">*</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">ngood</span><span class="p">)))</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">identify_outliers</span><span class="p">(</span><span class="s1">&#39;Mahal&#39;</span><span class="p">,</span> <span class="n">chains</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># =====================================================================</span>
+    <span class="c1"># Test replacement</span>
+
+    <span class="c1"># Construct a state object</span>
+    <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+    <span class="kn">from</span> <span class="nn">.state</span> <span class="kn">import</span> <span class="n">MCMCDraw</span>
+    <span class="n">ngen</span><span class="p">,</span> <span class="n">npop</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">npop</span><span class="p">,</span> <span class="n">nvar</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">MCMCDraw</span><span class="p">(</span><span class="n">Ngen</span><span class="o">=</span><span class="n">ngen</span><span class="p">,</span> <span class="n">Nthin</span><span class="o">=</span><span class="n">ngen</span><span class="p">,</span> <span class="n">Nupdate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                     <span class="n">Nvar</span><span class="o">=</span><span class="n">nvar</span><span class="p">,</span> <span class="n">Npop</span><span class="o">=</span><span class="n">npop</span><span class="p">,</span> <span class="n">Ncr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">thinning</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Fill it with chains</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ngen</span><span class="p">):</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">_generation</span><span class="p">(</span><span class="n">new_draws</span><span class="o">=</span><span class="n">npop</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="o">=</span><span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">accept</span><span class="o">=</span><span class="n">npop</span><span class="p">)</span>
+
+    <span class="c1"># Make a copy of the current state so we can check it was updated</span>
+    <span class="n">nx</span><span class="p">,</span> <span class="n">nlogp</span> <span class="o">=</span> <span class="n">x</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">chains</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">0</span>
+    <span class="c1"># Remove outliers</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">remove_outliers</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">nlogp</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="s1">&#39;IQR&#39;</span><span class="p">)</span>
+    <span class="c1"># Check that the outliers were removed</span>
+    <span class="n">outliers</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">outliers</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">outliers</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">nbad</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbad</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">nlogp</span><span class="p">[</span><span class="n">outliers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">==</span> <span class="n">chains</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">outliers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+        <span class="k">assert</span> <span class="n">nx</span><span class="p">[</span><span class="n">outliers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">x</span><span class="p">[</span><span class="n">outliers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test_outliers</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.outliers</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

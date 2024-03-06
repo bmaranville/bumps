@@ -1,0 +1,7 @@
+bumps.dream.crossover module
+============================
+
+.. automodule:: bumps.dream.crossover
+   :members:
+   :undoc-members:
+   :show-inheritance:

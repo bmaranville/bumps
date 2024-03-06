@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.mystic.solver module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.solver module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.mystic.solver">
+<span id="bumps-mystic-solver-module"></span><h1>bumps.mystic.solver module<a class="headerlink" href="#module-bumps.mystic.solver" title="Link to this heading">¶</a></h1>
+<p>Generic minimizers</p>
+<p>The general optimization algorithm is as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">Minimizer</span><span class="p">(</span><span class="n">problem</span><span class="o">=</span><span class="n">Problem</span><span class="p">(),</span>
+             <span class="n">strategy</span><span class="o">=</span><span class="n">Strategy</span><span class="p">(),</span>
+             <span class="n">monitors</span><span class="o">=</span><span class="p">[],</span>
+             <span class="n">success</span><span class="o">=</span><span class="n">Df</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Dx</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">),</span>
+             <span class="n">failure</span><span class="o">=</span><span class="n">Calls</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span> <span class="o">|</span> <span class="n">Steps</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+<span class="n">population</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">population</span><span class="p">))</span>
+    <span class="n">fit</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fit</span><span class="o">.</span><span class="n">isdone</span><span class="p">():</span> <span class="k">break</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">fit</span><span class="o">.</span><span class="n">successful</span><span class="p">:</span>
+    <span class="nb">print</span> <span class="s2">&quot;Converged&quot;</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span> <span class="s2">&quot;Stopped with&quot;</span><span class="p">,</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">failure_cond</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Variations are possible, such as the multistep process where the
+program first generates an initial population, then each time it
+is run generates an updated population based on the results of
+submitting the previous population to a batch queue.</p>
+<section id="history-traces">
+<h2>History traces<a class="headerlink" href="#history-traces" title="Link to this heading">¶</a></h2>
+<p>Stopping conditions use history traces to evaluate whether the program
+should continue.  When adding new stopping conditions, the programmer
+must define a config_history method to indicate which values are needed.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">config_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+    <span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When checking convergence, the programmer must still check that enough
+history is available for the test. For example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span> <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">norm</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">0.001</span>
+</pre></div>
+</div>
+<p>The optimizer will make sure that config_history is called for each
+condition before the fit starts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">success</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span><span class="o">|</span><span class="n">failure</span><span class="o">.</span><span class="n">primitives</span><span class="p">():</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">config_history</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Each optimizer can control which values it wants to monitor.  For
+consistency and ease of use, monitor names should be chosen from
+the standard names below.  As new optimizers are created, the
+list of standard names may expand.</p>
+<p>Fixed properties of history:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">ndim</span><span class="o">*</span> <span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+     <span class="n">problem</span> <span class="n">dimension</span>
+<span class="o">*</span><span class="n">lower_bound</span><span class="o">*</span><span class="p">,</span> <span class="o">*</span><span class="n">upper_bound</span><span class="o">*</span> <span class="p">([</span><span class="nb">float</span><span class="p">])</span>
+     <span class="n">bounds</span> <span class="n">constraints</span>
+</pre></div>
+</div>
+<p>Accumulated properties:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">step</span><span class="o">*</span> <span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+     <span class="n">iteration</span> <span class="n">number</span>
+<span class="o">*</span><span class="n">calls</span><span class="o">*</span> <span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">cumulative</span> <span class="n">number</span> <span class="n">of</span> <span class="n">function</span> <span class="n">evaluations</span>
+<span class="o">*</span><span class="n">time</span><span class="o">*</span> <span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+    <span class="n">cumulative</span> <span class="n">wall</span> <span class="n">clock</span> <span class="n">time</span>
+<span class="o">*</span><span class="n">cpu_time</span><span class="o">*</span> <span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+    <span class="n">cumulative</span> <span class="n">CPU</span> <span class="n">time</span>
+<span class="o">*</span><span class="n">value</span><span class="o">*</span> <span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">best</span> <span class="n">function</span> <span class="n">value</span>
+<span class="o">*</span><span class="n">point</span><span class="o">*</span> <span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="n">parameter</span> <span class="n">values</span> <span class="k">for</span> <span class="n">the</span> <span class="n">best</span> <span class="n">function</span> <span class="n">value</span>
+<span class="o">*</span><span class="n">gradient</span><span class="o">*</span> <span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">f</span><span class="p">:</span> <span class="n">gradient</span> <span class="n">at</span> <span class="n">best</span> <span class="n">point</span> <span class="p">(</span><span class="k">if</span> <span class="n">available</span><span class="p">)</span>
+<span class="o">*</span><span class="n">hessian</span><span class="o">*</span> <span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="k">del</span><span class="o">**</span><span class="mi">2</span> <span class="n">F</span><span class="p">:</span> <span class="n">Hessian</span> <span class="n">at</span> <span class="n">best</span> <span class="n">point</span> <span class="p">(</span><span class="k">if</span> <span class="n">available</span><span class="p">)</span>
+<span class="o">*</span><span class="n">population_values</span><span class="o">*</span> <span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="n">function</span> <span class="n">values</span> <span class="n">of</span> <span class="n">the</span> <span class="n">current</span> <span class="n">population</span> <span class="p">(</span><span class="k">if</span> <span class="n">available</span><span class="p">)</span>
+<span class="o">*</span><span class="n">population_points</span><span class="o">*</span> <span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="n">parameter</span> <span class="n">values</span> <span class="k">for</span> <span class="n">the</span> <span class="n">current</span> <span class="n">population</span> <span class="p">(</span><span class="k">if</span> <span class="n">available</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.solver.</span></span><span class="sig-name descname"><span class="pre">Minimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Perform a minimization.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.isdone">
+<span class="sig-name descname"><span class="pre">isdone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.isdone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.isdone" title="Link to this definition">¶</a></dt>
+<dd><p>Check if the fit has converged according to the criteria proposed
+by the user and/or the optimizer.</p>
+<p>Returns True if either the fit converged or is forced to stop for
+some other reason.</p>
+<p>Sets the following attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">successful</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span><span class="p">)</span>
+    <span class="kc">True</span> <span class="k">if</span> <span class="n">the</span> <span class="n">fit</span> <span class="n">converged</span>
+<span class="o">*</span><span class="n">success_cond</span><span class="o">*</span> <span class="p">([</span><span class="n">Condition</span><span class="p">])</span>
+    <span class="n">Reasons</span> <span class="k">for</span> <span class="n">success</span> <span class="ow">or</span> <span class="n">lack</span> <span class="n">of</span> <span class="n">success</span>
+<span class="o">*</span><span class="n">failed</span><span class="o">*</span> <span class="p">(</span><span class="n">boolean</span><span class="p">)</span>
+    <span class="kc">True</span> <span class="k">if</span> <span class="n">the</span> <span class="n">fit</span> <span class="n">should</span> <span class="n">stop</span>
+<span class="o">*</span><span class="n">failure_cond</span><span class="o">*</span> <span class="p">([</span><span class="n">Condition</span><span class="p">])</span>
+    <span class="n">Reasons</span> <span class="k">for</span> <span class="n">failure</span> <span class="ow">or</span> <span class="n">lack</span> <span class="n">of</span> <span class="n">failure</span>
+</pre></div>
+</div>
+<p>Note that success and failure can occur at the same time if
+for example the convergence criteria are met but the resource
+limits were exceeded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.minimize">
+<span class="sig-name descname"><span class="pre">minimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapper=&lt;function</span> <span class="pre">default_mapper&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.minimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.minimize" title="Link to this definition">¶</a></dt>
+<dd><p>Run the solver to completion, returning the best point.</p>
+<p>Note: only used stand-alone, not within fit service</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.reset" title="Link to this definition">¶</a></dt>
+<dd><p>Clear the solver history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.start" title="Link to this definition">¶</a></dt>
+<dd><p>Start the optimization but generating an initial population.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.step" title="Link to this definition">¶</a></dt>
+<dd><p>Generate the next population to evaluate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.termination_condition">
+<span class="sig-name descname"><span class="pre">termination_condition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.termination_condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.termination_condition" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Minimizer.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Minimizer.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Minimizer.update" title="Link to this definition">¶</a></dt>
+<dd><p>Collect statistics on time and resources</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Strategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.solver.</span></span><span class="sig-name descname"><span class="pre">Strategy</span></span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Strategy" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Optimization strategy to use.</p>
+<p>The doc string for the strategy will be used in the construction of
+the doc strings for the simple optimizer interfaces, with a description
+of the standard optimizer options at the end.   The following template
+works well:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Name</span> <span class="n">of</span> <span class="n">optimization</span> <span class="n">strategy</span>
+
+<span class="n">Brief</span> <span class="n">description</span> <span class="n">of</span> <span class="n">the</span> <span class="n">strategy</span>
+
+<span class="n">Optimizer</span> <span class="n">parameters</span><span class="p">::</span>
+
+    <span class="o">*</span><span class="n">argument</span><span class="o">*</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">description</span> <span class="n">of</span> <span class="n">the</span> <span class="n">argument</span>
+
+<span class="n">Additional</span> <span class="n">details</span> <span class="n">about</span> <span class="n">the</span> <span class="n">solver</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The __init__ arguments for the strategy will be passed in through
+the simple optimizer interface.  Be sure to make them all keyword
+arguments.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Strategy.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Strategy.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Strategy.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Specify which information needs to be preserved in history.</p>
+<p>For example, parallel tempering needs to save its level values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">history</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">levels</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Strategy.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Strategy.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Strategy.start" title="Link to this definition">¶</a></dt>
+<dd><p>Generate the initial population.</p>
+<p>Returns a matrix <em>P</em> of points to be evaluated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Strategy.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Strategy.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Strategy.step" title="Link to this definition">¶</a></dt>
+<dd><p>Generate the next population.</p>
+<p>Returns a matrix <em>P</em> of points to be evaluated.</p>
+<p><em>history</em> contains the previous history of the computation,
+including any fields placed by <a class="reference internal" href="#bumps.mystic.solver.Strategy.update" title="bumps.mystic.solver.Strategy.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.solver.Strategy.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#Strategy.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.Strategy.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update history with optimizer specific state information.</p>
+<p>Note: standard history items (step, calls, value, point,
+population_values, population_points, time, cpu_time) are
+already recorded.  Additional items should be recorded
+directly in the trace.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">history</span><span class="o">.</span><span class="n">levels</span><span class="o">.</span><span class="n">put</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.solver.cpu_time">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.solver.</span></span><span class="sig-name descname"><span class="pre">cpu_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#cpu_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.cpu_time" title="Link to this definition">¶</a></dt>
+<dd><p>Current cpu time for this process</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.solver.default_mapper">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.solver.</span></span><span class="sig-name descname"><span class="pre">default_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/solver.html#default_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.solver.default_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.mystic.solver module</a><ul>
+<li><a class="reference internal" href="#history-traces">History traces</a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer"><code class="docutils literal notranslate"><span class="pre">Minimizer</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.isdone"><code class="docutils literal notranslate"><span class="pre">Minimizer.isdone()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.minimize"><code class="docutils literal notranslate"><span class="pre">Minimizer.minimize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.reset"><code class="docutils literal notranslate"><span class="pre">Minimizer.reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.start"><code class="docutils literal notranslate"><span class="pre">Minimizer.start()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.step"><code class="docutils literal notranslate"><span class="pre">Minimizer.step()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.termination_condition"><code class="docutils literal notranslate"><span class="pre">Minimizer.termination_condition()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Minimizer.update"><code class="docutils literal notranslate"><span class="pre">Minimizer.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Strategy"><code class="docutils literal notranslate"><span class="pre">Strategy</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.solver.Strategy.config_history"><code class="docutils literal notranslate"><span class="pre">Strategy.config_history()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Strategy.start"><code class="docutils literal notranslate"><span class="pre">Strategy.start()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Strategy.step"><code class="docutils literal notranslate"><span class="pre">Strategy.step()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.Strategy.update"><code class="docutils literal notranslate"><span class="pre">Strategy.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.solver.cpu_time"><code class="docutils literal notranslate"><span class="pre">cpu_time()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.solver.default_mapper"><code class="docutils literal notranslate"><span class="pre">default_mapper()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.mystic.solver.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.solver module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

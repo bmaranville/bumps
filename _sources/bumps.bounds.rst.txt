@@ -1,0 +1,7 @@
+bumps.bounds module
+===================
+
+.. automodule:: bumps.bounds
+   :members:
+   :undoc-members:
+   :show-inheritance:

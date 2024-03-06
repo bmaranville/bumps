@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>errplot - Plot sample profile uncertainty &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="fitproblem - Interface between models and fitters" href="fitproblem.html" />
+    <link rel="prev" title="data - Data handling utilities" href="data.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitproblem.html" title="fitproblem - Interface between models and fitters"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="data - Data handling utilities"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">errplot - Plot sample profile uncertainty</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="errplot-plot-sample-profile-uncertainty">
+<h1>errplot - Plot sample profile uncertainty<a class="headerlink" href="#errplot-plot-sample-profile-uncertainty" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.errplot.html#bumps.errplot.reload_errors" title="bumps.errplot.reload_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reload_errors</span></code></a></p></td>
+<td><p>Reload the MCMC state and compute the model confidence intervals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors_from_state" title="bumps.errplot.calc_errors_from_state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_errors_from_state</span></code></a></p></td>
+<td><p>Compute confidence regions for a problem from the Align the sample profiles and compute the residual difference from the measured data for a set of points returned from DREAM.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors" title="bumps.errplot.calc_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_errors</span></code></a></p></td>
+<td><p>Align the sample profiles and compute the residual difference from the measured data for a set of points.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.errplot.html#bumps.errplot.show_errors" title="bumps.errplot.show_errors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_errors</span></code></a></p></td>
+<td><p>Display the confidence regions returned by <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors" title="bumps.errplot.calc_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_errors()</span></code></a>.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.errplot">Estimate model uncertainty from random sample.</p>
+<p>MCMC uncertainty analysis gives the uncertainty on the model parameters
+rather than the model itself.  For example, when fitting a line to a set
+of data, the uncertainty on the slope and the intercept does not directly
+give you the uncertainty in the expected value of <em>y</em> for a given value
+of <em>x</em>.</p>
+<p>The routines in bumps.errplot allow you to generate confidence intervals
+on  the model using a random sample of MCMC parameters.  After calculating
+the model <em>y</em> values for each sample, one can generate 68% and 95% contours
+for a set of sampling points <em>x</em>.  This can apply even to models which
+are not directly measured.  For example, in scattering inverse problems
+the scattered intensity is the value measured, but the fitting parameters
+describe the real space model that is being probed.  It is the uncertainty
+in the real space model that is of primary interest.</p>
+<p>Since bumps knows only the probability of seeing the measured value given
+the input parameters, it is up to the model itself to calculate and display
+the confidence intervals on the model and the expected values for the data
+points.  This is done using the <a class="reference internal" href="../bumps.plugin.html#module-bumps.plugin" title="bumps.plugin"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.plugin</span></code></a> architecture, so
+application writers can provide the appropriate functions for their data
+types.  Eventually this capability will move to the model definition so
+that different types of models can be processed in the same fit.</p>
+<p>For a completed MCMC run, four steps are required:</p>
+<ol class="arabic simple">
+<li><p>reload the fitting problem and the MCMC state</p></li>
+<li><p>select a set of sample points</p></li>
+<li><p>evaluate model confidence intervals from sample points</p></li>
+<li><p>show model confidence intervals</p></li>
+</ol>
+<p><a class="reference internal" href="../bumps.errplot.html#bumps.errplot.reload_errors" title="bumps.errplot.reload_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">reload_errors()</span></code></a> performs steps 1, 2 and 3, returning <em>errs</em>.
+If the fitting problem and the MCMC state are already loaded, then use
+<a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors_from_state" title="bumps.errplot.calc_errors_from_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_errors_from_state()</span></code></a> to perform steps 2 and 3, returning <em>errs</em>.
+If alternative sampling is desired, then use <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors" title="bumps.errplot.calc_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_errors()</span></code></a> on a
+given set of points to perform step 3, returning <em>errs</em>.  Once <em>errs</em> has
+been calculated and returned by one of these methods, call
+<a class="reference internal" href="../bumps.errplot.html#bumps.errplot.show_errors" title="bumps.errplot.show_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">show_errors()</span></code></a> to perform step 4.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.errplot.calc_errors">
+<span class="sig-prename descclassname"><span class="pre">bumps.errplot.</span></span><span class="sig-name descname"><span class="pre">calc_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/errplot.html#calc_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.errplot.calc_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Align the sample profiles and compute the residual difference from the
+measured data for a set of points.</p>
+<p>The return value is arbitrary.  It is passed to the <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.show_errors" title="bumps.errplot.show_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">show_errors()</span></code></a>
+plugin for the application.
+Returns <em>errs</em> for <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.show_errors" title="bumps.errplot.show_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">show_errors()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.errplot.calc_errors_from_state">
+<span class="sig-prename descclassname"><span class="pre">bumps.errplot.</span></span><span class="sig-name descname"><span class="pre">calc_errors_from_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nshown</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/errplot.html#calc_errors_from_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.errplot.calc_errors_from_state" title="Link to this definition">¶</a></dt>
+<dd><p>Compute confidence regions for a problem from the
+Align the sample profiles and compute the residual difference from
+the measured data for a set of points returned from DREAM.</p>
+<p><em>nshown</em> is the number of samples to include from the state.</p>
+<p><em>random</em> is True if the samples are randomly selected, or False if
+the most recent samples should be used.  Use random if you have
+poor mixing (i.e., the parameters tend to stay fixed from generation
+to generation), but not random if your burn-in was too short, and
+you want to select from the end.</p>
+<p>Returns <em>errs</em> for <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.show_errors" title="bumps.errplot.show_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">show_errors()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.errplot.reload_errors">
+<span class="sig-prename descclassname"><span class="pre">bumps.errplot.</span></span><span class="sig-name descname"><span class="pre">reload_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nshown</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/errplot.html#reload_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.errplot.reload_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Reload the MCMC state and compute the model confidence intervals.</p>
+<p>The loaded error data is a sample from the fit space according to the
+fit parameter uncertainty.  This is a subset of the samples returned
+by the DREAM MCMC sampling process.</p>
+<p><em>model</em> is the name of the model python file</p>
+<p><em>store</em> is the name of the store directory containing the dream results</p>
+<p><em>nshown</em> and <em>random</em> are as for <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors_from_state" title="bumps.errplot.calc_errors_from_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_errors_from_state()</span></code></a>.</p>
+<p>Returns <em>errs</em> for <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.show_errors" title="bumps.errplot.show_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">show_errors()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.errplot.show_errors">
+<span class="sig-prename descclassname"><span class="pre">bumps.errplot.</span></span><span class="sig-name descname"><span class="pre">show_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/errplot.html#show_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.errplot.show_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Display the confidence regions returned by <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors" title="bumps.errplot.calc_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_errors()</span></code></a>.</p>
+<p>The content of <em>errs</em> depends on the active plugin.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">errplot - Plot sample profile uncertainty</a><ul>
+<li><a class="reference internal" href="#bumps.errplot.calc_errors"><code class="docutils literal notranslate"><span class="pre">calc_errors()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.errplot.calc_errors_from_state"><code class="docutils literal notranslate"><span class="pre">calc_errors_from_state()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.errplot.reload_errors"><code class="docutils literal notranslate"><span class="pre">reload_errors()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.errplot.show_errors"><code class="docutils literal notranslate"><span class="pre">show_errors()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="data.html"
+                          title="previous chapter">data - Data handling utilities</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="fitproblem.html"
+                          title="next chapter">fitproblem - Interface between models and fitters</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/errplot.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitproblem.html" title="fitproblem - Interface between models and fitters"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="data - Data handling utilities"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">errplot - Plot sample profile uncertainty</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

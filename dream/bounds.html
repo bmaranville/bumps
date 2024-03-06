@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bounds - Bounds handling &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="convergence - Convergence tests" href="convergence.html" />
+    <link rel="prev" title="acr - A C Rencher normal outlier test" href="acr.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="convergence.html" title="convergence - Convergence tests"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="acr.html" title="acr - A C Rencher normal outlier test"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bounds - Bounds handling</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="bounds-bounds-handling">
+<h1>bounds - Bounds handling<a class="headerlink" href="#bounds-bounds-handling" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.bounds.make_bounds_handler" title="bumps.dream.bounds.make_bounds_handler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_bounds_handler</span></code></a></p></td>
+<td><p>Return a bounds object which can update the bounds.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bounds</span></code></a></p></td>
+<td><p>Base class for all times of bounds objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.bounds.ReflectBounds" title="bumps.dream.bounds.ReflectBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReflectBounds</span></code></a></p></td>
+<td><p>Reflect parameter values into bounded region</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.bounds.ClipBounds" title="bumps.dream.bounds.ClipBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClipBounds</span></code></a></p></td>
+<td><p>Clip values to bounded region</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.bounds.FoldBounds" title="bumps.dream.bounds.FoldBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldBounds</span></code></a></p></td>
+<td><p>Wrap values into the bounded region</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.bounds.RandomBounds" title="bumps.dream.bounds.RandomBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RandomBounds</span></code></a></p></td>
+<td><p>Randomize values into the bounded region</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.bounds.IgnoreBounds" title="bumps.dream.bounds.IgnoreBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IgnoreBounds</span></code></a></p></td>
+<td><p>Leave values outside the bounded region</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.bounds">Bounds handling.</p>
+<p>Use bounds(low, high, style) to create a bounds handling object.  This
+function operates on a point x, transforming it so that all dimensions
+are within the bounds.  Options are available, including reflecting,
+wrapping, clipping or randomizing the point, or ignoring the bounds.</p>
+<p>The returned bounds object should have an apply(x) method which
+transforms the point <em>x</em>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.bounds.Bounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">Bounds</span></span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#Bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.Bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for all times of bounds objects.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.bounds.Bounds.apply">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#Bounds.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.Bounds.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Force pop (population) values within bounds</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.Bounds.c_interface">
+<span class="sig-name descname"><span class="pre">c_interface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.Bounds.c_interface" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.Bounds.high">
+<span class="sig-name descname"><span class="pre">high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.Bounds.high" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.Bounds.low">
+<span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.Bounds.low" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ClipBounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">ClipBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#ClipBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.ClipBounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Clip values to bounded region</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ClipBounds.apply">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#ClipBounds.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.ClipBounds.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Force pop (population) values within bounds</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ClipBounds.c_interface">
+<span class="sig-name descname"><span class="pre">c_interface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.ClipBounds.c_interface" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ClipBounds.high">
+<span class="sig-name descname"><span class="pre">high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.ClipBounds.high" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ClipBounds.low">
+<span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.ClipBounds.low" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.bounds.FoldBounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">FoldBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#FoldBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.FoldBounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Wrap values into the bounded region</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.bounds.FoldBounds.apply">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#FoldBounds.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.FoldBounds.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Force pop (population) values within bounds</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.FoldBounds.c_interface">
+<span class="sig-name descname"><span class="pre">c_interface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.FoldBounds.c_interface" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.FoldBounds.high">
+<span class="sig-name descname"><span class="pre">high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.FoldBounds.high" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.FoldBounds.low">
+<span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.FoldBounds.low" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.bounds.IgnoreBounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">IgnoreBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#IgnoreBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.IgnoreBounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Leave values outside the bounded region</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.bounds.IgnoreBounds.apply">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#IgnoreBounds.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.IgnoreBounds.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Force pop (population) values within bounds</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.IgnoreBounds.c_interface">
+<span class="sig-name descname"><span class="pre">c_interface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.IgnoreBounds.c_interface" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.IgnoreBounds.high">
+<span class="sig-name descname"><span class="pre">high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.IgnoreBounds.high" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.IgnoreBounds.low">
+<span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.IgnoreBounds.low" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.bounds.RandomBounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">RandomBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#RandomBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.RandomBounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Randomize values into the bounded region</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.bounds.RandomBounds.apply">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#RandomBounds.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.RandomBounds.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Force pop (population) values within bounds</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.RandomBounds.c_interface">
+<span class="sig-name descname"><span class="pre">c_interface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.RandomBounds.c_interface" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.RandomBounds.high">
+<span class="sig-name descname"><span class="pre">high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.RandomBounds.high" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.RandomBounds.low">
+<span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.RandomBounds.low" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ReflectBounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">ReflectBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#ReflectBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.ReflectBounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.bounds.Bounds" title="bumps.dream.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Reflect parameter values into bounded region</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ReflectBounds.apply">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#ReflectBounds.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.ReflectBounds.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Update pop so all values lie within bounds</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ReflectBounds.c_interface">
+<span class="sig-name descname"><span class="pre">c_interface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.ReflectBounds.c_interface" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ReflectBounds.high">
+<span class="sig-name descname"><span class="pre">high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.ReflectBounds.high" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.bounds.ReflectBounds.low">
+<span class="sig-name descname"><span class="pre">low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.bounds.ReflectBounds.low" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.bounds.make_bounds_handler">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.bounds.</span></span><span class="sig-name descname"><span class="pre">make_bounds_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reflect'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/bounds.html#make_bounds_handler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.bounds.make_bounds_handler" title="Link to this definition">¶</a></dt>
+<dd><p>Return a bounds object which can update the bounds.</p>
+<p>Bounds handling <em>style</em> name is one of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reflect</span><span class="p">:</span>   <span class="n">reflect</span> <span class="n">off</span> <span class="n">the</span> <span class="n">boundary</span>
+<span class="n">clip</span><span class="p">:</span>      <span class="n">stop</span> <span class="n">at</span> <span class="n">the</span> <span class="n">boundary</span>
+<span class="n">fold</span><span class="p">:</span>      <span class="n">wrap</span> <span class="n">values</span> <span class="n">to</span> <span class="n">the</span> <span class="n">other</span> <span class="n">side</span> <span class="n">of</span> <span class="n">the</span> <span class="n">boundary</span>
+<span class="n">randomize</span><span class="p">:</span> <span class="n">move</span> <span class="n">to</span> <span class="n">a</span> <span class="n">random</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">bounds</span>
+<span class="n">none</span><span class="p">:</span>      <span class="n">ignore</span> <span class="n">the</span> <span class="n">bounds</span>
+</pre></div>
+</div>
+<p>With semi-infinite intervals folding and randomizing aren’t well
+defined, and reflection is used instead.</p>
+<p>With finite intervals the the reflected or folded point may still be
+outside the bounds (which can happen if the step size is too large),
+and a random uniform value is used instead.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bounds - Bounds handling</a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.Bounds"><code class="docutils literal notranslate"><span class="pre">Bounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.Bounds.apply"><code class="docutils literal notranslate"><span class="pre">Bounds.apply()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.Bounds.c_interface"><code class="docutils literal notranslate"><span class="pre">Bounds.c_interface</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.Bounds.high"><code class="docutils literal notranslate"><span class="pre">Bounds.high</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.Bounds.low"><code class="docutils literal notranslate"><span class="pre">Bounds.low</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ClipBounds"><code class="docutils literal notranslate"><span class="pre">ClipBounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.ClipBounds.apply"><code class="docutils literal notranslate"><span class="pre">ClipBounds.apply()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ClipBounds.c_interface"><code class="docutils literal notranslate"><span class="pre">ClipBounds.c_interface</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ClipBounds.high"><code class="docutils literal notranslate"><span class="pre">ClipBounds.high</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ClipBounds.low"><code class="docutils literal notranslate"><span class="pre">ClipBounds.low</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.bounds.FoldBounds"><code class="docutils literal notranslate"><span class="pre">FoldBounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.FoldBounds.apply"><code class="docutils literal notranslate"><span class="pre">FoldBounds.apply()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.FoldBounds.c_interface"><code class="docutils literal notranslate"><span class="pre">FoldBounds.c_interface</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.FoldBounds.high"><code class="docutils literal notranslate"><span class="pre">FoldBounds.high</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.FoldBounds.low"><code class="docutils literal notranslate"><span class="pre">FoldBounds.low</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.bounds.IgnoreBounds"><code class="docutils literal notranslate"><span class="pre">IgnoreBounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.IgnoreBounds.apply"><code class="docutils literal notranslate"><span class="pre">IgnoreBounds.apply()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.IgnoreBounds.c_interface"><code class="docutils literal notranslate"><span class="pre">IgnoreBounds.c_interface</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.IgnoreBounds.high"><code class="docutils literal notranslate"><span class="pre">IgnoreBounds.high</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.IgnoreBounds.low"><code class="docutils literal notranslate"><span class="pre">IgnoreBounds.low</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.bounds.RandomBounds"><code class="docutils literal notranslate"><span class="pre">RandomBounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.RandomBounds.apply"><code class="docutils literal notranslate"><span class="pre">RandomBounds.apply()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.RandomBounds.c_interface"><code class="docutils literal notranslate"><span class="pre">RandomBounds.c_interface</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.RandomBounds.high"><code class="docutils literal notranslate"><span class="pre">RandomBounds.high</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.RandomBounds.low"><code class="docutils literal notranslate"><span class="pre">RandomBounds.low</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ReflectBounds"><code class="docutils literal notranslate"><span class="pre">ReflectBounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.bounds.ReflectBounds.apply"><code class="docutils literal notranslate"><span class="pre">ReflectBounds.apply()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ReflectBounds.c_interface"><code class="docutils literal notranslate"><span class="pre">ReflectBounds.c_interface</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ReflectBounds.high"><code class="docutils literal notranslate"><span class="pre">ReflectBounds.high</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.bounds.ReflectBounds.low"><code class="docutils literal notranslate"><span class="pre">ReflectBounds.low</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.bounds.make_bounds_handler"><code class="docutils literal notranslate"><span class="pre">make_bounds_handler()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="acr.html"
+                          title="previous chapter">acr - A C Rencher normal outlier test</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="convergence.html"
+                          title="next chapter">convergence - Convergence tests</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/bounds.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="convergence.html" title="convergence - Convergence tests"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="acr.html" title="acr - A C Rencher normal outlier test"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bounds - Bounds handling</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

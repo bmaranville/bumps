@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.partemp &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.partemp</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.partemp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is public domain</span>
+<span class="c1"># Author: Paul Kienzle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Parallel tempering for continuous function optimization and uncertainty analysis.</span>
+
+<span class="sd">The program performs Markov chain Monte Carlo exploration of a probability</span>
+<span class="sd">density function using a combination of random and differential evolution</span>
+<span class="sd">updates.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;parallel_tempering&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">asarray</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">inf</span><span class="p">,</span> \
+    <span class="n">array</span><span class="p">,</span> <span class="n">nonzero</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">zeros_like</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">rand</span><span class="p">,</span> <span class="n">randn</span><span class="p">,</span> <span class="n">randint</span><span class="p">,</span> <span class="n">permutation</span>
+
+
+<span class="k">def</span> <span class="nf">every_ten</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">E</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">fx</span><span class="p">[</span><span class="n">step</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">step</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="parallel_tempering">
+<a class="viewcode-back" href="../../bumps.partemp.html#bumps.partemp.parallel_tempering">[docs]</a>
+<span class="k">def</span> <span class="nf">parallel_tempering</span><span class="p">(</span><span class="n">nllf</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                       <span class="n">CR</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">burn</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                       <span class="n">monitor</span><span class="o">=</span><span class="n">every_ten</span><span class="p">,</span>
+                       <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a MCMC walk using multiple temperatures in parallel.</span>
+
+<span class="sd">    :Parameters:</span>
+
+<span class="sd">    *nllf* : function(vector) -&gt; float</span>
+<span class="sd">        Negative log likelihood function to be minimized.  $\chi^2/2$ is a</span>
+<span class="sd">        good choice for curve fitting with no prior restraints on the possible</span>
+<span class="sd">        input parameters.</span>
+<span class="sd">    *p* : vector</span>
+<span class="sd">        Initial value</span>
+<span class="sd">    *bounds* : vector, vector</span>
+<span class="sd">        Box constraints on the parameter values.  No support for indefinite</span>
+<span class="sd">        or semi-definite programming at present</span>
+<span class="sd">    *T* : vector | 0 &lt; T[0] &lt; T[1] &lt; ...</span>
+<span class="sd">        Temperature vector.  Something like logspace(-1,1,10) will give</span>
+<span class="sd">        you 10 logarithmically spaced temperatures between 0.1 and 10.  The</span>
+<span class="sd">        maximum temperature T[-1] determines the size of the barriers that</span>
+<span class="sd">        can be easily jumped.  Note that the number of temperature values</span>
+<span class="sd">        limits the amount of parallelism available in the algorithm, so it</span>
+<span class="sd">        may gather statistics more quickly, though it will not necessarily</span>
+<span class="sd">        converge any faster.</span>
+<span class="sd">    *steps* = 1000 : int</span>
+<span class="sd">        Length of the accumulation vector.  The returned history will store</span>
+<span class="sd">        this many values for each temperature.  These values can be used in</span>
+<span class="sd">        a weighted histogram to determine parameter uncertainty.</span>
+<span class="sd">    *burn* = 1000 : int | [0,inf)</span>
+<span class="sd">        Number of iterations to perform in addition to steps.  Only the</span>
+<span class="sd">        last *steps* points will be preserved for each temperature.  Since</span>
+<span class="sd">        the</span>
+<span class="sd">        value should be in the same order as *steps* to be sure that the</span>
+<span class="sd">        full history is acquired.</span>
+<span class="sd">    *CR* = 0.9 : float | [0,1]</span>
+<span class="sd">        Cross-over ratio.  This is the differential evolution crossover</span>
+<span class="sd">        ratio to use when computing step size and direction.  Use a small</span>
+<span class="sd">        value to step through the dimensions one at a time, or a large value</span>
+<span class="sd">        to step through all at once.</span>
+<span class="sd">    *monitor* = every_ten : function(int step, vector x, float fx) -&gt; None</span>
+<span class="sd">        Function to called at every iteration with the step number the</span>
+<span class="sd">        best point and the best value.</span>
+<span class="sd">    *logfile* = None : string</span>
+<span class="sd">        Name of the file which will log the history of every accepted step.</span>
+<span class="sd">        Note that this includes all of the burn steps, so it can get very</span>
+<span class="sd">        large.</span>
+
+<span class="sd">    :Returns:</span>
+
+<span class="sd">    *history* : History</span>
+<span class="sd">        Structure containing *best*, *best_point* and *buffer*.  *best* is</span>
+<span class="sd">        the best nllf value seen and *best_point* is the parameter vector</span>
+<span class="sd">        which yielded *best*.  The list *buffer* contains lists of tuples</span>
+<span class="sd">        (step, temperature, nllf, x) for each temperature.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="n">History</span><span class="p">(</span><span class="n">logfile</span><span class="o">=</span><span class="n">logfile</span><span class="p">,</span> <span class="n">streams</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">steps</span><span class="p">)</span>
+    <span class="n">bounder</span> <span class="o">=</span> <span class="n">ReflectBounds</span><span class="p">(</span><span class="o">*</span><span class="n">bounds</span><span class="p">)</span>
+    <span class="c1">#stepper = RandStepper(bounds, tol=0.2/T[-1])</span>
+    <span class="n">stepper</span> <span class="o">=</span> <span class="n">Stepper</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">history</span><span class="p">)</span>
+    <span class="n">dT</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">asarray</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">([</span><span class="n">p</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span>   <span class="c1"># Points</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">ones</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">nllf</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># Values</span>
+    <span class="n">history</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">P</span><span class="p">)</span>
+    <span class="n">total_accept</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">total_swap</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">steps</span> <span class="o">+</span> <span class="n">burn</span><span class="p">):</span>
+            <span class="c1"># Take a step</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">rand</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="mi">20</span> <span class="ow">or</span> <span class="n">R</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">:</span>
+                <span class="c1">#action = &#39;jiggle&#39;</span>
+                <span class="n">Pnext</span> <span class="o">=</span> <span class="p">[</span><span class="n">stepper</span><span class="o">.</span><span class="n">jiggle</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">t</span> <span class="o">/</span> <span class="n">T</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">T</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="n">R</span> <span class="o">&lt;</span> <span class="mf">0.4</span><span class="p">:</span>
+                <span class="c1">#action = &#39;direct&#39;</span>
+                <span class="n">Pnext</span> <span class="o">=</span> <span class="p">[</span><span class="n">stepper</span><span class="o">.</span><span class="n">direct</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">P</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1">#action = &#39;diffev&#39;</span>
+                <span class="n">Pnext</span> <span class="o">=</span> <span class="p">[</span><span class="n">stepper</span><span class="o">.</span><span class="n">diffev</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">CR</span><span class="o">=</span><span class="n">CR</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">P</span><span class="p">)]</span>
+
+            <span class="c1"># Test constraints</span>
+            <span class="n">Pnext</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">([</span><span class="n">bounder</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Pnext</span><span class="p">])</span>
+
+            <span class="c1"># Temperature dependent Metropolis update</span>
+            <span class="n">Enext</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">([</span><span class="n">nllf</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Pnext</span><span class="p">])</span>
+            <span class="n">accept</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">Enext</span> <span class="o">-</span> <span class="n">E</span><span class="p">)</span> <span class="o">/</span> <span class="n">T</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+            <span class="c1"># print step,action</span>
+            <span class="c1"># print &quot;dP&quot;,&quot; &quot;.join(&quot;%.6f&quot;%norm((pn-p)/stepper.step) for pn,p in zip(P,Pnext))</span>
+            <span class="c1"># print &quot;dE&quot;,&quot; &quot;.join(&quot;%.1f&quot;%(en-e) for en,e in zip(E,Enext))</span>
+            <span class="c1"># print &quot;En&quot;,&quot; &quot;.join(&quot;%.1f&quot;%e for e in Enext)</span>
+            <span class="c1"># print &quot;accept&quot;,accept</span>
+            <span class="n">E</span><span class="p">[</span><span class="n">accept</span><span class="p">]</span> <span class="o">=</span> <span class="n">Enext</span><span class="p">[</span><span class="n">accept</span><span class="p">]</span>
+            <span class="n">P</span><span class="p">[</span><span class="n">accept</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pnext</span><span class="p">[</span><span class="n">accept</span><span class="p">]</span>
+            <span class="n">total_accept</span> <span class="o">+=</span> <span class="n">accept</span>
+
+            <span class="c1"># Accumulate history for population based methods</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">changed</span><span class="o">=</span><span class="n">accept</span><span class="p">)</span>
+            <span class="c1"># print &quot;best&quot;,history.best</span>
+
+            <span class="c1"># Swap chains across temperatures</span>
+            <span class="c1"># Note that we are are shuffling from high to low so that if a good</span>
+            <span class="c1"># point is found at a high temperature which push it immediately as</span>
+            <span class="c1"># low as we can go rather than risk losing it at the next high temp</span>
+            <span class="c1"># step.</span>
+            <span class="n">swap</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="c1"># print &quot;swap&quot;,E[i+1]-E[i],dT[i],exp((E[i+1]-E[i])*dT[i])</span>
+                <span class="k">if</span> <span class="n">exp</span><span class="p">((</span><span class="n">E</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">dT</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">rand</span><span class="p">():</span>
+                    <span class="n">swap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">E</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">E</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">P</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">0</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">0</span>
+            <span class="n">total_swap</span> <span class="o">+=</span> <span class="n">swap</span>
+            <span class="c1">#assert nllf(P[0]) == E[0]</span>
+
+            <span class="c1"># Monitoring</span>
+            <span class="n">monitor</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">history</span><span class="o">.</span><span class="n">best_point</span><span class="p">,</span> <span class="n">history</span><span class="o">.</span><span class="n">best</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="mi">100</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">step</span> <span class="o">%</span> <span class="n">interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;max r&quot;</span><span class="p">,</span>
+                      <span class="nb">max</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]))</span>
+                <span class="c1"># print &quot;min AR&quot;,argmin(total_accept),min(total_accept)</span>
+                <span class="c1"># print &quot;min SR&quot;,argmin(total_swap),min(total_swap)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">total_accept</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SR&quot;</span><span class="p">,</span> <span class="n">total_swap</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;s(d)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">std</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">]))</span>
+                               <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+                <span class="n">total_accept</span> <span class="o">*=</span> <span class="mi">0</span>
+                <span class="n">total_swap</span> <span class="o">*=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">history</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">History</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">streams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">logfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Allocate buffers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">streams</span><span class="p">)]</span>
+        <span class="c1"># Prepare log file</span>
+        <span class="k">if</span> <span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Step Temperature Energy Point&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Track the optimum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="o">=</span> <span class="n">inf</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">changed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">changed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">changed</span> <span class="o">=</span> <span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span> <span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changed</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">a</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_save_point</span><span class="p">(</span>
+                    <span class="n">step</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">temperature</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">energy</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+        <span class="c1"># Save in buffer</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># print &quot;P&quot;,P</span>
+            <span class="c1"># print &quot;S&quot;,S[-1][3]</span>
+            <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">P</span> <span class="o">-</span> <span class="n">S</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="n">S</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">P</span><span class="p">))</span>
+        <span class="c1"># print &quot;stream&quot;,i,&quot;now len&quot;,len(S)</span>
+        <span class="c1"># Track of the optimum</span>
+        <span class="k">if</span> <span class="n">E</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="o">=</span> <span class="n">E</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_point</span> <span class="o">=</span> <span class="n">P</span>
+        <span class="c1"># Log to file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">:</span>
+            <span class="n">point_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.6g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">P</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">point_str</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of k items drawn from the given stream.</span>
+
+<span class="sd">        If the stream is too short, fewer than n items may be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">stream</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">choose</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">k</span> <span class="k">else</span> <span class="n">S</span><span class="p">[:]</span>
+
+
+<span class="k">class</span> <span class="nc">Stepper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">low</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">history</span>
+
+    <span class="k">def</span> <span class="nf">diffev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">CR</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">stream</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="c1"># print &quot;jiggling&quot;,stream,stream,len(self.history.buffer[stream])</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jiggle</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">)</span>
+        <span class="c1"># Ideas incorporated from DREAM by Vrugt</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="c1"># Select to number of vector pair differences to use in update</span>
+        <span class="c1"># using k ~ discrete U[1,max pairs]</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># Select 2*k members at random</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span><span class="p">)]</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># May not have enough parents</span>
+        <span class="n">pop</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+        <span class="c1"># print &quot;k&quot;,k</span>
+        <span class="c1"># print &quot;parents&quot;,parents</span>
+        <span class="c1"># print &quot;pop&quot;,pop</span>
+
+        <span class="c1"># Select the dims to update based on the crossover ratio, making</span>
+        <span class="c1"># sure at least one significant dim is selected</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">vars</span> <span class="o">=</span> <span class="n">nonzero</span><span class="p">(</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">CR</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">randint</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pop</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">pop</span><span class="p">[</span><span class="n">k</span><span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">norm</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="nb">vars</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Weight the size of the jump inversely proportional to the</span>
+        <span class="c1"># number of contributions, both from the parameters being</span>
+        <span class="c1"># updated and from the population defining the step direction.</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="mf">2.38</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span>
+
+        <span class="c1"># Apply that step with F scaling and noise</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">noise</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># print &quot;j&quot;,j</span>
+        <span class="c1"># print &quot;gamma&quot;,gamma</span>
+        <span class="c1"># print &quot;step&quot;,step.shape</span>
+        <span class="c1"># print &quot;vars&quot;,vars.shape</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">zeros_like</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">delta</span><span class="p">[</span><span class="nb">vars</span><span class="p">]</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">eps</span> <span class="o">*</span> <span class="n">step</span><span class="p">)[</span><span class="nb">vars</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">p</span> <span class="o">+</span> <span class="n">delta</span>
+
+    <span class="k">def</span> <span class="nf">direct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">stream</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="c1"># print &quot;jiggling&quot;,stream,len(self.history.buffer[stream])</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jiggle</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">)</span>
+        <span class="n">pair</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;direct should never return identical points!!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">p</span> <span class="o">+</span> <span class="n">delta</span>
+
+    <span class="k">def</span> <span class="nf">jiggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">*</span> <span class="n">noise</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">p</span> <span class="o">+</span> <span class="n">delta</span>
+
+    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">p</span> <span class="o">+</span> <span class="n">delta</span>
+
+    <span class="k">def</span> <span class="nf">subspace_jiggle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">choose</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">zeros_like</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">delta</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">randn</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">noise</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">p</span> <span class="o">+</span> <span class="n">delta</span>
+
+
+<span class="k">class</span> <span class="nc">ReflectBounds</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reflect parameter values into bounded region</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update x so all values lie within bounds</span>
+
+<span class="sd">        Returns x for convenience.  E.g., y = bounds.apply(x+0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span>
+        <span class="c1"># Reflect points which are out of bounds</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Randomize points which are still out of bounds</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">rand</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+
+<span class="k">def</span> <span class="nf">choose</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return an array of k things selected from a pool of n without replacement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># At k == n/4, need to draw an extra 15% to get k unique draws</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">/</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">k</span><span class="p">))</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">randint</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">si</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">s</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;choose(n,k) contains dups!!&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">idx</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.partemp</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

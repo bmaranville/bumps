@@ -1,0 +1,7 @@
+bumps.cheby module
+==================
+
+.. automodule:: bumps.cheby
+   :members:
+   :undoc-members:
+   :show-inheritance:

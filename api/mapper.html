@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>mapper - Parallel processing implementations &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="monitor - Monitor fit progress" href="monitor.html" />
+    <link rel="prev" title="lsqerror - Least squares eorror analysis" href="lsqerror.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="monitor.html" title="monitor - Monitor fit progress"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="lsqerror.html" title="lsqerror - Least squares eorror analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mapper - Parallel processing implementations</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mapper-parallel-processing-implementations">
+<h1>mapper - Parallel processing implementations<a class="headerlink" href="#mapper-parallel-processing-implementations" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.AMQPMapper" title="bumps.mapper.AMQPMapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AMQPMapper</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.MPIMapper" title="bumps.mapper.MPIMapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPIMapper</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.MPMapper" title="bumps.mapper.MPMapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPMapper</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.SerialMapper" title="bumps.mapper.SerialMapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SerialMapper</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.can_pickle" title="bumps.mapper.can_pickle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_pickle</span></code></a></p></td>
+<td><p>Returns True if <em>problem</em> can be pickled.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.nice" title="bumps.mapper.nice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nice</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.mapper.html#bumps.mapper.setpriority" title="bumps.mapper.setpriority"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setpriority</span></code></a></p></td>
+<td><p>Set The Priority of a Windows Process.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.mapper">Parallel and serial mapper implementations.</p>
+<p>The API is a bit crufty since interprocess communication has evolved from
+the original implementation. And the names are misleading.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Mapper</span><span class="o">.</span><span class="n">start_worker</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="n">mapper</span> <span class="o">=</span> <span class="n">Mapper</span><span class="o">.</span><span class="n">start_mapper</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cpus</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">mapper</span> <span class="o">=</span> <span class="n">Mapper</span><span class="o">.</span><span class="n">start_mapper</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cpus</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+<span class="n">Mapper</span><span class="o">.</span><span class="n">stop_mapper</span><span class="p">(</span><span class="n">mapper</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mapper.AMQPMapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">AMQPMapper</span></span><a class="reference internal" href="../_modules/bumps/mapper.html#AMQPMapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.AMQPMapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.AMQPMapper.start_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#AMQPMapper.start_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.AMQPMapper.start_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.AMQPMapper.start_worker">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#AMQPMapper.start_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.AMQPMapper.start_worker" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.AMQPMapper.stop_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#AMQPMapper.stop_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.AMQPMapper.stop_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mapper.MPIMapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">MPIMapper</span></span><a class="reference internal" href="../_modules/bumps/mapper.html#MPIMapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPIMapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.MPIMapper.start_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#MPIMapper.start_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPIMapper.start_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.MPIMapper.start_worker">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#MPIMapper.start_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPIMapper.start_worker" title="Link to this definition">¶</a></dt>
+<dd><p>Start the worker process.</p>
+<p>For the main process this does nothing and returns immediately. The
+worker processes never return.</p>
+<p>Each worker sits in a loop waiting for the next batch of points
+for the problem, or for the next problem. Set t
+problem is set to None, then exit the process and never</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.MPIMapper.stop_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#MPIMapper.stop_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPIMapper.stop_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">MPMapper</span></span><a class="reference internal" href="../_modules/bumps/mapper.html#MPMapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPMapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.manager">
+<span class="sig-name descname"><span class="pre">manager</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.mapper.MPMapper.manager" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.namespace">
+<span class="sig-name descname"><span class="pre">namespace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.mapper.MPMapper.namespace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.pool">
+<span class="sig-name descname"><span class="pre">pool</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.mapper.MPMapper.pool" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.problem_id">
+<span class="sig-name descname"><span class="pre">problem_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#bumps.mapper.MPMapper.problem_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.start_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#MPMapper.start_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPMapper.start_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.start_worker">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#MPMapper.start_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPMapper.start_worker" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.MPMapper.stop_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#MPMapper.stop_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.MPMapper.stop_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mapper.SerialMapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">SerialMapper</span></span><a class="reference internal" href="../_modules/bumps/mapper.html#SerialMapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.SerialMapper" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.SerialMapper.start_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#SerialMapper.start_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.SerialMapper.start_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.SerialMapper.start_worker">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#SerialMapper.start_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.SerialMapper.start_worker" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mapper.SerialMapper.stop_mapper">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_mapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapper</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#SerialMapper.stop_mapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.SerialMapper.stop_mapper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mapper.can_pickle">
+<span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">can_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#can_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.can_pickle" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True if <em>problem</em> can be pickled.</p>
+<p>If this method returns False then MPMapper cannot be used and
+SerialMapper should be used instead.</p>
+<p>If <em>check</em> is True then call <em>nllf()</em> on the duplicated object as a
+“smoke test” to verify that the function will run after copying. This
+is not foolproof. For example, access to a database may work in the
+duplicated object because the connection is open and available in the
+current process, but it will fail when trying to run on a remote machine.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mapper.nice">
+<span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">nice</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#nice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.nice" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mapper.setpriority">
+<span class="sig-prename descclassname"><span class="pre">bumps.mapper.</span></span><span class="sig-name descname"><span class="pre">setpriority</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/mapper.html#setpriority"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mapper.setpriority" title="Link to this definition">¶</a></dt>
+<dd><p>Set The Priority of a Windows Process.  Priority is a value between 0-5
+where 2 is normal priority and 5 is maximum.  Default sets the priority
+of the current python process but can take any valid process ID.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">mapper - Parallel processing implementations</a><ul>
+<li><a class="reference internal" href="#bumps.mapper.AMQPMapper"><code class="docutils literal notranslate"><span class="pre">AMQPMapper</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mapper.AMQPMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">AMQPMapper.start_mapper()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.AMQPMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">AMQPMapper.start_worker()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.AMQPMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">AMQPMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mapper.MPIMapper"><code class="docutils literal notranslate"><span class="pre">MPIMapper</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mapper.MPIMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">MPIMapper.start_mapper()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPIMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">MPIMapper.start_worker()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPIMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">MPIMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper"><code class="docutils literal notranslate"><span class="pre">MPMapper</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.manager"><code class="docutils literal notranslate"><span class="pre">MPMapper.manager</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.namespace"><code class="docutils literal notranslate"><span class="pre">MPMapper.namespace</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.pool"><code class="docutils literal notranslate"><span class="pre">MPMapper.pool</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.problem_id"><code class="docutils literal notranslate"><span class="pre">MPMapper.problem_id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">MPMapper.start_mapper()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">MPMapper.start_worker()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.MPMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">MPMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mapper.SerialMapper"><code class="docutils literal notranslate"><span class="pre">SerialMapper</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mapper.SerialMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">SerialMapper.start_mapper()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.SerialMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">SerialMapper.start_worker()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.SerialMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">SerialMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mapper.can_pickle"><code class="docutils literal notranslate"><span class="pre">can_pickle()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.nice"><code class="docutils literal notranslate"><span class="pre">nice()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mapper.setpriority"><code class="docutils literal notranslate"><span class="pre">setpriority()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="lsqerror.html"
+                          title="previous chapter">lsqerror - Least squares eorror analysis</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="monitor.html"
+                          title="next chapter">monitor - Monitor fit progress</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/mapper.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="monitor.html" title="monitor - Monitor fit progress"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="lsqerror.html" title="lsqerror - Least squares eorror analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mapper - Parallel processing implementations</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

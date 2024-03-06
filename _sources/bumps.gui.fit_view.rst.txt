@@ -1,0 +1,7 @@
+bumps.gui.fit\_view module
+==========================
+
+.. automodule:: bumps.gui.fit_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

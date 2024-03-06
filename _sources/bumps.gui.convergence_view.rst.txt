@@ -1,0 +1,7 @@
+bumps.gui.convergence\_view module
+==================================
+
+.. automodule:: bumps.gui.convergence_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

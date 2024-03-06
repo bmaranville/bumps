@@ -1,0 +1,7 @@
+bumps.dream.geweke module
+=========================
+
+.. automodule:: bumps.dream.geweke
+   :members:
+   :undoc-members:
+   :show-inheritance:

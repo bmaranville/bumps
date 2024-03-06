@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.bounds module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.bounds module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.bounds">
+<span id="bumps-bounds-module"></span><h1>bumps.bounds module<a class="headerlink" href="#module-bumps.bounds" title="Link to this heading">¶</a></h1>
+<p>Parameter bounds and prior probabilities.</p>
+<p>Parameter bounds encompass several features of our optimizers.</p>
+<p>First and most trivially they allow for bounded constraints on
+parameter values.</p>
+<p>Secondly, for parameter values known to follow some distribution,
+the bounds encodes a penalty function as the value strays from
+its nominal value.  Using a negative log likelihood cost function
+on the fit, then this value naturally contributes to the overall
+likelihood measure.</p>
+<p>Predefined bounds are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Unbounded</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+<span class="n">BoundedBelow</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+<span class="n">BoundedAbove</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+<span class="n">Bounded</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+<span class="n">Normal</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span> <span class="k">with</span> <span class="n">gaussian</span> <span class="n">probability</span>
+<span class="n">BoundedNormal</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span> <span class="k">with</span> <span class="n">gaussian</span> <span class="n">probability</span> <span class="n">within</span>
+<span class="n">SoftBounded</span>
+    <span class="nb">range</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span> <span class="k">with</span> <span class="n">gaussian</span> <span class="n">probability</span> <span class="n">outside</span>
+</pre></div>
+</div>
+<p>New bounds can be defined following the abstract base class
+interface defined in <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a>, or using Distribution(rv)
+where rv is a scipy.stats continuous distribution.</p>
+<p>For generating bounds given a value, we provide a few helper
+functions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">+/-</span> <span class="n">d</span><span class="p">:</span>  <span class="n">pm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">dx</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="n">dm</span><span class="p">,</span><span class="o">+</span><span class="n">dp</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">+</span><span class="n">dp</span><span class="p">,</span><span class="o">-</span><span class="n">dm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">dm</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">dm</span><span class="p">)</span> <span class="n">limited</span> <span class="n">to</span> <span class="mi">2</span> <span class="n">significant</span> <span class="n">digits</span>
+<span class="n">v</span> <span class="o">+/-</span> <span class="n">p</span><span class="o">%</span><span class="p">:</span> <span class="n">pmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">p</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="n">pm</span><span class="p">,</span><span class="o">+</span><span class="n">pp</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">+</span><span class="n">pp</span><span class="p">,</span><span class="o">-</span><span class="n">pm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">pm</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="mi">100</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="n">pp</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span> <span class="n">limited</span> <span class="n">to</span> <span class="mi">2</span> <span class="n">sig</span><span class="o">.</span> <span class="n">digits</span>
+<span class="n">pm_raw</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">dx</span><span class="p">)</span> <span class="ow">or</span> <span class="n">raw_pm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="n">dm</span><span class="p">,</span><span class="o">+</span><span class="n">dp</span><span class="p">)</span> <span class="ow">or</span> <span class="n">raw_pm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">+</span><span class="n">dp</span><span class="p">,</span><span class="o">-</span><span class="n">dm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">dm</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">dm</span><span class="p">)</span>
+<span class="n">pmp_raw</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">p</span><span class="p">)</span> <span class="ow">or</span> <span class="n">raw_pmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="n">pm</span><span class="p">,</span><span class="o">+</span><span class="n">pp</span><span class="p">)</span> <span class="ow">or</span> <span class="n">raw_pmp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">+</span><span class="n">pp</span><span class="p">,</span><span class="o">-</span><span class="n">pm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">pm</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="mi">100</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="n">pp</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">nice_range</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span><span class="n">hi</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">lo</span><span class="p">,</span><span class="n">hi</span><span class="p">)</span> <span class="n">limited</span> <span class="n">to</span> <span class="mi">2</span> <span class="n">significant</span> <span class="n">digits</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">Bounded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Bounded range.</p>
+<p>[lo,hi] &lt;-&gt; [0,1] scale is simple linear
+[lo,hi] &lt;-&gt; (-inf,inf) scale uses exponential expansion</p>
+<p>While technically the probability of seeing any value within the
+range is 1/range, for consistency with the semi-infinite ranges
+and for a more natural mapping between nllf and chisq, we instead
+set the probability to 0.  This choice will not affect the fits.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounded.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounded.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounded.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">BoundedAbove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Semidefinite range bounded above.</p>
+<p>[-inf,base] &lt;-&gt; [0,1] uses logarithmic compression
+[-inf,base] &lt;-&gt; (-inf,inf) is direct below base-1, 1/(base-x) above</p>
+<p>Logarithmic compression works by converting sign*m*2^e+base to
+sign*(e+1023+m), yielding a value in [0,2048].  This can then be
+converted to a value in [0,1].</p>
+<p>Note that the likelihood function is problematic: the true probability
+of seeing any particular value in the range is infinitesimal, and that
+is indistinguishable from values outside the range.  Instead we say
+that P = 1 in range, and 0 outside.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedAbove.start_value">
+<span class="sig-name descname"><span class="pre">start_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedAbove.start_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedAbove.start_value" title="Link to this definition">¶</a></dt>
+<dd><p>Return a default starting value if none given.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">BoundedBelow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Semidefinite range bounded below.</p>
+<p>The random initial condition is assumed to be within 1 of the maximum.</p>
+<p>[base,inf] &lt;-&gt; (-inf,inf) is direct above base+1, -1/(x-base) below
+[base,inf] &lt;-&gt; [0,1] uses logarithmic compression.</p>
+<p>Logarithmic compression works by converting sign*m*2^e+base to
+sign*(e+1023+m), yielding a value in [0,2048]. This can then be
+converted to a value in [0,1].</p>
+<p>Note that the likelihood function is problematic: the true probability
+of seeing any particular value in the range is infinitesimal, and that
+is indistinguishable from values outside the range.  Instead we say
+that P = 1 in range, and 0 outside.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedBelow.start_value">
+<span class="sig-name descname"><span class="pre">start_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedBelow.start_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedBelow.start_value" title="Link to this definition">¶</a></dt>
+<dd><p>Return a default starting value if none given.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">BoundedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(-inf,</span> <span class="pre">inf)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>truncated normal bounds</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value, or an array of values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>For the truncated normal distribution, we can just use the normal
+residuals.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.BoundedNormal.start_value">
+<span class="sig-name descname"><span class="pre">start_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#BoundedNormal.start_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.BoundedNormal.start_value" title="Link to this definition">¶</a></dt>
+<dd><p>Return a default starting value if none given.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">Bounds</span></span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Bounds abstract base class.</p>
+<p>A range is used for several purposes.  One is that it transforms parameters
+between unbounded and bounded forms depending on the needs of the optimizer.</p>
+<p>Another is that it generates random values in the range for stochastic
+optimizers, and for initialization.</p>
+<p>A third is that it returns the likelihood of seeing that particular value
+for optimizers which use soft constraints.  Assuming the cost function that
+is being optimized is also a probability, then this is an easy way to
+incorporate information from other sorts of measurements into the model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.limits">
+<span class="sig-name descname"><span class="pre">limits</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(-inf,</span> <span class="pre">inf)</span></em><a class="headerlink" href="#bumps.bounds.Bounds.limits" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.start_value">
+<span class="sig-name descname"><span class="pre">start_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.start_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.start_value" title="Link to this definition">¶</a></dt>
+<dd><p>Return a default starting value if none given.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Bounds.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Bounds.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Bounds.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">Distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Parameter is pulled from a distribution.</p>
+<p><em>dist</em> must implement the distribution interface from scipy.stats.
+In particular, it should define methods rvs, nnlf, cdf and ppf and
+attributes args and dist.name.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Distribution.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Distribution.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Distribution.to_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.Normal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">Normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Normal" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Distribution" title="bumps.bounds.Distribution"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distribution</span></code></a></p>
+<p>Parameter is pulled from a normal distribution.</p>
+<p>If you have measured a parameter value with some uncertainty (e.g., the
+film thickness is 35+/-5 according to TEM), then you can use this
+measurement to restrict the values given to the search, and to penalize
+choices of this fitting parameter which are different from this value.</p>
+<p><em>mean</em> is the expected value of the parameter and <em>std</em> is the 1-sigma
+standard deviation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Normal.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Normal.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Normal.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Normal.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Normal.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Normal.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">SoftBounded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Parameter is pulled from a stretched normal distribution.</p>
+<p>This is like a rectangular distribution, but with gaussian tails.</p>
+<p>The intent of this distribution is for soft constraints on the values.
+As such, the random generator will return values like the rectangular
+distribution, but the likelihood will return finite values based on
+the distance from the from the bounds rather than returning infinity.</p>
+<p>Note that for bounds constrained optimizers which force the value
+into the range [0,1] for each parameter we don’t need to use soft
+constraints, and this acts just like the rectangular distribution.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.SoftBounded.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#SoftBounded.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.SoftBounded.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">Unbounded</span></span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.bounds.Bounds" title="bumps.bounds.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a></p>
+<p>Unbounded parameter.</p>
+<p>The random initial condition is assumed to be between 0 and 1</p>
+<p>The probability is uniformly 1/inf everywhere, which means the negative
+log likelihood of P is inf everywhere.  A value inf will interfere
+with optimization routines, and so we instead choose P == 1 everywhere.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.get01">
+<span class="sig-name descname"><span class="pre">get01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.get01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.get01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into [0,1] for optimizers which are bounds constrained.</p>
+<p>This can also be used as a scale bar to show approximately how close to
+the end of the range the value is.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.getfull">
+<span class="sig-name descname"><span class="pre">getfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.getfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.getfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert value into (-inf,inf) for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Return the negative log likelihood of seeing this value, with
+likelihood scaled so that the maximum probability is one.</p>
+<p>For uniform bounds, this either returns zero or inf.  For bounds
+based on a probability distribution, this returns values between
+zero and inf.  The scaling is necessary so that indefinite and
+semi-definite ranges return a sensible value.  The scaling does
+not affect the likelihood maximization process, though the resulting
+likelihood is not easily interpreted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.put01">
+<span class="sig-name descname"><span class="pre">put01</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.put01"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.put01" title="Link to this definition">¶</a></dt>
+<dd><p>Convert [0,1] into value for optimizers which are bounds constrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.putfull">
+<span class="sig-name descname"><span class="pre">putfull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.putfull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.putfull" title="Link to this definition">¶</a></dt>
+<dd><p>Convert (-inf,inf) into value for optimizers which are unconstrained.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.random">
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.random"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.random" title="Link to this definition">¶</a></dt>
+<dd><p>Return a randomly generated valid value.</p>
+<p><em>target</em> gives some scale independence to the random number
+generator, allowing the initial value of the parameter to influence
+the randomly generated value.  Otherwise fits without bounds have
+too large a space to search through.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.bounds.Unbounded.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#Unbounded.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.Unbounded.residual" title="Link to this definition">¶</a></dt>
+<dd><p>Return the parameter ‘residual’ in a way that is consistent with
+residuals in the normal distribution.  The primary purpose is to
+graphically display exceptional values in a way that is familiar
+to the user.  For fitting, the scaled likelihood should be used.</p>
+<p>To do this, we will match the cumulative density function value
+with that for N(0,1) and find the corresponding percent point
+function from the N(0,1) distribution.  In this way, for example,
+a value to the right of 2.275% of the distribution would correspond
+to a residual of -2, or 2 standard deviations below the mean.</p>
+<p>For uniform distributions, with all values equally probable, we
+use a value of +/-4 for values outside the range, and 0 for values
+inside the range.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.bounds.init_bounds">
+<span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">init_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#init_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.init_bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a bounds object of the appropriate type given the arguments.</p>
+<p>This is a helper factory to simplify the user interface to parameter
+objects.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.bounds.nice_range">
+<span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">nice_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#nice_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.nice_range" title="Link to this definition">¶</a></dt>
+<dd><p>Given a range, return an enclosing range accurate to two digits.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.bounds.pm">
+<span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">pm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#pm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.pm" title="Link to this definition">¶</a></dt>
+<dd><p>Return the tuple (~v-dv,~v+dv), where ~expr is a ‘nice’ number near to
+to the value of expr.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">pm</span><span class="p">(</span><span class="mf">0.78421</span><span class="p">,</span> <span class="mf">0.0023145</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%g</span><span class="s2"> - </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">r</span><span class="p">)</span>
+<span class="go">0.7818 - 0.7866</span>
+</pre></div>
+</div>
+<p>If called as pm(value, +dp, -dm) or pm(value, -dm, +dp),
+return (~v-dm, ~v+dp).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.bounds.pm_raw">
+<span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">pm_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#pm_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.pm_raw" title="Link to this definition">¶</a></dt>
+<dd><p>Return the tuple [v-dv,v+dv].</p>
+<p>If called as pm_raw(value, +dp, -dm) or pm_raw(value, -dm, +dp),
+return (v-dm, v+dp).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.bounds.pmp">
+<span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">pmp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#pmp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.pmp" title="Link to this definition">¶</a></dt>
+<dd><p>Return the tuple (~v-%v,~v+%v), where ~expr is a ‘nice’ number near to
+the value of expr.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">pmp</span><span class="p">(</span><span class="mf">0.78421</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%g</span><span class="s2"> - </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">r</span><span class="p">)</span>
+<span class="go">0.7 - 0.87</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">pmp</span><span class="p">(</span><span class="mf">0.78421</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%g</span><span class="s2"> - </span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">r</span><span class="p">)</span>
+<span class="go">0.7834 - 0.785</span>
+</pre></div>
+</div>
+<p>If called as pmp(value, +pp, -pm) or pmp(value, -pm, +pp),
+return (~v-pm%v, ~v+pp%v).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.bounds.pmp_raw">
+<span class="sig-prename descclassname"><span class="pre">bumps.bounds.</span></span><span class="sig-name descname"><span class="pre">pmp_raw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/bounds.html#pmp_raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.bounds.pmp_raw" title="Link to this definition">¶</a></dt>
+<dd><p>Return the tuple [v-%v,v+%v]</p>
+<p>If called as pmp_raw(value, +pp, -pm) or pmp_raw(value, -pm, +pp),
+return (v-pm%v, v+pp%v).</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.bounds module</a><ul>
+<li><a class="reference internal" href="#bumps.bounds.Bounded"><code class="docutils literal notranslate"><span class="pre">Bounded</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.get01"><code class="docutils literal notranslate"><span class="pre">Bounded.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.getfull"><code class="docutils literal notranslate"><span class="pre">Bounded.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.nllf"><code class="docutils literal notranslate"><span class="pre">Bounded.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.put01"><code class="docutils literal notranslate"><span class="pre">Bounded.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.putfull"><code class="docutils literal notranslate"><span class="pre">Bounded.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.random"><code class="docutils literal notranslate"><span class="pre">Bounded.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounded.residual"><code class="docutils literal notranslate"><span class="pre">Bounded.residual()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove"><code class="docutils literal notranslate"><span class="pre">BoundedAbove</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.get01"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.getfull"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.nllf"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.put01"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.putfull"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.random"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.residual"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.residual()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedAbove.start_value"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.start_value()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow"><code class="docutils literal notranslate"><span class="pre">BoundedBelow</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.get01"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.getfull"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.nllf"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.put01"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.putfull"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.random"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.residual"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.residual()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedBelow.start_value"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.start_value()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal"><code class="docutils literal notranslate"><span class="pre">BoundedNormal</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.get01"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.getfull"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.nllf"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.put01"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.putfull"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.random"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.residual"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.residual()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.BoundedNormal.start_value"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.start_value()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds"><code class="docutils literal notranslate"><span class="pre">Bounds</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.get01"><code class="docutils literal notranslate"><span class="pre">Bounds.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.getfull"><code class="docutils literal notranslate"><span class="pre">Bounds.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.limits"><code class="docutils literal notranslate"><span class="pre">Bounds.limits</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.nllf"><code class="docutils literal notranslate"><span class="pre">Bounds.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.put01"><code class="docutils literal notranslate"><span class="pre">Bounds.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.putfull"><code class="docutils literal notranslate"><span class="pre">Bounds.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.random"><code class="docutils literal notranslate"><span class="pre">Bounds.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.residual"><code class="docutils literal notranslate"><span class="pre">Bounds.residual()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.start_value"><code class="docutils literal notranslate"><span class="pre">Bounds.start_value()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Bounds.to_dict"><code class="docutils literal notranslate"><span class="pre">Bounds.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution"><code class="docutils literal notranslate"><span class="pre">Distribution</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.get01"><code class="docutils literal notranslate"><span class="pre">Distribution.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.getfull"><code class="docutils literal notranslate"><span class="pre">Distribution.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.nllf"><code class="docutils literal notranslate"><span class="pre">Distribution.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.put01"><code class="docutils literal notranslate"><span class="pre">Distribution.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.putfull"><code class="docutils literal notranslate"><span class="pre">Distribution.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.random"><code class="docutils literal notranslate"><span class="pre">Distribution.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.residual"><code class="docutils literal notranslate"><span class="pre">Distribution.residual()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Distribution.to_dict"><code class="docutils literal notranslate"><span class="pre">Distribution.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.Normal"><code class="docutils literal notranslate"><span class="pre">Normal</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.Normal.nllf"><code class="docutils literal notranslate"><span class="pre">Normal.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Normal.residual"><code class="docutils literal notranslate"><span class="pre">Normal.residual()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded"><code class="docutils literal notranslate"><span class="pre">SoftBounded</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.get01"><code class="docutils literal notranslate"><span class="pre">SoftBounded.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.getfull"><code class="docutils literal notranslate"><span class="pre">SoftBounded.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.nllf"><code class="docutils literal notranslate"><span class="pre">SoftBounded.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.put01"><code class="docutils literal notranslate"><span class="pre">SoftBounded.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.putfull"><code class="docutils literal notranslate"><span class="pre">SoftBounded.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.random"><code class="docutils literal notranslate"><span class="pre">SoftBounded.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.SoftBounded.residual"><code class="docutils literal notranslate"><span class="pre">SoftBounded.residual()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded"><code class="docutils literal notranslate"><span class="pre">Unbounded</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.get01"><code class="docutils literal notranslate"><span class="pre">Unbounded.get01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.getfull"><code class="docutils literal notranslate"><span class="pre">Unbounded.getfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.nllf"><code class="docutils literal notranslate"><span class="pre">Unbounded.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.put01"><code class="docutils literal notranslate"><span class="pre">Unbounded.put01()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.putfull"><code class="docutils literal notranslate"><span class="pre">Unbounded.putfull()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.random"><code class="docutils literal notranslate"><span class="pre">Unbounded.random()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.Unbounded.residual"><code class="docutils literal notranslate"><span class="pre">Unbounded.residual()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.bounds.init_bounds"><code class="docutils literal notranslate"><span class="pre">init_bounds()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.nice_range"><code class="docutils literal notranslate"><span class="pre">nice_range()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.pm"><code class="docutils literal notranslate"><span class="pre">pm()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.pm_raw"><code class="docutils literal notranslate"><span class="pre">pm_raw()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.pmp"><code class="docutils literal notranslate"><span class="pre">pmp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.bounds.pmp_raw"><code class="docutils literal notranslate"><span class="pre">pmp_raw()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.bounds.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.bounds module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

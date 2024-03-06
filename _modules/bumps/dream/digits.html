@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.digits &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.digits</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.digits</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Significant digits</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Calculate the number significant digits in a statistic using boot</span>
+<span class="sd">strapping/jackknife.</span>
+
+<span class="sd">The &#39;gum&#39; method from the GUM supplement[1] splits the sequence into n</span>
+<span class="sd">independent sequences, computes the statistic for each sequence, and</span>
+<span class="sd">returns the mean and variance of the statistic as the estimated value</span>
+<span class="sd">with uncertainty.  Each block should have at least 10000 samples, or</span>
+<span class="sd">100/(1-ci) samples if the desired credible interval ci &gt; 0.99.</span>
+
+<span class="sd">The &#39;jack&#39; method uses</span>
+
+<span class="sd">notes:</span>
+
+<span class="sd">- the gum method gives a slight underestimate of the sd, while</span>
+<span class="sd">  jackknife gives an overestimate.</span>
+<span class="sd">- Jackknife performs better than gum on small samples</span>
+<span class="sd">- in current implementation, gum is much faster</span>
+<span class="sd">- in picking the number of cuts for jackknife, lower is usually better</span>
+<span class="sd">  (but not too low...)</span>
+
+<span class="sd">[1] JCGM, 2008. Evaluation of measurement data - Supplement 1 to the &quot;Guide to</span>
+<span class="sd">the expression of uncertainty in measurement&quot; - Propagation of distributions</span>
+<span class="sd">using a Monte Carlo method (No. JCGM 101:2008). Geneva, Switzerland.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="c1"># TODO: needs a refactor before going into production</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">things to do:</span>
+<span class="sd">- actually useful display of information in output</span>
+<span class="sd">- an effective, fast, online version to use as a stoping crit</span>
+<span class="sd">- use as a method to guess how many more samples:</span>
+<span class="sd">    - provides estimate of sd of sampling distribution of statistic</span>
+<span class="sd">    - sd of stat for n samples = sd for k samples / sqrt(n/k - 1)</span>
+<span class="sd">    - not actually well tested...</span>
+<span class="sd">- provide better user accessible control hooks</span>
+<span class="sd">- do better deciding between jack and gum</span>
+<span class="sd">- these don&#39;t deal with lists of CIs (as the actual ci functions do)</span>
+<span class="sd">- very slow, needs a restructure</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+
+<span class="kn">from</span> <span class="nn">.stats</span> <span class="kn">import</span> <span class="n">credible_interval</span>
+
+<div class="viewcode-block" id="credible_interval_sd">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.credible_interval_sd">[docs]</a>
+<span class="k">def</span> <span class="nf">credible_interval_sd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cuts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># ugly hack here</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">credible_interval</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># do something clever to choose gum or jack</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;gum&#39;</span>
+
+    <span class="c1"># Determine the number of cuts</span>
+    <span class="k">if</span> <span class="n">cuts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cuts</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Use groups of 10000 unless looking for ci &gt; 0.99, in which case</span>
+        <span class="c1"># use groups of 100/(1-ci).</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">100</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ci</span><span class="p">)),</span> <span class="mi">10000</span><span class="p">)</span>
+        <span class="n">cuts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="n">M</span>
+    <span class="k">if</span> <span class="n">cuts</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">cuts</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;gum&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gum_sd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;jack&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jack_sd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown sd method&quot;</span><span class="o">+</span><span class="n">method</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># TODO does not handle either CI function natively</span>
+<span class="c1"># requires a 1d ndarray return value</span>
+
+<div class="viewcode-block" id="gum_sd">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.gum_sd">[docs]</a>
+<span class="k">def</span> <span class="nf">gum_sd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">cuts</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    adaptation of method in section 7.9.4 of gum suppliment 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># reshape data into blocks, skipping the first partial block</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="n">cuts</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="n">M</span><span class="o">*</span><span class="n">cuts</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">cuts</span><span class="p">,</span> <span class="n">M</span><span class="p">))</span>
+    <span class="c1"># compute the variance of the statistic over the sub-blocks</span>
+    <span class="n">stat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># estimate standard deviation of the statistic for the full data set</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span> <span class="o">/</span> <span class="n">cuts</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="jack_sd">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.jack_sd">[docs]</a>
+<span class="k">def</span> <span class="nf">jack_sd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">cuts</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    does an average of sd on smaller blocks to counteract skewed</span>
+<span class="sd">    distribution of jackknife</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># reshape data into blocks, skipping the first partial block</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="n">cuts</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="n">M</span><span class="o">*</span><span class="n">cuts</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">cuts</span><span class="p">,</span> <span class="n">M</span><span class="p">))</span>
+    <span class="c1"># compute the standard deviation of the statistic over the sub-blocks</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">fast_jack</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+    <span class="c1"># estimate standard deviation of the statistic for the full data set</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">cuts</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># TODO: does not deal well with a list of CIs</span>
+<span class="c1"># returns the sd of a statistic, f</span>
+<div class="viewcode-block" id="fast_jack">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.fast_jack">[docs]</a>
+<span class="k">def</span> <span class="nf">fast_jack</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+    <span class="n">jack</span> <span class="o">=</span> <span class="n">FastJackknife</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">jack</span><span class="o">.</span><span class="n">set_args</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jack</span><span class="o">.</span><span class="n">std</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># TODO: this is coded badly and so is very slow</span>
+<div class="viewcode-block" id="FastJackknife">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.FastJackknife">[docs]</a>
+<span class="k">class</span> <span class="nc">FastJackknife</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>
+
+    <span class="nd">@data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@fn</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span> <span class="o">=</span> <span class="n">f</span>
+
+<div class="viewcode-block" id="FastJackknife.set_args">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.FastJackknife.set_args">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span> <span class="o">=</span> <span class="n">kw</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_f_drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros_like</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">mx</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">compressed</span><span class="p">()))</span>
+
+<div class="viewcode-block" id="FastJackknife.pooled">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.FastJackknife.pooled">[docs]</a>
+    <span class="k">def</span> <span class="nf">pooled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FastJackknife.std">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.FastJackknife.std">[docs]</a>
+    <span class="k">def</span> <span class="nf">std</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">searchsorted</span>
+
+        <span class="n">true_stat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">drop_stats</span> <span class="o">=</span> <span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">true_stat</span><span class="p">)))</span>
+
+        <span class="c1"># this part is specific for CI</span>
+        <span class="n">idx_lo</span><span class="p">,</span> <span class="n">idx_hi</span> <span class="o">=</span> <span class="n">searchsorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">true_stat</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_interval</span><span class="p">(</span><span class="n">drop_stats</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx_lo</span><span class="p">),</span> <span class="n">true_stat</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_interval</span><span class="p">(</span><span class="n">drop_stats</span><span class="p">,</span> <span class="p">(</span><span class="n">idx_lo</span><span class="p">,</span> <span class="n">idx_hi</span><span class="p">),</span> <span class="n">true_stat</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_interval</span><span class="p">(</span><span class="n">drop_stats</span><span class="p">,</span> <span class="p">(</span><span class="n">idx_hi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">true_stat</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">var</span><span class="p">(</span><span class="n">drop_stats</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_fill_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drop_stats</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">splits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">interval</span>
+        <span class="n">v_hi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_drop</span><span class="p">(</span><span class="n">hi</span><span class="p">)</span>
+        <span class="n">v_lo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_drop</span><span class="p">(</span><span class="n">lo</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v_lo</span><span class="p">,</span> <span class="n">v_hi</span><span class="p">,</span> <span class="n">ev</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">ar</span><span class="p">:</span> <span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ar</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span> <span class="n">hi</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">drop_stats</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v_hi</span>
+        <span class="k">elif</span> <span class="n">hi</span> <span class="o">==</span> <span class="n">lo</span><span class="p">:</span>
+            <span class="n">drop_stats</span><span class="p">[</span><span class="n">hi</span><span class="p">]</span> <span class="o">=</span> <span class="n">v_hi</span>
+        <span class="k">elif</span> <span class="n">hi</span> <span class="o">==</span> <span class="n">lo</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">drop_stats</span><span class="p">[</span><span class="n">hi</span><span class="p">]</span> <span class="o">=</span> <span class="n">v_hi</span>
+            <span class="n">drop_stats</span><span class="p">[</span><span class="n">lo</span><span class="p">]</span> <span class="o">=</span> <span class="n">v_lo</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">hi</span><span class="o">-</span><span class="n">lo</span><span class="p">))),</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span><span class="o">//</span><span class="n">splits</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="p">[[</span><span class="n">lo</span><span class="o">+</span><span class="n">dx</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="n">lo</span><span class="o">+</span><span class="n">dx</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">splits</span><span class="p">)]</span>
+            <span class="n">intervals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">hi</span>
+            <span class="k">for</span> <span class="n">inter</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fill_interval</span><span class="p">(</span><span class="n">drop_stats</span><span class="p">,</span> <span class="n">inter</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">v_lo</span><span class="p">,</span> <span class="n">v_hi</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="n_dig">
+<a class="viewcode-back" href="../../../bumps.dream.digits.html#bumps.dream.digits.n_dig">[docs]</a>
+<span class="k">def</span> <span class="nf">n_dig</span><span class="p">(</span><span class="n">sx</span><span class="p">,</span> <span class="n">sd</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts standard deviation to # of significand digits.</span>
+
+<span class="sd">    *sx* is standard deviation of the statistic</span>
+<span class="sd">    *sd* is standard deviation of the sample</span>
+
+<span class="sd">    Adapted from section 7.9.2 of gum suppliment 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">sx</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">sd</span><span class="p">))</span> <span class="o">-</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1">#return as float or round now?</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.digits</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

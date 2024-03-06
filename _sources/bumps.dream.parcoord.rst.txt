@@ -1,0 +1,7 @@
+bumps.dream.parcoord module
+===========================
+
+.. automodule:: bumps.dream.parcoord
+   :members:
+   :undoc-members:
+   :show-inheritance:

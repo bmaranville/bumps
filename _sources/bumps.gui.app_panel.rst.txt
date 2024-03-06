@@ -1,0 +1,7 @@
+bumps.gui.app\_panel module
+===========================
+
+.. automodule:: bumps.gui.app_panel
+   :members:
+   :undoc-members:
+   :show-inheritance:

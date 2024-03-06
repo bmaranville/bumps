@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>crossover - Adaptive crossover support &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="diffev - Differential evolution MCMC stepper" href="diffev.html" />
+    <link rel="prev" title="corrplot - Correlation plots" href="corrplot.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="diffev.html" title="diffev - Differential evolution MCMC stepper"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="corrplot.html" title="corrplot - Correlation plots"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">crossover - Adaptive crossover support</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="crossover-adaptive-crossover-support">
+<h1>crossover - Adaptive crossover support<a class="headerlink" href="#crossover-adaptive-crossover-support" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.crossover.Crossover" title="bumps.dream.crossover.Crossover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Crossover</span></code></a></p></td>
+<td><p>Fixed weight crossover ratios.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover" title="bumps.dream.crossover.BaseAdaptiveCrossover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover</span></code></a></p></td>
+<td><p>Adapted weight crossover ratios.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.crossover.AdaptiveCrossover" title="bumps.dream.crossover.AdaptiveCrossover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdaptiveCrossover</span></code></a></p></td>
+<td><p>Adapted weight crossover ratios.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bumps.dream.crossover.LogAdaptiveCrossover" title="bumps.dream.crossover.LogAdaptiveCrossover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogAdaptiveCrossover</span></code></a></p></td>
+<td><p>Adapted weight crossover ratios, log-spaced.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.crossover">Crossover ratios</p>
+<p>The crossover ratio (CR) determines what percentage of parameters in the
+target vector are updated with difference vector selected from the
+population.  In traditional differential evolution a CR value is chosen
+somewhere in [0, 1] at the start of the search and stays constant throughout.
+DREAM extends this by allowing multiple CRs at the same time with different
+probabilities.  Adaptive crossover adjusts the relative weights of the CRs
+based on the average distance of the steps taken when that CR was used.  This
+distance will be zero for unsuccessful metropolis steps, and so the relative
+weights on those CRs which generate many unsuccessful steps will be reduced.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<ol class="arabic">
+<li><p>Traditional differential evolution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">crossover</span> <span class="o">=</span> <span class="n">Crossover</span><span class="p">(</span><span class="n">CR</span><span class="o">=</span><span class="n">CR</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Weighted crossover ratios:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">crossover</span> <span class="o">=</span> <span class="n">Crossover</span><span class="p">(</span><span class="n">CR</span><span class="o">=</span><span class="p">[</span><span class="n">CR1</span><span class="p">,</span> <span class="n">CR2</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="p">[</span><span class="n">weight1</span><span class="p">,</span> <span class="n">weight2</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>The weights are normalized to one, and default to equally weighted CRs.</p>
+<ol class="arabic" start="3">
+<li><p>Adaptive weighted crossover ratios:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">crossover</span> <span class="o">=</span> <span class="n">AdaptiveCrossover</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>The CRs are set to <em>[1/N, 2/N, … 1]</em>, and start out equally weighted.  The
+weights are adapted during burn-in (10% of the runs) and fixed for the
+remainder of the analysis.</p>
+</section>
+<section id="compatibility-notes">
+<h2>Compatibility Notes<a class="headerlink" href="#compatibility-notes" title="Link to this heading">¶</a></h2>
+<p>For <em>Extra.pCR == ‘Update’</em> in the matlab interface use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CR</span> <span class="o">=</span> <span class="n">AdaptiveCrossover</span><span class="p">(</span><span class="n">Ncr</span><span class="o">=</span><span class="n">MCMCPar</span><span class="o">.</span><span class="n">nCR</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For <em>Extra.pCR != ‘Update’</em> in the matlab interface use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CR</span> <span class="o">=</span> <span class="n">Crossover</span><span class="p">(</span><span class="n">CR</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="o">/</span><span class="n">Ncr</span><span class="p">],</span> <span class="n">pCR</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.crossover.AdaptiveCrossover">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.crossover.</span></span><span class="sig-name descname"><span class="pre">AdaptiveCrossover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#AdaptiveCrossover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.AdaptiveCrossover" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover" title="bumps.dream.crossover.BaseAdaptiveCrossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover</span></code></a></p>
+<p>Adapted weight crossover ratios.</p>
+<p><em>N</em> is the number of CRs to use.  CR is set to [1/N, 2/N, …, 1], with
+initial weights [1/N, 1/N, …, 1/N].</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.AdaptiveCrossover.adapt">
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.crossover.AdaptiveCrossover.adapt" title="Link to this definition">¶</a></dt>
+<dd><p>Update CR weights based on the available adaptation data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.AdaptiveCrossover.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.crossover.AdaptiveCrossover.reset" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.AdaptiveCrossover.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xnew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.crossover.AdaptiveCrossover.update" title="Link to this definition">¶</a></dt>
+<dd><p>Gather adaptation data on <em>xold</em>, <em>xnew</em> for each CR that was
+<em>used</em> in step <em>N</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.crossover.AdaptiveCrossover.weight">
+<span class="sig-name descname"><span class="pre">weight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.crossover.AdaptiveCrossover.weight" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.crossover.BaseAdaptiveCrossover">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.crossover.</span></span><span class="sig-name descname"><span class="pre">BaseAdaptiveCrossover</span></span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#BaseAdaptiveCrossover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.BaseAdaptiveCrossover" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Adapted weight crossover ratios.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.BaseAdaptiveCrossover.adapt">
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#BaseAdaptiveCrossover.adapt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.BaseAdaptiveCrossover.adapt" title="Link to this definition">¶</a></dt>
+<dd><p>Update CR weights based on the available adaptation data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.BaseAdaptiveCrossover.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#BaseAdaptiveCrossover.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.BaseAdaptiveCrossover.reset" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.BaseAdaptiveCrossover.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xnew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#BaseAdaptiveCrossover.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.BaseAdaptiveCrossover.update" title="Link to this definition">¶</a></dt>
+<dd><p>Gather adaptation data on <em>xold</em>, <em>xnew</em> for each CR that was
+<em>used</em> in step <em>N</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.crossover.BaseAdaptiveCrossover.weight">
+<span class="sig-name descname"><span class="pre">weight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.crossover.BaseAdaptiveCrossover.weight" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.crossover.Crossover">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.crossover.</span></span><span class="sig-name descname"><span class="pre">Crossover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#Crossover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.Crossover" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Fixed weight crossover ratios.</p>
+<p><em>CR</em> is a scalar if there is a single crossover ratio, or a vector of
+numbers in (0, 1].</p>
+<p><em>weight</em> is the relative weighting of each CR, or None for equal weights.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.Crossover.adapt">
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#Crossover.adapt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.Crossover.adapt" title="Link to this definition">¶</a></dt>
+<dd><p>Update CR weights based on the available adaptation data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.Crossover.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#Crossover.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.Crossover.reset" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.Crossover.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xnew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#Crossover.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.Crossover.update" title="Link to this definition">¶</a></dt>
+<dd><p>Gather adaptation data on <em>xold</em>, <em>xnew</em> for each CR that was
+<em>used</em> in step <em>N</em>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.dream.crossover.LogAdaptiveCrossover">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.dream.crossover.</span></span><span class="sig-name descname"><span class="pre">LogAdaptiveCrossover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/crossover.html#LogAdaptiveCrossover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.crossover.LogAdaptiveCrossover" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover" title="bumps.dream.crossover.BaseAdaptiveCrossover"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover</span></code></a></p>
+<p>Adapted weight crossover ratios, log-spaced.</p>
+<p><em>dim</em> is the number of dimensions in the problem.
+<em>N</em> is the number of CRs to use per decade.</p>
+<p>CR is set to [k/dim] where k is log-spaced from 1 to dim.
+The CRs start equally weighted as [1, …, 1]/len(CR).</p>
+<p><em>N</em> should be around 4.5.  This gives good low end density, with 1, 2, 3,
+and 5 parameters changed at a time, and proceeds up to 60% and 100% of
+parameters each time.  Lower values of <em>N</em> give too few high density CRs,
+and higher values give too many low density CRs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.LogAdaptiveCrossover.adapt">
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.crossover.LogAdaptiveCrossover.adapt" title="Link to this definition">¶</a></dt>
+<dd><p>Update CR weights based on the available adaptation data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.LogAdaptiveCrossover.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.crossover.LogAdaptiveCrossover.reset" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.dream.crossover.LogAdaptiveCrossover.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xnew</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">used</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.dream.crossover.LogAdaptiveCrossover.update" title="Link to this definition">¶</a></dt>
+<dd><p>Gather adaptation data on <em>xold</em>, <em>xnew</em> for each CR that was
+<em>used</em> in step <em>N</em>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.dream.crossover.LogAdaptiveCrossover.weight">
+<span class="sig-name descname"><span class="pre">weight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.dream.crossover.LogAdaptiveCrossover.weight" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">crossover - Adaptive crossover support</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#compatibility-notes">Compatibility Notes</a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.AdaptiveCrossover"><code class="docutils literal notranslate"><span class="pre">AdaptiveCrossover</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.crossover.AdaptiveCrossover.adapt"><code class="docutils literal notranslate"><span class="pre">AdaptiveCrossover.adapt()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.AdaptiveCrossover.reset"><code class="docutils literal notranslate"><span class="pre">AdaptiveCrossover.reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.AdaptiveCrossover.update"><code class="docutils literal notranslate"><span class="pre">AdaptiveCrossover.update()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.AdaptiveCrossover.weight"><code class="docutils literal notranslate"><span class="pre">AdaptiveCrossover.weight</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover"><code class="docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover.adapt"><code class="docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover.adapt()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover.reset"><code class="docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover.reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover.update"><code class="docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover.update()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.BaseAdaptiveCrossover.weight"><code class="docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover.weight</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.crossover.Crossover"><code class="docutils literal notranslate"><span class="pre">Crossover</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.crossover.Crossover.adapt"><code class="docutils literal notranslate"><span class="pre">Crossover.adapt()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.Crossover.reset"><code class="docutils literal notranslate"><span class="pre">Crossover.reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.Crossover.update"><code class="docutils literal notranslate"><span class="pre">Crossover.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.dream.crossover.LogAdaptiveCrossover"><code class="docutils literal notranslate"><span class="pre">LogAdaptiveCrossover</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.dream.crossover.LogAdaptiveCrossover.adapt"><code class="docutils literal notranslate"><span class="pre">LogAdaptiveCrossover.adapt()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.LogAdaptiveCrossover.reset"><code class="docutils literal notranslate"><span class="pre">LogAdaptiveCrossover.reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.LogAdaptiveCrossover.update"><code class="docutils literal notranslate"><span class="pre">LogAdaptiveCrossover.update()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.dream.crossover.LogAdaptiveCrossover.weight"><code class="docutils literal notranslate"><span class="pre">LogAdaptiveCrossover.weight</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="corrplot.html"
+                          title="previous chapter">corrplot - Correlation plots</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="diffev.html"
+                          title="next chapter">diffev - Differential evolution MCMC stepper</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/crossover.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="diffev.html" title="diffev - Differential evolution MCMC stepper"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="corrplot.html" title="corrplot - Correlation plots"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">crossover - Adaptive crossover support</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

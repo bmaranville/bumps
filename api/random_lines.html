@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>random_lines - Random lines and particle swarm optimizers &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="simplex - Nelder-Mead simplex optimizer (amoeba)" href="simplex.html" />
+    <link rel="prev" title="quasinewton - BFGS quasi-newton optimizer" href="quasinewton.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplex.html" title="simplex - Nelder-Mead simplex optimizer (amoeba)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="quasinewton.html" title="quasinewton - BFGS quasi-newton optimizer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">random_lines - Random lines and particle swarm optimizers</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="random-lines-random-lines-and-particle-swarm-optimizers">
+<h1>random_lines - Random lines and particle swarm optimizers<a class="headerlink" href="#random-lines-random-lines-and-particle-swarm-optimizers" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.random_lines.html#bumps.random_lines.random_lines" title="bumps.random_lines.random_lines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_lines</span></code></a></p></td>
+<td><p>Random lines is a population based optimizer which using quadratic fits along randomly oriented directions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.random_lines.html#bumps.random_lines.particle_swarm" title="bumps.random_lines.particle_swarm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">particle_swarm</span></code></a></p></td>
+<td><p>Particle swarm is a population based optimizer which uses force and momentum to select candidate points.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.random_lines">Random Lines Algorithm finds the optimal minimum of a function.</p>
+<p>Sahin, I. (2013). Minimization over randomly selected lines.  An
+International  Journal Of Optimization And Control: Theories &amp;
+Applications (IJOCTA), 3(2), 111-119.
+<a class="reference external" href="http://dx.doi.org/10.11121/ijocta.01.2013.00167">http://dx.doi.org/10.11121/ijocta.01.2013.00167</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.random_lines.particle_swarm">
+<span class="sig-prename descclassname"><span class="pre">bumps.random_lines.</span></span><span class="sig-name descname"><span class="pre">particle_swarm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NP</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/random_lines.html#particle_swarm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.random_lines.particle_swarm" title="Link to this definition">¶</a></dt>
+<dd><p>Particle swarm is a population based optimizer which uses force and
+momentum to select candidate points.</p>
+<p><em>cfo</em> is the cost function object.  This is a dictionary which contains
+the following keys:</p>
+<blockquote>
+<div><p><em>cost</em> is the function to be optimized.  If <em>parallel_cost</em> exists,
+it should accept a list of points, not just a single point on each
+evaluation.</p>
+<p><em>n</em> is the problem dimension</p>
+<p><em>x0</em> is the initial point</p>
+<p><em>x1</em> and <em>x2</em> are lower and upper bounds for each parameter</p>
+<p><em>monitor</em> is a callable which is called each iteration using
+<em>callback(step, x, fx, k)</em>, where <em>step</em> is the iteration number,
+<em>x</em> is the population, <em>fx</em> is value of the cost function for each
+member of the population and <em>k</em> is the index of the best point in
+the population.</p>
+<p><em>f_opt</em> is the target value of the optimization</p>
+</div></blockquote>
+<p><em>NP</em> is the number of fit parameters</p>
+<p><em>epsilon</em> is the convergence criterion.</p>
+<p><em>abort_test</em> is a callable which indicates whether an external processes
+requests the fit to stop.</p>
+<p><em>maxiter</em> is the maximum number of generations</p>
+<p>Returns success, num_evals, f(x_best), x_best.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.random_lines.random_lines">
+<span class="sig-prename descclassname"><span class="pre">bumps.random_lines.</span></span><span class="sig-name descname"><span class="pre">random_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NP</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/random_lines.html#random_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.random_lines.random_lines" title="Link to this definition">¶</a></dt>
+<dd><p>Random lines is a population based optimizer which using quadratic
+fits along randomly oriented directions.</p>
+<p><em>cfo</em> is the cost function object.  This is a dictionary which contains
+the following keys:</p>
+<blockquote>
+<div><p><em>cost</em> is the function to be optimized.  If <em>parallel_cost</em> exists,
+it should accept a list of points, not just a single point on each
+evaluation.</p>
+<p><em>n</em> is the problem dimension</p>
+<p><em>x0</em> is the initial point</p>
+<p><em>x1</em> and <em>x2</em> are lower and upper bounds for each parameter</p>
+<p><em>monitor</em> is a callable which is called each iteration using
+<em>callback(step, x, fx, k)</em>, where <em>step</em> is the iteration number,
+<em>x</em> is the population, <em>fx</em> is value of the cost function for each
+member of the population and <em>k</em> is the index of the best point in
+the population.</p>
+<p><em>f_opt</em> is the target value of the optimization</p>
+</div></blockquote>
+<p><em>NP</em> is the number of fit parameters</p>
+<p><em>CR</em> is the cross-over ratio, which is the proportion of dimensions
+that participate in any random orientation vector.</p>
+<p><em>epsilon</em> is the convergence criterion.</p>
+<p><em>abort_test</em> is a callable which indicates whether an external processes
+requests the fit to stop.</p>
+<p><em>maxiter</em> is the maximum number of generations</p>
+<p>Returns success, num_evals, f(x_best), x_best.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">random_lines - Random lines and particle swarm optimizers</a><ul>
+<li><a class="reference internal" href="#bumps.random_lines.particle_swarm"><code class="docutils literal notranslate"><span class="pre">particle_swarm()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.random_lines.random_lines"><code class="docutils literal notranslate"><span class="pre">random_lines()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="quasinewton.html"
+                          title="previous chapter">quasinewton - BFGS quasi-newton optimizer</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="simplex.html"
+                          title="next chapter">simplex - Nelder-Mead simplex optimizer (amoeba)</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/random_lines.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplex.html" title="simplex - Nelder-Mead simplex optimizer (amoeba)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="quasinewton.html" title="quasinewton - BFGS quasi-newton optimizer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">random_lines - Random lines and particle swarm optimizers</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

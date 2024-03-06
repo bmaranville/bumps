@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.plugin module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plugin module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.plugin">
+<span id="bumps-plugin-module"></span><h1>bumps.plugin module<a class="headerlink" href="#module-bumps.plugin" title="Link to this heading">¶</a></h1>
+<p>Bumps plugin architecture.</p>
+<p>With sophisticated models, developers need to be able to provide tools
+such as model builders and data viewers.</p>
+<p>Some of these will be tools for the GUI, such as views.  Others will be
+tools to display results.</p>
+<p>This file defines the interface that can be defined by your own application
+so that it interacts with models of your type.  Define your own model
+package with a module plugin.py.</p>
+<p>Create a main program which looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">multiprocessing</span>
+    <span class="n">multiprocessing</span><span class="o">.</span><span class="n">freeze_support</span><span class="p">()</span>
+
+    <span class="kn">import</span> <span class="nn">bumps.cli</span>
+    <span class="kn">import</span> <span class="nn">mypackage.plugin</span>
+    <span class="n">bumps</span><span class="o">.</span><span class="n">cli</span><span class="o">.</span><span class="n">install_plugin</span><span class="p">(</span><span class="n">mypackage</span><span class="o">.</span><span class="n">plugin</span><span class="p">)</span>
+    <span class="n">bumps</span><span class="o">.</span><span class="n">cli</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You should be able to use this as a driver program for your application.</p>
+<p>Note: the plugin architecture is likely to change radically as more models
+are added to the system, particularly so that we can accommodate simultaneous
+fitting of data taken using different experimental techniques.  For now, only
+only one plugin at a time is supported.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plugin.calc_errors">
+<span class="sig-prename descclassname"><span class="pre">bumps.plugin.</span></span><span class="sig-name descname"><span class="pre">calc_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plugin.html#calc_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plugin.calc_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Gather data needed to display uncertainty in the model and the data.</p>
+<p>Returns an object to be passed later to <a class="reference internal" href="#bumps.plugin.show_errors" title="bumps.plugin.show_errors"><code class="xref py py-func docutils literal notranslate"><span class="pre">show_errors()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plugin.data_view">
+<span class="sig-prename descclassname"><span class="pre">bumps.plugin.</span></span><span class="sig-name descname"><span class="pre">data_view</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plugin.html#data_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plugin.data_view" title="Link to this definition">¶</a></dt>
+<dd><p>Panel factory for the data tab in the GUI.</p>
+<p>If your model has an adequate show() function this should not be
+necessary.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plugin.load_model">
+<span class="sig-prename descclassname"><span class="pre">bumps.plugin.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plugin.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plugin.load_model" title="Link to this definition">¶</a></dt>
+<dd><p>Return a model stored within a file.</p>
+<p>This routine is for specialized model descriptions not defined by script.</p>
+<p>If the filename does not contain a model of the appropriate type (e.g.,
+because the extension is incorrect), then return None.</p>
+<p>No need to load pickles or script models.  These will be attempted if
+load_model returns None.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plugin.model_view">
+<span class="sig-prename descclassname"><span class="pre">bumps.plugin.</span></span><span class="sig-name descname"><span class="pre">model_view</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plugin.html#model_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plugin.model_view" title="Link to this definition">¶</a></dt>
+<dd><p>Panel factory for the model tab in the GUI.</p>
+<p>Return None if not present.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plugin.new_model">
+<span class="sig-prename descclassname"><span class="pre">bumps.plugin.</span></span><span class="sig-name descname"><span class="pre">new_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plugin.html#new_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plugin.new_model" title="Link to this definition">¶</a></dt>
+<dd><p>Return a new empty model or None.</p>
+<p>Called in response to &gt;File &gt;New from the GUI.  Creates a new empty
+model.  Also triggered if GUI is started without a model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.plugin.show_errors">
+<span class="sig-prename descclassname"><span class="pre">bumps.plugin.</span></span><span class="sig-name descname"><span class="pre">show_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/plugin.html#show_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.plugin.show_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Display the model with uncertainty on the current figure.</p>
+<p><em>errs</em> is the data returned from calc_errs.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.plugin module</a><ul>
+<li><a class="reference internal" href="#bumps.plugin.calc_errors"><code class="docutils literal notranslate"><span class="pre">calc_errors()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plugin.data_view"><code class="docutils literal notranslate"><span class="pre">data_view()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plugin.load_model"><code class="docutils literal notranslate"><span class="pre">load_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plugin.model_view"><code class="docutils literal notranslate"><span class="pre">model_view()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plugin.new_model"><code class="docutils literal notranslate"><span class="pre">new_model()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.plugin.show_errors"><code class="docutils literal notranslate"><span class="pre">show_errors()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.plugin.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.plugin module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

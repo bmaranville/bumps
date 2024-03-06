@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ksmirnov - Kolmogorov-Smirnov test for MCMC convergence &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="mahal - Mahalanobis distance calculator" href="mahal.html" />
+    <link rel="prev" title="initpop - Population initialization routines" href="initpop.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mahal.html" title="mahal - Mahalanobis distance calculator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="initpop.html" title="initpop - Population initialization routines"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">ksmirnov - Kolmogorov-Smirnov test for MCMC convergence</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="ksmirnov-kolmogorov-smirnov-test-for-mcmc-convergence">
+<h1>ksmirnov - Kolmogorov-Smirnov test for MCMC convergence<a class="headerlink" href="#ksmirnov-kolmogorov-smirnov-test-for-mcmc-convergence" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bumps.dream.ksmirnov.ksmirnov" title="bumps.dream.ksmirnov.ksmirnov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ksmirnov</span></code></a></p></td>
+<td><p>Kolmogorov-Smirnov test of similarity between the empirical distribution at the start and at the end of the chain.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.dream.ksmirnov">Kolmogorov-Smirnov test for MCMC convergence.</p>
+<p>Use the K-S tests to compare the distribution of values at the front of
+the chain to that at the end of the chain.  If the distributions are
+significantly different, then the MCMC chain has not converged.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.dream.ksmirnov.ksmirnov">
+<span class="sig-prename descclassname"><span class="pre">bumps.dream.ksmirnov.</span></span><span class="sig-name descname"><span class="pre">ksmirnov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/dream/ksmirnov.html#ksmirnov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.dream.ksmirnov.ksmirnov" title="Link to this definition">¶</a></dt>
+<dd><p>Kolmogorov-Smirnov test of similarity between the empirical distribution
+at the start and at the end of the chain.  Apply a median
+filter (filter=15) on neighbouring K-S values to reduce variation in
+the test statistic value.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">ksmirnov - Kolmogorov-Smirnov test for MCMC convergence</a><ul>
+<li><a class="reference internal" href="#bumps.dream.ksmirnov.ksmirnov"><code class="docutils literal notranslate"><span class="pre">ksmirnov()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="initpop.html"
+                          title="previous chapter">initpop - Population initialization routines</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="mahal.html"
+                          title="next chapter">mahal - Mahalanobis distance calculator</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/dream/ksmirnov.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mahal.html" title="mahal - Mahalanobis distance calculator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="initpop.html" title="initpop - Population initialization routines"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps.dream</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">ksmirnov - Kolmogorov-Smirnov test for MCMC convergence</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

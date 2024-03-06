@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Check the entropy calculator &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Bayesian Experimental Design" href="peak.html" />
+    <link rel="prev" title="Cross-shaped anti-correlation" href="../test_functions/cross.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="peak.html" title="Bayesian Experimental Design"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../test_functions/cross.html" title="Cross-shaped anti-correlation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Tutorial</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Check the entropy calculator</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="check-the-entropy-calculator">
+<h1>Check the entropy calculator<a class="headerlink" href="#check-the-entropy-calculator" title="Link to this heading">¶</a></h1>
+<p>A single measure for a multivariate distribution is the entropy</p>
+<p>By comparing the entropy of the prior distribution (usually a box uniform
+distribution with entropy <span class="math notranslate nohighlight">\(\sum_{i=1}^n \log(w_i)\)</span> where <span class="math notranslate nohighlight">\(w_i\)</span> is the
+range on parameter <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(n\)</span> is the number of paramters, but maybe
+lower if explicit priors are given for any of the parameters based on
+information from other sources) to the entropy computed from the posterior,
+you can estimate the number of bits of information from the fit to the data.</p>
+<p>Note that bumps calculates the entropy expected from the closest multivariate
+normal distribution (MVN) as well as directly from the samples.  The sample
+derived entropy has more variability, particularly in high dimensions.</p>
+<p>Many of the probability distributions in scipy.stats include a method
+to compute the entropy of the distribution.  We can use these to test
+the values from bumps against known good values.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">distributions</span><span class="p">,</span> <span class="n">multivariate_normal</span>
+<span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">bumps.dream.entropy</span> <span class="kn">import</span> <span class="n">Box</span><span class="p">,</span> <span class="n">MultivariateT</span><span class="p">,</span> <span class="n">Joint</span>
+</pre></div>
+</div>
+<p>Create the distribution using the name and parameters from the command line.
+Provide some handy help if the no distribution is given.</p>
+<p>TODO: create version of dirichlet that we can sample from.
+For dirichlet, need to enforce x_k in [0,1] and sum(x) = 1.  By reducing the
+number of parameters by 1 and setting</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">USAGE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Usage: bumps check_entropy.py dist p1 p2 ...</span>
+
+<span class="s2">where dist is one of the distributions in scipy.stats.distributions and</span>
+<span class="s2">p1, p2, ... are the arguments for the distribution in the order that they</span>
+<span class="s2">appear. For example, for the normal distribution, x ~ N(3, 0.8), use:</span>
+
+<span class="s2">    bumps --fit=dream --entropy  --store=/tmp/T1 check_entropy.py norm 3 0.2</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_mu_sigma</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span>
+
+<span class="k">def</span> <span class="nf">mvn</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">_mu_sigma</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mvskewn</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sigma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">Dk</span> <span class="o">=</span> <span class="p">[</span><span class="n">distributions</span><span class="o">.</span><span class="n">skewnorm</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">Joint</span><span class="p">(</span><span class="n">Dk</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mvt</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">_mu_sigma</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">MultivariateT</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mvcauchy</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">_mu_sigma</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">MultivariateT</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">DISTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;mvn&#39;</span><span class="p">:</span> <span class="n">mvn</span><span class="p">,</span>
+    <span class="s1">&#39;mvt&#39;</span><span class="p">:</span> <span class="n">mvt</span><span class="p">,</span>
+    <span class="s1">&#39;mvskewn&#39;</span><span class="p">:</span> <span class="n">mvskewn</span><span class="p">,</span>
+    <span class="s1">&#39;mvcauchy&#39;</span><span class="p">:</span> <span class="n">mvcauchy</span><span class="p">,</span>
+    <span class="s1">&#39;mvu&#39;</span><span class="p">:</span> <span class="n">Box</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">dist_name</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">D_class</span> <span class="o">=</span> <span class="n">DISTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dist_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">D_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">D_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">distributions</span><span class="p">,</span> <span class="n">dist_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">D_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;unknown distribution &quot;</span> <span class="o">+</span> <span class="n">dist_name</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[[[</span><span class="nb">float</span><span class="p">(</span><span class="n">vjk</span><span class="p">)</span> <span class="k">for</span> <span class="n">vjk</span> <span class="ow">in</span> <span class="n">vj</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span> <span class="k">for</span> <span class="n">vj</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="s1">&#39;;&#39;</span> <span class="ow">in</span> <span class="n">v</span>
+            <span class="k">else</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">vj</span><span class="p">)</span> <span class="k">for</span> <span class="n">vj</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">v</span>
+            <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">D_class</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">USAGE</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Set the fitting problem using the direct PDF method.  In this case, bumps
+is not being used to fit data, but instead to explore the probability
+distribution directly through the negative log likelihood function.  The
+only argument to this function is the parameter value x, which becomes the
+fitting parameter.  This model file will not work for multivariate
+distributions.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">D_nllf</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">D</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">dim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="s1">&#39;dim&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">D_nllf</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">VectorPDF</span><span class="p">(</span><span class="n">D_nllf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">))</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">dist_name</span> <span class="o">==</span> <span class="s2">&quot;mvskewn&quot;</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">))</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">distributions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Before fitting, print the expected entropy from the fit.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entropy</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*** Expected entropy: </span><span class="si">%.4f</span><span class="s2"> bits </span><span class="si">%.4f</span><span class="s2"> nats&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">entropy</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">entropy</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>To exercise the entropy calculator, try fitting some non-normal
+distributions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="mi">84</span>            <span class="c1"># close to normal</span>
+<span class="n">t</span> <span class="mi">4</span>             <span class="c1"># high kurtosis</span>
+<span class="n">uniform</span> <span class="o">-</span><span class="mi">5</span> <span class="mi">100</span>  <span class="c1"># high entropy</span>
+<span class="n">cauchy</span> <span class="mi">0</span> <span class="mi">1</span>      <span class="c1"># undefined variance</span>
+<span class="n">expon</span> <span class="mf">0.1</span> <span class="mf">0.2</span>   <span class="c1"># asymmetric, narrow</span>
+<span class="n">beta</span> <span class="mf">0.5</span> <span class="mf">0.5</span>    <span class="c1"># &#39;antimodal&#39; u-shaped pdf</span>
+<span class="n">beta</span> <span class="mi">2</span> <span class="mi">5</span>        <span class="c1"># skewed</span>
+<span class="n">mvn</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span> <span class="c1"># 3-D multivariate standard normal at (1,2,3)</span>
+<span class="n">mvt</span> <span class="mi">4</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span> <span class="c1"># 5-D multivariate t-distribution with df=4 at origin</span>
+<span class="n">mvu</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span>   <span class="c1"># 5-D unit uniform distribution centered at origin</span>
+<span class="n">mvcauchy</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span>  <span class="c1"># 3-D multivariate Cauchy distribution at origin</span>
+<span class="n">mvskewn</span> <span class="mi">5</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span> <span class="c1"># 3-D multivariate skew normal with alpha=5 at origin</span>
+</pre></div>
+</div>
+<p>Ideally, the entropy estimated by bumps will match the predicted entropy
+when using <em>–fit=dream</em>.  This is not the case for <em>beta 0.5 0.5</em>.  For
+the other distributions, the estimated entropy is within uncertainty of
+actual value, but the uncertainty is a bit high.</p>
+<p>The other fitters, which use the curvature at the peak to estimate
+the entropy, do not work reliably when the fit is not normal.  Try
+the same distributions with <em>–fit=amoeba</em> to see this.</p>
+<p>Download: <a class="reference download internal" download="" href="../../_downloads/5681c831b3693d0b07b762c3a6bdcbad/check_entropy.py"><code class="xref download docutils literal notranslate"><span class="pre">check_entropy.py</span></code></a>.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="../test_functions/cross.html"
+                          title="previous chapter">Cross-shaped anti-correlation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="peak.html"
+                          title="next chapter">Bayesian Experimental Design</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tutorial/entropy/check_entropy.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="peak.html" title="Bayesian Experimental Design"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../test_functions/cross.html" title="Cross-shaped anti-correlation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Check the entropy calculator</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

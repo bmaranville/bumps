@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.pdfwrapper module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pdfwrapper module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.pdfwrapper">
+<span id="bumps-pdfwrapper-module"></span><h1>bumps.pdfwrapper module<a class="headerlink" href="#module-bumps.pdfwrapper" title="Link to this heading">¶</a></h1>
+<p>Build a bumps model from a function.</p>
+<p>The <a class="reference internal" href="#bumps.pdfwrapper.PDF" title="bumps.pdfwrapper.PDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PDF</span></code></a> class uses introspection to convert a negative log
+likelihood function nllf(m1,m2,…) into a <a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness" title="bumps.fitproblem.Fitness"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.fitproblem.Fitness</span></code></a>
+class that has fittable parameters m1, m2, ….</p>
+<p>There is no attempt to manage data or uncertainties, except that an
+additional plot function can be provided to display the current value
+of the function in whatever way is meaningful.</p>
+<p>The note regarding user defined functions in <a class="reference internal" href="bumps.curve.html#module-bumps.curve" title="bumps.curve"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.curve</span></code></a> apply
+here as well.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.pdfwrapper.</span></span><span class="sig-name descname"><span class="pre">DirectProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Build model from negative log likelihood function <em>f(p)</em>.</p>
+<p>Vector <em>p</em> of length <em>n</em> defines the initial value.</p>
+<p><em>bounds</em> defines limiting values for <em>p</em> as
+<em>[(p1_low, p1_high), (p2_low, p2_high), …]</em>.  If all parameters are
+have the same bounds, use <em>bounds=np.tile([low,high],[n,1])</em>.</p>
+<p>Unlike <a class="reference internal" href="#bumps.pdfwrapper.PDF" title="bumps.pdfwrapper.PDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PDF</span></code></a>, no parameter objects are defined for the elements
+of <em>p</em>, so all are fitting parameters.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.chisq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.chisq" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.chisq_str">
+<span class="sig-name descname"><span class="pre">chisq_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.chisq_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.chisq_str" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.getp">
+<span class="sig-name descname"><span class="pre">getp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.getp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.getp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.has_residuals">
+<span class="sig-name descname"><span class="pre">has_residuals</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.has_residuals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.model_parameters">
+<span class="sig-name descname"><span class="pre">model_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.model_parameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.model_reset">
+<span class="sig-name descname"><span class="pre">model_reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.model_reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.model_reset" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.model_update">
+<span class="sig-name descname"><span class="pre">model_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.model_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.model_update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pvec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.nllf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fignum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the model to the current figure.  You only get one figure, but you
+can make it as complex as you want.  This will be saved as a png on
+the server, and composed onto a results web page.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.randomize">
+<span class="sig-name descname"><span class="pre">randomize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.randomize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.randomize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.setp">
+<span class="sig-name descname"><span class="pre">setp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.setp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.setp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.show" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.DirectProblem.summarize">
+<span class="sig-name descname"><span class="pre">summarize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#DirectProblem.summarize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.DirectProblem.summarize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.pdfwrapper.</span></span><span class="sig-name descname"><span class="pre">PDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Build a model from a function.</p>
+<p>This model can be fitted with any of the bumps optimizers.</p>
+<p><em>fn</em> is a function that returns the negative log likelihood of seeing
+its input parameters.</p>
+<p>The fittable parameters are derived from the parameter names in the
+function definition, with <em>name</em> prepended to each parameter.</p>
+<p>The optional <em>plot</em> function takes the same arguments as <em>fn</em>, with an
+additional <em>view</em> argument which may be set from the bumps command
+line.  If provide, it should provide a visual indication of the
+function value and uncertainty on the current matplotlib.pyplot figure.</p>
+<p>Additional keyword arguments are treated as the initial values for
+the parameters, or initial ranges if par=(min,max).  Otherwise, the
+default is taken from the function definition (if the function uses
+par=value to define the parameter) or is set to zero if no default is
+given in the function.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF.chisq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF.chisq" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.chisq_str">
+<span class="sig-name descname"><span class="pre">chisq_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF.chisq_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF.chisq_str" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.has_residuals">
+<span class="sig-name descname"><span class="pre">has_residuals</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.pdfwrapper.PDF.has_residuals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Call self as a function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.numpoints">
+<span class="sig-name descname"><span class="pre">numpoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF.numpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF.numpoints" title="Link to this definition">¶</a></dt>
+<dd><p>Return the number of data points.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>return the parameters in the model.</p>
+<p>model parameters are a hierarchical structure of lists and
+dictionaries.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.PDF.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#PDF.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.PDF.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the model to the current figure.  You only get one figure, but you
+can make it as complex as you want.  This will be saved as a png on
+the server, and composed onto a results web page.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.pdfwrapper.</span></span><span class="sig-name descname"><span class="pre">VectorPDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Build a model from a function.</p>
+<p>This model can be fitted with any of the bumps optimizers.</p>
+<p><em>fn</em> is a function that returns the negative log likelihood of seeing
+its input parameters.</p>
+<p>Vector <em>p</em> of length <em>n</em> defines the initial value. Unlike <a class="reference internal" href="#bumps.pdfwrapper.PDF" title="bumps.pdfwrapper.PDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PDF</span></code></a>,
+<em>VectorPDF</em> operates on a parameter vector <em>p</em> rather than individual
+parameters <em>p1</em>, <em>p2</em>, etc.  Default parameter values <em>p</em> must be
+provided in order to determine the number of parameters.</p>
+<p><em>labels</em> are the names of the individual parameters.  If not present,
+the name for parameter <em>k</em> defaults to <em>pk</em>.  Each label is prefixed by
+<em>name</em>.</p>
+<p>The optional <em>plot</em> function takes the same arguments as <em>fn</em>, with an
+additional <em>view</em> argument which may be set from the bumps command
+line.  If provide, it should provide a visual indication of the
+function value and uncertainty on the current matplotlib.pyplot figure.</p>
+<p>Additional keyword arguments are treated as the initial values for
+the parameters, or initial ranges if par=(min,max).  Otherwise, the
+default is taken from the function definition (if the function uses
+par=value to define the parameter) or is set to zero if no default is
+given in the function.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.chisq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.chisq" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.chisq_str">
+<span class="sig-name descname"><span class="pre">chisq_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.chisq_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.chisq_str" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.has_residuals">
+<span class="sig-name descname"><span class="pre">has_residuals</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.has_residuals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Call self as a function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.numpoints">
+<span class="sig-name descname"><span class="pre">numpoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.numpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.numpoints" title="Link to this definition">¶</a></dt>
+<dd><p>Return the number of data points.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.parameters" title="Link to this definition">¶</a></dt>
+<dd><p>return the parameters in the model.</p>
+<p>model parameters are a hierarchical structure of lists and
+dictionaries.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the model to the current figure.  You only get one figure, but you
+can make it as complex as you want.  This will be saved as a png on
+the server, and composed onto a results web page.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pdfwrapper.VectorPDF.residuals">
+<span class="sig-name descname"><span class="pre">residuals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pdfwrapper.html#VectorPDF.residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pdfwrapper.VectorPDF.residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Return residuals for current theory minus data.</p>
+<p>Used for Levenburg-Marquardt, and for plotting.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.pdfwrapper module</a><ul>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem"><code class="docutils literal notranslate"><span class="pre">DirectProblem</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.bounds"><code class="docutils literal notranslate"><span class="pre">DirectProblem.bounds()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.chisq"><code class="docutils literal notranslate"><span class="pre">DirectProblem.chisq()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.chisq_str"><code class="docutils literal notranslate"><span class="pre">DirectProblem.chisq_str()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.getp"><code class="docutils literal notranslate"><span class="pre">DirectProblem.getp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.has_residuals"><code class="docutils literal notranslate"><span class="pre">DirectProblem.has_residuals</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.labels"><code class="docutils literal notranslate"><span class="pre">DirectProblem.labels()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.model_parameters"><code class="docutils literal notranslate"><span class="pre">DirectProblem.model_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.model_reset"><code class="docutils literal notranslate"><span class="pre">DirectProblem.model_reset()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.model_update"><code class="docutils literal notranslate"><span class="pre">DirectProblem.model_update()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.nllf"><code class="docutils literal notranslate"><span class="pre">DirectProblem.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.plot"><code class="docutils literal notranslate"><span class="pre">DirectProblem.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.randomize"><code class="docutils literal notranslate"><span class="pre">DirectProblem.randomize()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.setp"><code class="docutils literal notranslate"><span class="pre">DirectProblem.setp()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.show"><code class="docutils literal notranslate"><span class="pre">DirectProblem.show()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.DirectProblem.summarize"><code class="docutils literal notranslate"><span class="pre">DirectProblem.summarize()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF"><code class="docutils literal notranslate"><span class="pre">PDF</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.chisq"><code class="docutils literal notranslate"><span class="pre">PDF.chisq()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.chisq_str"><code class="docutils literal notranslate"><span class="pre">PDF.chisq_str()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.has_residuals"><code class="docutils literal notranslate"><span class="pre">PDF.has_residuals</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.nllf"><code class="docutils literal notranslate"><span class="pre">PDF.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.numpoints"><code class="docutils literal notranslate"><span class="pre">PDF.numpoints()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.parameters"><code class="docutils literal notranslate"><span class="pre">PDF.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.PDF.plot"><code class="docutils literal notranslate"><span class="pre">PDF.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF"><code class="docutils literal notranslate"><span class="pre">VectorPDF</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.chisq"><code class="docutils literal notranslate"><span class="pre">VectorPDF.chisq()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.chisq_str"><code class="docutils literal notranslate"><span class="pre">VectorPDF.chisq_str()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.has_residuals"><code class="docutils literal notranslate"><span class="pre">VectorPDF.has_residuals</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.nllf"><code class="docutils literal notranslate"><span class="pre">VectorPDF.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.numpoints"><code class="docutils literal notranslate"><span class="pre">VectorPDF.numpoints()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.parameters"><code class="docutils literal notranslate"><span class="pre">VectorPDF.parameters()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.plot"><code class="docutils literal notranslate"><span class="pre">VectorPDF.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pdfwrapper.VectorPDF.residuals"><code class="docutils literal notranslate"><span class="pre">VectorPDF.residuals()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.pdfwrapper.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pdfwrapper module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

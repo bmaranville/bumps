@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.mystic.examples.circle module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.examples.circle module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.mystic.examples.circle">
+<span id="bumps-mystic-examples-circle-module"></span><h1>bumps.mystic.examples.circle module<a class="headerlink" href="#module-bumps.mystic.examples.circle" title="Link to this heading">¶</a></h1>
+<p>2d array representation of a circle</p>
+<dl class="simple">
+<dt>References::</dt><dd><p>None</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.examples.circle.MinimumCircle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.examples.circle.</span></span><span class="sig-name descname"><span class="pre">MinimumCircle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/examples/circle.html#MinimumCircle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.examples.circle.MinimumCircle" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bumps.mystic.examples.model.html#bumps.mystic.examples.model.Fitness" title="bumps.mystic.examples.model.Fitness"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fitness</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.examples.circle.MinimumCircle.profile">
+<span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/examples/circle.html#MinimumCircle.profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.examples.circle.MinimumCircle.profile" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.examples.circle.MinimumCircle.residuals">
+<span class="sig-name descname"><span class="pre">residuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/examples/circle.html#MinimumCircle.residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.examples.circle.MinimumCircle.residuals" title="Link to this definition">¶</a></dt>
+<dd><p>Residuals is used by Levenburg-Marquardt, so fake the
+penalty terms of the normal cost function for use here.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.examples.circle.circle">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.examples.circle.</span></span><span class="sig-name descname"><span class="pre">circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/examples/circle.html#circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.examples.circle.circle" title="Link to this definition">¶</a></dt>
+<dd><p>generate a 2D array representation of a circle of given coeffs
+coeffs = (x,y,r)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.examples.circle.gendensity">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.examples.circle.</span></span><span class="sig-name descname"><span class="pre">gendensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">density</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/examples/circle.html#gendensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.examples.circle.gendensity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.examples.circle.genpoints">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.examples.circle.</span></span><span class="sig-name descname"><span class="pre">genpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/examples/circle.html#genpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.examples.circle.genpoints" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 2D dataset of npts enclosed in circle of given coeffs,
+where coeffs = (x,y,r).</p>
+<p>NOTE: if npts is None, constrain all points to circle of given radius</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.mystic.examples.circle module</a><ul>
+<li><a class="reference internal" href="#bumps.mystic.examples.circle.MinimumCircle"><code class="docutils literal notranslate"><span class="pre">MinimumCircle</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.examples.circle.MinimumCircle.profile"><code class="docutils literal notranslate"><span class="pre">MinimumCircle.profile()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.examples.circle.MinimumCircle.residuals"><code class="docutils literal notranslate"><span class="pre">MinimumCircle.residuals()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.examples.circle.circle"><code class="docutils literal notranslate"><span class="pre">circle()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.examples.circle.gendensity"><code class="docutils literal notranslate"><span class="pre">gendensity()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.examples.circle.genpoints"><code class="docutils literal notranslate"><span class="pre">genpoints()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.mystic.examples.circle.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.examples.circle module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

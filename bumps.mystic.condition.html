@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.mystic.condition module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.condition module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.mystic.condition">
+<span id="bumps-mystic-condition-module"></span><h1>bumps.mystic.condition module<a class="headerlink" href="#module-bumps.mystic.condition" title="Link to this heading">¶</a></h1>
+<p>Conditional expression manager</p>
+<p>Conditional expressions are formed from combinations of
+and (&amp;), or (|), exclusive or (^) and not  (!), as well
+as primitive tests.   The resulting expressions can be
+evaluated on particular inputs, with the inputs passed
+down to the primitive tests.  Primitive tests should be
+subclassed from Condition, with the __call__  method
+defined to return the truth value of the condition
+given the inputs.</p>
+<p>For example, the following creates a test whether a
+number is in the open interval (0,1):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">gt</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">):</span> <span class="k">return</span> <span class="n">test</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;x&gt;</span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">lt</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">):</span> <span class="k">return</span> <span class="n">test</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;x&lt;</span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test</span> <span class="o">=</span> <span class="n">lt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">gt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+<span class="go">(x&lt;1 and x&gt;0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>No assumptions are made about the structure of the arguments
+to the primitives, but all primitives in an expression should
+accept the same arguments.</p>
+<p>The constants true and false are predefined as primitives
+which can take any arguments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">true</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">false</span><span class="p">(</span><span class="s2">&quot;this&quot;</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="s2">&quot;ignored&quot;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>You can find the individual terms of the expression using
+the method primitives:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">true</span><span class="o">&amp;</span><span class="n">false</span><span class="p">)</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="n">true</span><span class="p">,</span><span class="n">false</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>In many instances you not only want to know that an expression
+is true or false, but why it is true or false. The status method
+on expressions does this, returning not only the truth status as
+a boolean, but also a list of primitives and Not(primitives)
+saying which conditions are responsible.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">iters</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span> <span class="k">return</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;iters&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;iters&gt;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">stepsize</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span> <span class="k">return</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;stepsize&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;stepsize&lt;</span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">converge</span> <span class="o">=</span> <span class="n">stepsize</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diverge</span> <span class="o">=</span> <span class="n">iters</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">,</span><span class="n">why</span> <span class="o">=</span> <span class="n">converge</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">stepsize</span><span class="o">=</span><span class="mf">21.2</span><span class="p">,</span><span class="n">iters</span><span class="o">=</span><span class="mi">20</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">why</span><span class="p">)))</span>
+<span class="go">False not stepsize&lt;0.001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">,</span><span class="n">why</span> <span class="o">=</span> <span class="n">diverge</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">stepsize</span><span class="o">=</span><span class="mf">21.2</span><span class="p">,</span><span class="n">iters</span><span class="o">=</span><span class="mi">129</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">why</span><span class="p">)))</span>
+<span class="go">True iters&gt;100</span>
+</pre></div>
+</div>
+<p>Note that status will be less efficient than direct evaluation
+because it has to test all branches and construct the result list.
+Normally the And and Or calculations an short circuit, and only
+compute what they need to guarantee the resulting truth value.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.condition.And">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.condition.</span></span><span class="sig-name descname"><span class="pre">And</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#And"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.And" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>True if both conditions are satisfied.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.And.primitives">
+<span class="sig-name descname"><span class="pre">primitives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#And.primitives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.And.primitives" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of terms in the condition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.And.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#And.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.And.status" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the condition, returning both the status and a list of
+conditions.  If the status is true, then the conditions are those
+that contribute to the true status.  If the status is false, then
+the conditions are those that contribute to the false status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Condition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.condition.</span></span><span class="sig-name descname"><span class="pre">Condition</span></span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Condition" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Condition abstract base class.</p>
+<p>Subclasses should define __call__(self, <a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kw)
+which returns True if the condition is satisfied, and
+False otherwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Condition.primitives">
+<span class="sig-name descname"><span class="pre">primitives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Condition.primitives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Condition.primitives" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of terms in the condition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Condition.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Condition.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Condition.status" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the condition, returning both the status and a list of
+conditions.  If the status is true, then the conditions are those
+that contribute to the true status.  If the status is false, then
+the conditions are those that contribute to the false status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Constant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.condition.</span></span><span class="sig-name descname"><span class="pre">Constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Constant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Constant" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>Constants true and false.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Not">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.condition.</span></span><span class="sig-name descname"><span class="pre">Not</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Not"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Not" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>True if condition is not satisfied</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Not.primitives">
+<span class="sig-name descname"><span class="pre">primitives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Not.primitives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Not.primitives" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of terms in the condition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Not.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Not.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Not.status" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the condition, returning both the status and a list of
+conditions.  If the status is true, then the conditions are those
+that contribute to the true status.  If the status is false, then
+the conditions are those that contribute to the false status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Or">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.condition.</span></span><span class="sig-name descname"><span class="pre">Or</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Or"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Or" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>True if either condition is satisfied</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Or.primitives">
+<span class="sig-name descname"><span class="pre">primitives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Or.primitives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Or.primitives" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of terms in the condition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Or.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Or.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Or.status" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the condition, returning both the status and a list of
+conditions.  If the status is true, then the conditions are those
+that contribute to the true status.  If the status is false, then
+the conditions are those that contribute to the false status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Xor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mystic.condition.</span></span><span class="sig-name descname"><span class="pre">Xor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Xor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Xor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.mystic.condition.Condition" title="bumps.mystic.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
+<p>True if only one condition is satisfied</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Xor.primitives">
+<span class="sig-name descname"><span class="pre">primitives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Xor.primitives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Xor.primitives" title="Link to this definition">¶</a></dt>
+<dd><p>Return a list of terms in the condition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mystic.condition.Xor.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/condition.html#Xor.status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.condition.Xor.status" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate the condition, returning both the status and a list of
+conditions.  If the status is true, then the conditions are those
+that contribute to the true status.  If the status is false, then
+the conditions are those that contribute to the false status.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.mystic.condition module</a><ul>
+<li><a class="reference internal" href="#bumps.mystic.condition.And"><code class="docutils literal notranslate"><span class="pre">And</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.condition.And.primitives"><code class="docutils literal notranslate"><span class="pre">And.primitives()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.condition.And.status"><code class="docutils literal notranslate"><span class="pre">And.status()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.condition.Condition.primitives"><code class="docutils literal notranslate"><span class="pre">Condition.primitives()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Condition.status"><code class="docutils literal notranslate"><span class="pre">Condition.status()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Not"><code class="docutils literal notranslate"><span class="pre">Not</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.condition.Not.primitives"><code class="docutils literal notranslate"><span class="pre">Not.primitives()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Not.status"><code class="docutils literal notranslate"><span class="pre">Not.status()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Or"><code class="docutils literal notranslate"><span class="pre">Or</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.condition.Or.primitives"><code class="docutils literal notranslate"><span class="pre">Or.primitives()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Or.status"><code class="docutils literal notranslate"><span class="pre">Or.status()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Xor"><code class="docutils literal notranslate"><span class="pre">Xor</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mystic.condition.Xor.primitives"><code class="docutils literal notranslate"><span class="pre">Xor.primitives()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.condition.Xor.status"><code class="docutils literal notranslate"><span class="pre">Xor.status()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.mystic.condition.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.condition module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

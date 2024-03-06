@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Inequality constraints &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="User’s Guide" href="../../guide/index.html" />
+    <link rel="prev" title="Calling fit from scripts" href="../direct_call/direct_call.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../guide/index.html" title="User’s Guide"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../direct_call/direct_call.html" title="Calling fit from scripts"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Tutorial</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Inequality constraints</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="inequality-constraints">
+<h1>Inequality constraints<a class="headerlink" href="#inequality-constraints" title="Link to this heading">¶</a></h1>
+<p>The usual pattern for constraints within bumps is to set the value for one
+parameter to be some function of the other parameters.  This does not
+allow contraints of the form <span class="math notranslate nohighlight">\(a &lt; b\)</span> for parameters <span class="math notranslate nohighlight">\(a\)</span> and paramter <span class="math notranslate nohighlight">\(b\)</span>.</p>
+<p>Instead, along with the fit problem definition, you can supply your
+own penalty constraints function which adds an artificial value to the
+probability function for points outside the feasible region.  The
+ideal constraints function will incorporate the distance from the
+boundary of the feasible region so that if the fitter is started
+outside forces the fit back into the feasible region.</p>
+<p>The <em>soft_limit</em> value can be used in conjunction with the penalty to
+avoid evaluating the function outside the feasible region.  For example,
+the function <span class="math notranslate nohighlight">\(\log(a-b)\)</span> is only defined for <span class="math notranslate nohighlight">\(a &gt; b\)</span>, so setting a
+constraint such as <span class="math notranslate nohighlight">\(10^6 + (a-b)^2\)</span> for <span class="math notranslate nohighlight">\(a &lt;= b\)</span> and <span class="math notranslate nohighlight">\(0\)</span> along with a
+soft limit of <span class="math notranslate nohighlight">\(10^6\)</span> will keep the function defined everywhere.  With
+the penalty value sufficiently large, the probability of any evaluation
+in the infeasible region will be neglible, and will not skew the
+posterior distribution statistics.</p>
+<p>Define the model as usual</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span> <span class="nf">line</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">m</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.1</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">6.3</span><span class="p">,</span> <span class="mf">8.03</span><span class="p">,</span> <span class="mf">9.6</span><span class="p">,</span> <span class="mf">11.9</span><span class="p">]</span>
+<span class="n">dy</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]</span>
+
+<span class="n">M</span> <span class="o">=</span> <span class="n">Curve</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Define the constraints as a function which takes no parameters and returns
+a floating point value.  Note the value <em>1e6</em> in the penalty condition:
+this is the soft limit value which we will use to avoid evaluating the
+curve in the infeasible region.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">constraints</span><span class="p">():</span>
+    <span class="n">m</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">m</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">M</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="n">b</span> <span class="k">else</span> <span class="mf">1e6</span> <span class="o">+</span> <span class="p">(</span><span class="n">m</span><span class="o">-</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">6</span>
+</pre></div>
+</div>
+<p>Attach the constraints to the problem.  Give the soft limit value that is
+used for the constraints.  Without the soft limit, the fit would stall
+since we started it at a deep local minimum near the true solution without
+constraints.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="n">constraints</span><span class="p">,</span> <span class="n">soft_limit</span><span class="o">=</span><span class="mf">1e6</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The constraint relies on the ability for python to access the parameters
+from the module.  Furthermore, the parameters still “boxed”, and so you
+need to reference the value attribute to get the parameter value at the
+time the constraint is evaluated.  Not an elegant solution, but it works.
+Eventually we will add constraint expressions such as <em>M.m &lt; M.b</em> or
+<em>M.m + M.b &lt; 10</em> using the same infrastructure as equality constraints.</p>
+<p>Download: <a class="reference download internal" download="" href="../../_downloads/833535780900a2ee1c3be283e2c7e96b/inequality.py"><code class="xref download docutils literal notranslate"><span class="pre">inequality.py</span></code></a>.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="../direct_call/direct_call.html"
+                          title="previous chapter">Calling fit from scripts</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="../../guide/index.html"
+                          title="next chapter">User’s Guide</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tutorial/constraints/inequality.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../guide/index.html" title="User’s Guide"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../direct_call/direct_call.html" title="Calling fit from scripts"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Tutorial</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Inequality constraints</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

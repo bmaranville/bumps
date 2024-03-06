@@ -1,0 +1,7 @@
+bumps.mystic.condition module
+=============================
+
+.. automodule:: bumps.mystic.condition
+   :members:
+   :undoc-members:
+   :show-inheritance:

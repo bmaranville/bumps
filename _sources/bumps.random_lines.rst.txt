@@ -1,0 +1,7 @@
+bumps.random\_lines module
+==========================
+
+.. automodule:: bumps.random_lines
+   :members:
+   :undoc-members:
+   :show-inheritance:

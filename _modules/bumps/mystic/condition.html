@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.mystic.condition &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.condition</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.mystic.condition</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is public domain</span>
+<span class="c1"># Author: Paul Kienzle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Conditional expression manager</span>
+
+<span class="sd">Conditional expressions are formed from combinations of</span>
+<span class="sd">and (&amp;), or (|), exclusive or (^) and not  (!), as well</span>
+<span class="sd">as primitive tests.   The resulting expressions can be</span>
+<span class="sd">evaluated on particular inputs, with the inputs passed</span>
+<span class="sd">down to the primitive tests.  Primitive tests should be</span>
+<span class="sd">subclassed from Condition, with the __call__  method</span>
+<span class="sd">defined to return the truth value of the condition</span>
+<span class="sd">given the inputs.</span>
+
+<span class="sd">For example, the following creates a test whether a</span>
+<span class="sd">number is in the open interval (0,1)::</span>
+
+<span class="sd">    &gt;&gt;&gt; class gt(Condition):</span>
+<span class="sd">    ...    def __init__(self, base): self.base = base</span>
+<span class="sd">    ...    def __call__(self, test): return test&gt;self.base</span>
+<span class="sd">    ...    def __str__(self): return &quot;x&gt;%g&quot;%self.base</span>
+<span class="sd">    &gt;&gt;&gt; class lt(Condition):</span>
+<span class="sd">    ...    def __init__(self, base): self.base = base</span>
+<span class="sd">    ...    def __call__(self, test): return test&lt;self.base</span>
+<span class="sd">    ...    def __str__(self): return &quot;x&lt;%g&quot;%self.base</span>
+<span class="sd">    &gt;&gt;&gt; test = lt(1) &amp; gt(0)</span>
+<span class="sd">    &gt;&gt;&gt; print(test)</span>
+<span class="sd">    (x&lt;1 and x&gt;0)</span>
+<span class="sd">    &gt;&gt;&gt; test(0.5)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; test(1)</span>
+<span class="sd">    False</span>
+
+<span class="sd">No assumptions are made about the structure of the arguments</span>
+<span class="sd">to the primitives, but all primitives in an expression should</span>
+<span class="sd">accept the same arguments.</span>
+
+<span class="sd">The constants true and false are predefined as primitives</span>
+<span class="sd">which can take any arguments::</span>
+
+<span class="sd">    &gt;&gt;&gt; true()</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; false(&quot;this&quot;,string=&quot;ignored&quot;)</span>
+<span class="sd">    False</span>
+
+<span class="sd">You can find the individual terms of the expression using</span>
+<span class="sd">the method primitives:</span>
+
+<span class="sd">    &gt;&gt;&gt; (true&amp;false).primitives() == set([true,false])</span>
+<span class="sd">    True</span>
+
+<span class="sd">In many instances you not only want to know that an expression</span>
+<span class="sd">is true or false, but why it is true or false. The status method</span>
+<span class="sd">on expressions does this, returning not only the truth status as</span>
+<span class="sd">a boolean, but also a list of primitives and Not(primitives)</span>
+<span class="sd">saying which conditions are responsible.  For example::</span>
+
+<span class="sd">    &gt;&gt;&gt; class iters(Condition):</span>
+<span class="sd">    ...    def __init__(self, base): self.base = base</span>
+<span class="sd">    ...    def __call__(self, state): return state[&#39;iters&#39;]&gt;self.base</span>
+<span class="sd">    ...    def __str__(self): return &quot;iters&gt;%d&quot;%self.base</span>
+<span class="sd">    &gt;&gt;&gt; class stepsize(Condition):</span>
+<span class="sd">    ...    def __init__(self, base): self.base = base</span>
+<span class="sd">    ...    def __call__(self, state): return state[&#39;stepsize&#39;]&lt;self.base</span>
+<span class="sd">    ...    def __str__(self): return &quot;stepsize&lt;%g&quot;%self.base</span>
+<span class="sd">    &gt;&gt;&gt; converge = stepsize(0.001)</span>
+<span class="sd">    &gt;&gt;&gt; diverge = iters(100)</span>
+<span class="sd">    &gt;&gt;&gt; result,why = converge.status(dict(stepsize=21.2,iters=20))</span>
+<span class="sd">    &gt;&gt;&gt; print(&quot;%s %s&quot;%(result, &quot;, &quot;.join(str(c) for c in why)))</span>
+<span class="sd">    False not stepsize&lt;0.001</span>
+<span class="sd">    &gt;&gt;&gt; result,why = diverge.status(dict(stepsize=21.2,iters=129))</span>
+<span class="sd">    &gt;&gt;&gt; print(&quot;%s %s&quot;%(result, &quot;, &quot;.join(str(c) for c in why)))</span>
+<span class="sd">    True iters&gt;100</span>
+
+<span class="sd">Note that status will be less efficient than direct evaluation</span>
+<span class="sd">because it has to test all branches and construct the result list.</span>
+<span class="sd">Normally the And and Or calculations an short circuit, and only</span>
+<span class="sd">compute what they need to guarantee the resulting truth value.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Condition">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Condition">[docs]</a>
+<span class="k">class</span> <span class="nc">Condition</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Condition abstract base class.</span>
+
+<span class="sd">    Subclasses should define __call__(self, *args, **kw)</span>
+<span class="sd">    which returns True if the condition is satisfied, and</span>
+<span class="sd">    False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Xor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Not</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span> <span class="nf">_negate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_Bar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<div class="viewcode-block" id="Condition.status">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Condition.status">[docs]</a>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the condition, returning both the status and a list of</span>
+<span class="sd">        conditions.  If the status is true, then the conditions are those</span>
+<span class="sd">        that contribute to the true status.  If the status is false, then</span>
+<span class="sd">        the conditions are those that contribute to the false status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stat</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stat</span><span class="p">,</span> <span class="p">[</span><span class="n">Not</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Condition.primitives">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Condition.primitives">[docs]</a>
+    <span class="k">def</span> <span class="nf">primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of terms in the condition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span></div>
+</div>
+
+
+<div class="viewcode-block" id="And">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.And">[docs]</a>
+<span class="k">class</span> <span class="nc">And</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    True if both conditions are satisfied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">left</span><span class="p">,</span><span class="n">right</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_negate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_negate</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_negate</span><span class="p">())</span>
+<div class="viewcode-block" id="And.status">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.And.status">[docs]</a>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">lstat</span><span class="p">,</span><span class="n">lcond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">rstat</span><span class="p">,</span><span class="n">rcond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lstat</span> <span class="ow">and</span> <span class="n">rstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span><span class="n">lcond</span><span class="o">+</span><span class="n">rcond</span>
+        <span class="k">elif</span> <span class="n">lstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span><span class="n">rcond</span>
+        <span class="k">elif</span> <span class="n">rstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span><span class="n">lcond</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span><span class="n">lcond</span><span class="o">+</span><span class="n">rcond</span></div>
+
+<div class="viewcode-block" id="And.primitives">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.And.primitives">[docs]</a>
+    <span class="k">def</span> <span class="nf">primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Or">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Or">[docs]</a>
+<span class="k">class</span> <span class="nc">Or</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    True if either condition is satisfied</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">left</span><span class="p">,</span><span class="n">right</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> or </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_negate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_negate</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_negate</span><span class="p">())</span>
+<div class="viewcode-block" id="Or.status">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Or.status">[docs]</a>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">lstat</span><span class="p">,</span><span class="n">lcond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">rstat</span><span class="p">,</span><span class="n">rcond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lstat</span> <span class="ow">and</span> <span class="n">rstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span><span class="n">lcond</span><span class="o">+</span><span class="n">rcond</span>
+        <span class="k">elif</span> <span class="n">lstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span><span class="n">lcond</span>
+        <span class="k">elif</span> <span class="n">rstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span><span class="n">rcond</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span><span class="n">lcond</span><span class="o">+</span><span class="n">rcond</span></div>
+
+<div class="viewcode-block" id="Or.primitives">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Or.primitives">[docs]</a>
+    <span class="k">def</span> <span class="nf">primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Xor">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Xor">[docs]</a>
+<span class="k">class</span> <span class="nc">Xor</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    True if only one condition is satisfied</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">left</span><span class="p">,</span><span class="n">right</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">l</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">l</span> <span class="ow">or</span> <span class="n">r</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">l</span> <span class="ow">and</span> <span class="n">r</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> xor </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_negate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Xor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_negate</span><span class="p">())</span>
+<div class="viewcode-block" id="Xor.status">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Xor.status">[docs]</a>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">lstat</span><span class="p">,</span><span class="n">lcond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">rstat</span><span class="p">,</span><span class="n">rcond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lstat</span> <span class="o">^</span> <span class="n">rstat</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span><span class="n">lcond</span><span class="o">+</span><span class="n">rcond</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span><span class="n">lcond</span><span class="o">+</span><span class="n">rcond</span></div>
+
+<div class="viewcode-block" id="Xor.primitives">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Xor.primitives">[docs]</a>
+    <span class="k">def</span> <span class="nf">primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Not">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Not">[docs]</a>
+<span class="k">class</span> <span class="nc">Not</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    True if condition is not satisfied</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;not &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_negate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span>
+<div class="viewcode-block" id="Not.status">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Not.status">[docs]</a>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">stat</span><span class="p">,</span><span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">stat</span><span class="p">,</span> <span class="n">cond</span></div>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">Not</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">condition</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">Not</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">condition</span>
+<div class="viewcode-block" id="Not.primitives">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Not.primitives">[docs]</a>
+    <span class="k">def</span> <span class="nf">primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span></div>
+</div>
+
+
+<span class="k">class</span> <span class="nc">_Bar</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is an internal condition structure created solely to handle</span>
+<span class="sd">    negated primitives when computing status.  It should not be used</span>
+<span class="sd">    externally.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_negate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">stat</span><span class="p">,</span><span class="n">cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">stat</span><span class="p">,</span> <span class="n">cond</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;not &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">primitives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">primitives</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Constant">
+<a class="viewcode-back" href="../../../bumps.mystic.condition.html#bumps.mystic.condition.Constant">[docs]</a>
+<span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">Condition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Constants true and false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span></div>
+
+
+<span class="n">true</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">false</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.condition</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

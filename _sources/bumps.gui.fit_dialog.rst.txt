@@ -1,0 +1,7 @@
+bumps.gui.fit\_dialog module
+============================
+
+.. automodule:: bumps.gui.fit_dialog
+   :members:
+   :undoc-members:
+   :show-inheritance:

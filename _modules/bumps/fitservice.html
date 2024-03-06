@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.fitservice &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.fitservice</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.fitservice</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Fit job definition for the distributed job queue.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">dill</span> <span class="k">as</span> <span class="nn">pickle</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cli</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="c1"># Site configuration determines what kind of mapper to use</span>
+<span class="c1"># This should be true in cli.py as well</span>
+<span class="kn">from</span> <span class="nn">.mapper</span> <span class="kn">import</span> <span class="n">MPMapper</span> <span class="k">as</span> <span class="n">Mapper</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">monitor</span>
+<span class="kn">from</span> <span class="nn">.fitters</span> <span class="kn">import</span> <span class="n">FitDriver</span>
+
+
+<div class="viewcode-block" id="fitservice">
+<a class="viewcode-back" href="../../bumps.fitservice.html#bumps.fitservice.fitservice">[docs]</a>
+<span class="k">def</span> <span class="nf">fitservice</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">matplotlib</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+    <span class="n">service_version</span> <span class="o">=</span> <span class="n">__version__</span>
+    <span class="n">request_version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">service_version</span> <span class="o">!=</span> <span class="n">request_version</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;fitter version </span><span class="si">%s</span><span class="s1"> does not match request </span><span class="si">%s</span><span class="s1">&#39;</span>
+                         <span class="o">%</span> <span class="p">(</span><span class="n">service_version</span><span class="p">,</span> <span class="n">request_version</span><span class="p">))</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;package&#39;</span><span class="p">])</span>
+
+    <span class="n">service_model_version</span> <span class="o">=</span> <span class="n">__version__</span>
+    <span class="n">request_model_version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">service_model_version</span> <span class="o">!=</span> <span class="n">request_model_version</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> version </span><span class="si">%s</span><span class="s1"> does not match request </span><span class="si">%s</span><span class="s1">&#39;</span>
+                         <span class="o">%</span> <span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">service_model_version</span><span class="p">,</span> <span class="n">request_model_version</span><span class="p">))</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">]))</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;problem&#39;</span><span class="p">]))</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">)</span>
+
+    <span class="n">fitdriver</span> <span class="o">=</span> <span class="n">FitDriver</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">fit</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="n">fitdriver</span><span class="o">.</span><span class="n">mapper</span> <span class="o">=</span> <span class="n">Mapper</span><span class="o">.</span><span class="n">start_mapper</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">))</span>
+    <span class="n">best</span><span class="p">,</span> <span class="n">fbest</span> <span class="o">=</span> <span class="n">fitdriver</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+    <span class="n">cli</span><span class="o">.</span><span class="n">save_best</span><span class="p">(</span><span class="n">fitdriver</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">best</span><span class="p">)</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">best</span><span class="p">),</span> <span class="n">fbest</span></div>
+
+
+
+<div class="viewcode-block" id="ServiceMonitor">
+<a class="viewcode-back" href="../../bumps.fitservice.html#bumps.fitservice.ServiceMonitor">[docs]</a>
+<span class="k">class</span> <span class="nc">ServiceMonitor</span><span class="p">(</span><span class="n">monitor</span><span class="o">.</span><span class="n">TimedUpdate</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Display fit progress on the console</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">improvement</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+        <span class="n">monitor</span><span class="o">.</span><span class="n">TimedUpdate</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                                     <span class="n">improvement</span><span class="o">=</span><span class="n">improvement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ServiceMonitor.show_progress">
+<a class="viewcode-back" href="../../bumps.fitservice.html#bumps.fitservice.ServiceMonitor.show_progress">[docs]</a>
+    <span class="k">def</span> <span class="nf">show_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">dof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">dof</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">summarize</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;step&quot;</span><span class="p">:</span>  <span class="n">history</span><span class="o">.</span><span class="n">step</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;cost&quot;</span><span class="p">:</span>  <span class="n">history</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">dof</span><span class="p">,</span>
+            <span class="s2">&quot;pars&quot;</span><span class="p">:</span>  <span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="n">json_status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;status.json&#39;</span><span class="p">),</span> <span class="s2">&quot;wt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json_status</span><span class="p">)</span>
+        <span class="n">status</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary</span>
+        <span class="n">status</span><span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&lt;img file=&quot;</span><span class="si">%s</span><span class="s1">&quot; alt=&quot;</span><span class="si">%s</span><span class="s1">&quot; /&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                                     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+        <span class="n">html_status</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">&lt;html&gt;&lt;body&gt;</span>
+<span class="s2">Generation </span><span class="si">%(step)d</span><span class="s2">, chisq </span><span class="si">%(cost)g</span>
+<span class="s2">&lt;pre&gt;</span>
+<span class="si">%(table)s</span>
+<span class="s2">&lt;/pre&gt;</span>
+<span class="si">%(images)s</span>
+<span class="s2">&lt;/body&gt;&lt;/html&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">status</span>
+        <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;status.html&#39;</span><span class="p">),</span> <span class="s2">&quot;wt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html_status</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ServiceMonitor.show_improvement">
+<a class="viewcode-back" href="../../bumps.fitservice.html#bumps.fitservice.ServiceMonitor.show_improvement">[docs]</a>
+    <span class="k">def</span> <span class="nf">show_improvement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pylab</span>
+
+        <span class="c1"># print &quot;step&quot;,history.step[0],&quot;chisq&quot;,history.value[0]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figfile</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">))</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.fitservice</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

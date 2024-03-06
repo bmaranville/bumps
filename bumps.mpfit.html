@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.mpfit module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mpfit module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.mpfit">
+<span id="bumps-mpfit-module"></span><h1>bumps.mpfit module<a class="headerlink" href="#module-bumps.mpfit" title="Link to this heading">¶</a></h1>
+<p>Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.</p>
+<blockquote>
+<div><blockquote>
+<div><blockquote>
+<div><p>AUTHORS</p>
+</div></blockquote>
+<p>The original version of this software, called LMFIT, was written in FORTRAN
+as part of the MINPACK-1 package by XXX.</p>
+<p>Craig Markwardt converted the FORTRAN code to IDL.  The information for the
+IDL version is:</p>
+<blockquote>
+<div><p>Craig B. Markwardt, NASA/GSFC Code 662, Greenbelt, MD 20770
+<a class="reference external" href="mailto:craigm&#37;&#52;&#48;lheamail&#46;gsfc&#46;nasa&#46;gov">craigm<span>&#64;</span>lheamail<span>&#46;</span>gsfc<span>&#46;</span>nasa<span>&#46;</span>gov</a>
+UPDATED VERSIONs can be found on my WEB PAGE:</p>
+<blockquote>
+<div><p><a class="reference external" href="http://cow.physics.wisc.edu/~craigm/idl/idl.html">http://cow.physics.wisc.edu/~craigm/idl/idl.html</a></p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>Mark Rivers created this Python version from Craig’s IDL version.</dt><dd><p>Mark Rivers, University of Chicago
+Building 434A, Argonne National Laboratory
+9700 South Cass Avenue, Argonne, IL 60439
+<a class="reference external" href="mailto:rivers&#37;&#52;&#48;cars&#46;uchicago&#46;edu">rivers<span>&#64;</span>cars<span>&#46;</span>uchicago<span>&#46;</span>edu</a>
+Updated versions can be found at <a class="reference external" href="http://cars.uchicago.edu/software">http://cars.uchicago.edu/software</a></p>
+</dd>
+</dl>
+<p>2022-09-21 [PAK] add ‘double’ parameter to select machine precision for
+the objective function. This mainly affects numerical derivatives, forcing
+the step size to be large enough that x + h != x, but will also change the
+criteria for correcting degenerate qr decomposition and maybe stopping
+conditions and returned status codes.</p>
+<blockquote>
+<div><p>DESCRIPTION</p>
+</div></blockquote>
+</div></blockquote>
+<p>MPFIT uses the Levenberg-Marquardt technique to solve the
+least-squares problem.  In its typical use, MPFIT will be used to
+fit a user-supplied function (the “model”) to user-supplied data
+points (the “data”) by adjusting a set of parameters.  MPFIT is
+based upon MINPACK-1 (LMDIF.F) by More’ and collaborators.</p>
+<p>For example, a researcher may think that a set of observed data
+points is best modelled with a Gaussian curve.  A Gaussian curve is
+parameterized by its mean, standard deviation and normalization.
+MPFIT will, within certain constraints, find the set of parameters
+which best fits the data.  The fit is “best” in the least-squares
+sense; that is, the sum of the weighted squared differences between
+the model and data is minimized.</p>
+<p>The Levenberg-Marquardt technique is a particular strategy for
+iteratively searching for the best fit.  This particular
+implementation is drawn from MINPACK-1 (see NETLIB), and is much faster
+and more accurate than the version provided in the Scientific Python package
+in Scientific.Functions.LeastSquares.
+This version allows upper and lower bounding constraints to be placed on each
+parameter, or the parameter can be held fixed.</p>
+<p>The user-supplied Python function should return an array of weighted
+deviations between model and data.  In a typical scientific problem
+the residuals should be weighted so that each deviate has a
+gaussian sigma of 1.0.  If X represents values of the independent
+variable, Y represents a measurement for each value of X, and ERR
+represents the error in the measurements, then the deviates could
+be calculated as follows:</p>
+<blockquote>
+<div><p>DEVIATES = (Y - F(X)) / ERR</p>
+</div></blockquote>
+<p>where F is the analytical function representing the model.  You are
+recommended to use the convenience functions MPFITFUN and
+MPFITEXPR, which are driver functions that calculate the deviates
+for you.  If ERR are the 1-sigma uncertainties in Y, then</p>
+<blockquote>
+<div><p>TOTAL( DEVIATES^2 )</p>
+</div></blockquote>
+<p>will be the total chi-squared value.  MPFIT will minimize the
+chi-square value.  The values of X, Y and ERR are passed through
+MPFIT to the user-supplied function via the FUNCTKW keyword.</p>
+<p>Simple constraints can be placed on parameter values by using the
+PARINFO keyword to MPFIT.  See below for a description of this
+keyword.</p>
+<p>MPFIT does not perform more general optimization tasks.  See TNMIN
+instead.  MPFIT is customized, based on MINPACK-1, to the
+least-squares minimization problem.</p>
+<blockquote>
+<div><p>USER FUNCTION</p>
+</div></blockquote>
+<p>The user must define a function which returns the appropriate
+values as specified above.  The function should return the weighted
+deviations between the model and the data.  It should also return a status
+flag and an optional partial derivative array.  For applications which
+use finite-difference derivatives – the default – the user
+function should be declared in the following way:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>def myfunct(p, fjac=None, x=None, y=None, err=None)</dt><dd><p># Parameter values are passed in “p”
+# If fjac==None then partial derivatives should not be
+# computed.  It will always be None if MPFIT is called with default
+# flag.
+model = F(x, p)
+# Non-negative status value means MPFIT should continue, negative means
+# stop the calculation.
+status = 0
+return([status, (y-model)/err]</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>See below for applications with analytical derivatives.</p>
+<p>The keyword parameters X, Y, and ERR in the example above are
+suggestive but not required.  Any parameters can be passed to
+MYFUNCT by using the functkw keyword to MPFIT.  Use MPFITFUN and
+MPFITEXPR if you need ideas on how to do that.  The function <em>must</em>
+accept a parameter list, P.</p>
+<p>In general there are no restrictions on the number of dimensions in
+X, Y or ERR.  However the deviates <em>must</em> be returned in a
+one-dimensional numpy array of type float.</p>
+<p>User functions may also indicate a fatal error condition using the
+status return described above. If status is set to a number between
+-15 and -1 then MPFIT will stop the calculation and return to the caller.</p>
+<blockquote>
+<div><p>ANALYTIC DERIVATIVES</p>
+</div></blockquote>
+<p>In the search for the best-fit solution, MPFIT by default
+calculates derivatives numerically via a finite difference
+approximation.  The user-supplied function need not calculate the
+derivatives explicitly.  However, if you desire to compute them
+analytically, then the AUTODERIVATIVE=0 keyword must be passed to MPFIT.
+As a practical matter, it is often sufficient and even faster to allow
+MPFIT to calculate the derivatives numerically, and so
+AUTODERIVATIVE=0 is not necessary.</p>
+<p>If AUTODERIVATIVE=0 is used then the user function must check the parameter
+FJAC, and if FJAC!=None then return the partial derivative array in the
+return list.</p>
+<blockquote>
+<div><dl>
+<dt>def myfunct(p, fjac=None, x=None, y=None, err=None)</dt><dd><p># Parameter values are passed in “p”
+# If FJAC!=None then partial derivatives must be comptuer.
+# FJAC contains an array of len(p), where each entry
+# is 1 if that parameter is free and 0 if it is fixed.
+model = F(x, p)
+Non-negative status value means MPFIT should continue, negative means
+# stop the calculation.
+status = 0
+if (dojac):</p>
+<blockquote>
+<div><p>pderiv = numpy.zeros([len(x), len(p)], numpy.float64)
+for j in range(len(p)):</p>
+<blockquote>
+<div><p>pderiv[:,j] = FGRAD(x, p, j)</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="simple">
+<dt>else:</dt><dd><p>pderiv = None</p>
+</dd>
+</dl>
+<p>return([status, (y-model)/err, pderiv]</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>where FGRAD(x, p, i) is a user function which must compute the
+derivative of the model with respect to parameter P[i] at X.  When
+finite differencing is used for computing derivatives (ie, when
+AUTODERIVATIVE=1), or when MPFIT needs only the errors but not the
+derivatives the parameter FJAC=None.</p>
+<p>Derivatives should be returned in the PDERIV array. PDERIV should be an m x
+n array, where m is the number of data points and n is the number
+of parameters.  dp[i,j] is the derivative at the ith point with
+respect to the jth parameter.</p>
+<p>The derivatives with respect to fixed parameters are ignored; zero
+is an appropriate value to insert for those derivatives.  Upon
+input to the user function, FJAC is set to a vector with the same
+length as P, with a value of 1 for a parameter which is free, and a
+value of zero for a parameter which is fixed (and hence no
+derivative needs to be calculated).</p>
+<p>If the data is higher than one dimensional, then the <em>last</em>
+dimension should be the parameter dimension.  Example: fitting a
+50x50 image, “dp” should be 50x50xNPAR.</p>
+<blockquote>
+<div><p>CONSTRAINING PARAMETER VALUES WITH THE PARINFO KEYWORD</p>
+</div></blockquote>
+<p>The behavior of MPFIT can be modified with respect to each
+parameter to be fitted.  A parameter value can be fixed; simple
+boundary constraints can be imposed; limitations on the parameter
+changes can be imposed; properties of the automatic derivative can
+be modified; and parameters can be tied to one another.</p>
+<p>These properties are governed by the PARINFO structure, which is
+passed as a keyword parameter to MPFIT.</p>
+<p>PARINFO should be a list of dictionaries, one list entry for each parameter.
+Each parameter is associated with one element of the array, in
+numerical order.  The dictionary can have the following keys
+(none are required, keys are case insensitive):</p>
+<blockquote>
+<div><dl>
+<dt>‘value’ - the starting parameter value (but see the START_PARAMS</dt><dd><p>parameter for more information).</p>
+</dd>
+<dt>‘fixed’ - a boolean value, whether the parameter is to be held</dt><dd><p>fixed or not.  Fixed parameters are not varied by
+MPFIT, but are passed on to MYFUNCT for evaluation.</p>
+</dd>
+<dt>‘limited’ - a two-element boolean array.  If the first/second</dt><dd><p>element is set, then the parameter is bounded on the
+lower/upper side.  A parameter can be bounded on both
+sides.  Both LIMITED and LIMITS must be given
+together.</p>
+</dd>
+<dt>‘limits’ - a two-element float array.  Gives the</dt><dd><p>parameter limits on the lower and upper sides,
+respectively.  Zero, one or two of these values can be
+set, depending on the values of LIMITED.  Both LIMITED
+and LIMITS must be given together.</p>
+</dd>
+<dt>‘parname’ - a string, giving the name of the parameter.  The</dt><dd><p>fitting code of MPFIT does not use this tag in any
+way.  However, the default iterfunct will print the
+parameter name if available.</p>
+</dd>
+<dt>‘step’ - the step size to be used in calculating the numerical</dt><dd><p>derivatives.  If set to zero, then the step size is
+computed automatically.  Ignored when AUTODERIVATIVE=0.</p>
+</dd>
+<dt>‘mpside’ - the sidedness of the finite difference when computing</dt><dd><blockquote>
+<div><p>numerical derivatives.  This field can take four
+values:</p>
+<blockquote>
+<div><blockquote>
+<div><p>0 - one-sided derivative computed automatically
+1 - one-sided derivative (f(x+h) - f(x)  )/h</p>
+</div></blockquote>
+<dl class="simple">
+<dt>-1 - one-sided derivative (f(x)   - f(x-h))/h</dt><dd><p>2 - two-sided derivative (f(x+h) - f(x-h))/(2*h)</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+<p>Where H is the STEP parameter described above.  The
+“automatic” one-sided derivative method will chose a
+direction for the finite difference which does not
+violate any constraints.  The other methods do not
+perform this check.  The two-sided method is in
+principle more precise, but requires twice as many
+function evaluations.  Default: 0.</p>
+</dd>
+<dt>‘mpmaxstep’ - the maximum change to be made in the parameter</dt><dd><p>value.  During the fitting process, the parameter
+will never be changed by more than this value in
+one iteration.</p>
+<p>A value of 0 indicates no maximum.  Default: 0.</p>
+</dd>
+<dt>‘tied’ - a string expression which “ties” the parameter to other</dt><dd><p>free or fixed parameters.  Any expression involving
+constants and the parameter array P are permitted.
+Example: if parameter 2 is always to be twice parameter
+1 then use the following: parinfo(2).tied = ‘2 * p(1)’.
+Since they are totally constrained, tied parameters are
+considered to be fixed; no errors are computed for them.
+[ NOTE: the PARNAME can’t be used in expressions. ]</p>
+</dd>
+<dt>‘mpprint’ - if set to 1, then the default iterfunct will print the</dt><dd><p>parameter value.  If set to 0, the parameter value
+will not be printed.  This tag can be used to
+selectively print only a few parameter values out of
+many.  Default: 1 (all parameters printed)</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Future modifications to the PARINFO structure, if any, will involve
+adding dictionary tags beginning with the two letters “MP”.
+Therefore programmers are urged to avoid using tags starting with
+the same letters; otherwise they are free to include their own
+fields within the PARINFO structure, and they will be ignored.</p>
+<p>PARINFO Example:
+parinfo = [{‘value’:0., ‘fixed’:0, ‘limited’:[0,0], ‘limits’:[0.,0.]}]*5
+parinfo[0][‘fixed’] = 1
+parinfo[4][‘limited’][0] = 1
+parinfo[4][‘limits’][0]  = 50.
+values = [5.7, 2.2, 500., 1.5, 2000.]
+for i in range(5): parinfo[i][‘value’]=values[i]</p>
+<p>A total of 5 parameters, with starting values of 5.7,
+2.2, 500, 1.5, and 2000 are given.  The first parameter
+is fixed at a value of 5.7, and the last parameter is
+constrained to be above 50.</p>
+<blockquote>
+<div><blockquote>
+<div><p>EXAMPLE</p>
+</div></blockquote>
+<p>import mpfit
+import numpy
+x = numpy.arange(100, numpy.float64)
+p0 = [5.7, 2.2, 500., 1.5, 2000.]
+y = ( p[0] + p[1]*[x] + p[2]*[x**2] + p[3]*numpy.sqrt(x) +</p>
+<blockquote>
+<div><p>p[4]*numpy.log(x))</p>
+</div></blockquote>
+<p>fa = {‘x’:x, ‘y’:y, ‘err’:err}
+m = mpfit(‘myfunct’, p0, functkw=fa)
+print ‘status = ‘, m.status
+if (m.status &lt;= 0): print ‘error message = ‘, m.errmsg
+print ‘parameters = ‘, m.params</p>
+<p>Minimizes sum of squares of MYFUNCT.  MYFUNCT is called with the X,
+Y, and ERR keyword parameters that are given by FUNCTKW.  The
+results can be obtained from the returned object m.</p>
+<blockquote>
+<div><p>THEORY OF OPERATION</p>
+</div></blockquote>
+<p>There are many specific strategies for function minimization.  One
+very popular technique is to use function gradient information to
+realize the local structure of the function.  Near a local minimum
+the function value can be taylor expanded about x0 as follows:</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>f(x) = f(x0) + f’(x0) . (x-x0) + (1/2) (x-x0) . f’’(x0) . (x-x0)</dt><dd><p>—–   —————   ——————————-  (1)</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Order    0th          1st                      2nd</p>
+</div></blockquote>
+<p>Here f’(x) is the gradient vector of f at x, and f’’(x) is the
+Hessian matrix of second derivatives of f at x.  The vector x is
+the set of function parameters, not the measured data vector.  One
+can find the minimum of f, f(xm) using Newton’s method, and
+arrives at the following linear equation:</p>
+<blockquote>
+<div><p>f’’(x0) . (xm-x0) = - f’(x0)                            (2)</p>
+</div></blockquote>
+<p>If an inverse can be found for f’’(x0) then one can solve for
+(xm-x0), the step vector from the current position x0 to the new
+projected minimum.  Here the problem has been linearized (ie, the
+gradient information is known to first order).  f’’(x0) is
+symmetric n x n matrix, and should be positive definite.</p>
+<p>The Levenberg - Marquardt technique is a variation on this theme.
+It adds an additional diagonal term to the equation which may aid the
+convergence properties:</p>
+<blockquote>
+<div><p>(f’’(x0) + nu I) . (xm-x0) = -f’(x0)                  (2a)</p>
+</div></blockquote>
+<p>where I is the identity matrix.  When nu is large, the overall
+matrix is diagonally dominant, and the iterations follow steepest
+descent.  When nu is small, the iterations are quadratically
+convergent.</p>
+<p>In principle, if f’’(x0) and f’(x0) are known then xm-x0 can be
+determined.  However the Hessian matrix is often difficult or
+impossible to compute.  The gradient f’(x0) may be easier to
+compute, if even by finite difference techniques.  So-called
+quasi-Newton techniques attempt to successively estimate f’’(x0)
+by building up gradient information as the iterations proceed.</p>
+<p>In the least squares problem there are further simplifications
+which assist in solving eqn (2).  The function to be minimized is
+a sum of squares:</p>
+<blockquote>
+<div><p>f = Sum(hi^2)                                         (3)</p>
+</div></blockquote>
+<p>where hi is the ith residual out of m residuals as described
+above.  This can be substituted back into eqn (2) after computing
+the derivatives:</p>
+<blockquote>
+<div><p>f’  = 2 Sum(hi  hi’)
+f’’ = 2 Sum(hi’ hj’) + 2 Sum(hi hi’’)                (4)</p>
+</div></blockquote>
+<p>If one assumes that the parameters are already close enough to a
+minimum, then one typically finds that the second term in f’’ is
+negligible [or, in any case, is too difficult to compute].  Thus,
+equation (2) can be solved, at least approximately, using only
+gradient information.</p>
+<p>In matrix notation, the combination of eqns (2) and (4) becomes:</p>
+<blockquote>
+<div><p>hT’ . h’ . dx = - hT’ . h                          (5)</p>
+</div></blockquote>
+<p>Where h is the residual vector (length m), hT is its transpose, h’
+is the Jacobian matrix (dimensions n x m), and dx is (xm-x0).  The
+user function supplies the residual vector h, and in some cases h’
+when it is not found by finite differences (see MPFIT_FDJAC2,
+which finds h and hT’).  Even if dx is not the best absolute step
+to take, it does provide a good estimate of the best <em>direction</em>,
+so often a line minimization will occur along the dx vector
+direction.</p>
+<p>The method of solution employed by MINPACK is to form the Q . R
+factorization of h’, where Q is an orthogonal matrix such that QT .
+Q = I, and R is upper right triangular.  Using h’ = Q . R and the
+ortogonality of Q, eqn (5) becomes</p>
+<blockquote>
+<div><dl class="simple">
+<dt>(RT . QT) . (Q . R) . dx = - (RT . QT) . h</dt><dd><dl class="simple">
+<dt>RT . R . dx = - RT . QT . h         (6)</dt><dd><p>R . dx = - QT . h</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>where the last statement follows because R is upper triangular.
+Here, R, QT and h are known so this is a matter of solving for dx.
+The routine MPFIT_QRFAC provides the QR factorization of h, with
+pivoting, and MPFIT_QRSOLV provides the solution for dx.</p>
+<blockquote>
+<div><p>REFERENCES</p>
+</div></blockquote>
+<p>MINPACK-1, Jorge More’, available from netlib (www.netlib.org).
+“Optimization Software Guide,” Jorge More’ and Stephen Wright,</p>
+<blockquote>
+<div><p>SIAM, <em>Frontiers in Applied Mathematics</em>, Number 14.</p>
+</div></blockquote>
+<dl>
+<dt>More’, Jorge J., “The Levenberg-Marquardt Algorithm:</dt><dd><p>Implementation and Theory,” in <em>Numerical Analysis</em>, ed. Watson,
+G. A., Lecture Notes in Mathematics 630, Springer-Verlag, 1977.</p>
+<blockquote>
+<div><p>MODIFICATION HISTORY</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>Translated from MINPACK-1 in FORTRAN, Apr-Jul 1998, CM</p>
+</div></blockquote>
+<p>Copyright (C) 1997-2002, Craig Markwardt
+This software is provided as is without any warranty whatsoever.
+Permission to use, copy, modify, and distribute modified or
+unmodified copies is granted, provided this copyright and disclaimer
+are included unchanged.</p>
+<blockquote>
+<div><p>Translated from MPFIT (Craig Markwardt’s IDL package) to Python,
+August, 2002.  Mark Rivers</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mpfit.machar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mpfit.</span></span><span class="sig-name descname"><span class="pre">machar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">double</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#machar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.machar" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.mpfit.</span></span><span class="sig-name descname"><span class="pre">mpfit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functkw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nprint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterfunct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterkw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nocovar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fastnorm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoderivative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsfcn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.calc_covar">
+<span class="sig-name descname"><span class="pre">calc_covar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ipvt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-14</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.calc_covar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.calc_covar" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.call">
+<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functkw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fjac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.call" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.defiter">
+<span class="sig-name descname"><span class="pre">defiter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fnorm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functkw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterstop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%.10g'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.defiter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.defiter" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.enorm">
+<span class="sig-name descname"><span class="pre">enorm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.enorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.enorm" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.fdjac2">
+<span class="sig-name descname"><span class="pre">fdjac2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fvec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ulimited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ulimit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dside</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsfcn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoderivative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functkw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dstep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.fdjac2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.fdjac2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.lmpar">
+<span class="sig-name descname"><span class="pre">lmpar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ipvt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qtb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdiag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">par</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.lmpar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.lmpar" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.parinfo">
+<span class="sig-name descname"><span class="pre">parinfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'a'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.parinfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.parinfo" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.qrfac">
+<span class="sig-name descname"><span class="pre">qrfac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pivot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.qrfac"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.qrfac" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.qrsolv">
+<span class="sig-name descname"><span class="pre">qrsolv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ipvt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qtb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdiag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.qrsolv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.qrsolv" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.mpfit.mpfit.tie">
+<span class="sig-name descname"><span class="pre">tie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mpfit.html#mpfit.tie"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mpfit.mpfit.tie" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.mpfit module</a><ul>
+<li><a class="reference internal" href="#bumps.mpfit.machar"><code class="docutils literal notranslate"><span class="pre">machar</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit"><code class="docutils literal notranslate"><span class="pre">mpfit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.calc_covar"><code class="docutils literal notranslate"><span class="pre">mpfit.calc_covar()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.call"><code class="docutils literal notranslate"><span class="pre">mpfit.call()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.defiter"><code class="docutils literal notranslate"><span class="pre">mpfit.defiter()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.enorm"><code class="docutils literal notranslate"><span class="pre">mpfit.enorm()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.fdjac2"><code class="docutils literal notranslate"><span class="pre">mpfit.fdjac2()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.lmpar"><code class="docutils literal notranslate"><span class="pre">mpfit.lmpar()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.parinfo"><code class="docutils literal notranslate"><span class="pre">mpfit.parinfo()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.qrfac"><code class="docutils literal notranslate"><span class="pre">mpfit.qrfac()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.qrsolv"><code class="docutils literal notranslate"><span class="pre">mpfit.qrsolv()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mpfit.mpfit.tie"><code class="docutils literal notranslate"><span class="pre">mpfit.tie()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.mpfit.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mpfit module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

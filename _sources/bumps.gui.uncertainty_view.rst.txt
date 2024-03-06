@@ -1,0 +1,7 @@
+bumps.gui.uncertainty\_view module
+==================================
+
+.. automodule:: bumps.gui.uncertainty_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

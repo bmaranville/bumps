@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.cheby &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.cheby</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.cheby</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Freeform modeling with Chebyshev polynomials.</span>
+
+<span class="sd">`Chebyshev polynomials &lt;http://en.wikipedia.org/wiki/Chebyshev_polynomials&gt;`_</span>
+<span class="sd">$T_k$ form a basis set for functions over $[-1,1]$.  The truncated</span>
+<span class="sd">interpolating polynomial $P_n$ is a weighted sum of Chebyshev polynomials</span>
+<span class="sd">up to degree $n$:</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    f(x) \approx P_n(x) = \sum_{k=0}^n c_i T_k(x)</span>
+
+<span class="sd">The interpolating polynomial exactly matches $f(x)$ at the chebyshev</span>
+<span class="sd">nodes $z_k$ and is near the optimal polynomial approximation to $f$</span>
+<span class="sd">of degree $n$ under the maximum norm.  For well behaved functions,</span>
+<span class="sd">the coefficients $c_k$ decrease rapidly, and furthermore are independent</span>
+<span class="sd">of the degree $n$ of the polynomial.</span>
+
+<span class="sd">The models can either be defined directly in terms of the Chebyshev</span>
+<span class="sd">coefficients $c_k$ with *method* = &#39;direct&#39;, or in terms of control</span>
+<span class="sd">points $(z_k, f(z_k))$ at the Chebyshev nodes :func:`cheby_points`</span>
+<span class="sd">with *method* = &#39;interp&#39;.  Bounds on the parameters are easier to</span>
+<span class="sd">control using &#39;interp&#39;, but the function may oscillate wildly outside</span>
+<span class="sd">the bounds.  Bounds on the oscillation are easier to control using</span>
+<span class="sd">&#39;direct&#39;, but the shape of the profile is difficult to control.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># TODO: clipping volume fraction to [0,1] distorts parameter space</span>
+<span class="c1"># Option 0: clip to [0,1]</span>
+<span class="c1"># - Bayesian analysis: parameter values outside the domain will be equally</span>
+<span class="c1">#   probable out to infinity</span>
+<span class="c1"># - Newton methods: the fit space is flat outside the domain, which leads</span>
+<span class="c1">#   to a degenerate hessian.</span>
+<span class="c1"># - Direct methods: won&#39;t fail, but will be subject to random walk</span>
+<span class="c1">#   performance outside the domain.</span>
+<span class="c1"># - trivial to implement!</span>
+<span class="c1"># Option 1: compress (-inf,0.001] and [0.999,inf) into (0,0.001], [0.999,1)</span>
+<span class="c1"># - won&#39;t address any of the problems of clipping</span>
+<span class="c1"># Option 2: have chisq return inf for points outside the domain</span>
+<span class="c1"># - Bayesian analysis: correctly assigns probability zero</span>
+<span class="c1"># - Newton methods: degenerate Hessian outside domain</span>
+<span class="c1"># - Direct methods: random walk outside domain</span>
+<span class="c1"># - easy to implement</span>
+<span class="c1"># Option 3: clip outside domain but add penalty based on amount of clipping</span>
+<span class="c1">#   A profile based on clipping may have lower chisq than any profile that</span>
+<span class="c1">#   can be described by a valid model (e.g., by having a sharper transition</span>
+<span class="c1">#   than would be allowed by the model), leading to a minimum outside D.</span>
+<span class="c1">#   Adding a penalty constant outside D would help, but there is no constant</span>
+<span class="c1">#   that works everywhere.  We could use a constant greater than the worst</span>
+<span class="c1">#   chisq seen so far in D, which can guarantee an arbitrarily low P(x) and</span>
+<span class="c1">#   a global minimum within D, but for Newton methods, the boundary may still</span>
+<span class="c1">#   have spurious local minima and objective value now depends on history.</span>
+<span class="c1">#   Linear compression of profile to fit within the domain would avoid</span>
+<span class="c1">#   unreachable profile shapes (this is just a linear transform on chebyshev</span>
+<span class="c1">#   coefficients), and the addition of the penalty value would reduce</span>
+<span class="c1">#   parameter correlations that result from having transformed parameters</span>
+<span class="c1">#   resulting in identical profiles.  Returning T = ||A(x)|| from render,</span>
+<span class="c1">#   with A being a transform that brings the profile within [0,1], the</span>
+<span class="c1">#   objective function can return P&#39;(x) = P(x)/(10*(1+sum(T_i)^4) for all</span>
+<span class="c1">#   slabs i, or P(x) if no slabs return a penalty value.  So long as T is</span>
+<span class="c1">#   monotonic with increasing badness, with value of 0 within D, and so long</span>
+<span class="c1">#   as no values of x outside D can generate models that cannot be</span>
+<span class="c1">#   expressed for any x within D, then any optimizer should return a valid</span>
+<span class="c1">#   result at the global minimum.  There may still be local minima outside</span>
+<span class="c1">#   the boundary, so information that the the value is outside the domain</span>
+<span class="c1">#   still needs to pass through a local optimizer to the fitting program.</span>
+<span class="c1">#   This approach could be used to transform a box constrained</span>
+<span class="c1">#   problem to an unconstrained problem using clipping+penalty on the</span>
+<span class="c1">#   parameter values and removing the need for constrained Newton optimizers.</span>
+<span class="c1"># - Bayesian analysis: parameters outside D have incorrect probability, but</span>
+<span class="c1">#   with a sufficiently large penalty, P(x) ~ 0; if the penalty value is</span>
+<span class="c1">#   too low, details of the correlations outside D may leak into D.</span>
+<span class="c1"># - Newton methods: Hessian should point back to domain</span>
+<span class="c1"># - Direct methods: random walk should be biased toward the domain</span>
+<span class="c1"># - moderately complicated</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">,</span> <span class="s2">&quot;cheby_approx&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;cheby_val&quot;</span><span class="p">,</span> <span class="s2">&quot;cheby_points&quot;</span><span class="p">,</span> <span class="s2">&quot;cheby_coeff&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">real</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">asarray</span>
+<span class="kn">from</span> <span class="nn">numpy.fft</span> <span class="kn">import</span> <span class="n">fft</span>
+
+
+<div class="viewcode-block" id="profile">
+<a class="viewcode-back" href="../../bumps.cheby.html#bumps.cheby.profile">[docs]</a>
+<span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate the chebyshev approximation c at points x.</span>
+
+<span class="sd">    If method is &#39;direct&#39; then $c_i$ are the coefficients for the chebyshev</span>
+<span class="sd">    polynomials $T_i$ yielding $P = \sum_i{c_i T_i(x)}$.</span>
+
+<span class="sd">    If method is &#39;interp&#39; then $c_i$ are the values of the interpolated</span>
+<span class="sd">    function $f$ evaluated at the chebyshev points returned by</span>
+<span class="sd">    :func:`cheby_points`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;interp&#39;</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">cheby_coeff</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cheby_val</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cheby_approx">
+<a class="viewcode-back" href="../../bumps.cheby.html#bumps.cheby.cheby_approx">[docs]</a>
+<span class="k">def</span> <span class="nf">cheby_approx</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the coefficients for the order n chebyshev approximation to</span>
+<span class="sd">    function f evaluated over the range [low,high].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">cheby_points</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="nb">range</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">cheby_coeff</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cheby_val">
+<a class="viewcode-back" href="../../bumps.cheby.html#bumps.cheby.cheby_val">[docs]</a>
+<span class="k">def</span> <span class="nf">cheby_val</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate the chebyshev approximation c at points x.</span>
+
+<span class="sd">    The values $c_i$ are the coefficients for the chebyshev</span>
+<span class="sd">    polynomials $T_i$ yielding $p(x) = \sum_i{c_i T_i(x)}$.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">x</span>
+
+    <span class="c1"># Crenshaw recursion from numerical recipes sec. 5.8</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">2</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">dd</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">c_j</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[:</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">d</span><span class="p">,</span> <span class="n">dd</span> <span class="o">=</span> <span class="n">y</span> <span class="o">*</span> <span class="n">d</span> <span class="o">+</span> <span class="p">(</span><span class="n">c_j</span> <span class="o">-</span> <span class="n">dd</span><span class="p">),</span> <span class="n">d</span>
+    <span class="k">return</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">dd</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cheby_points">
+<a class="viewcode-back" href="../../bumps.cheby.html#bumps.cheby.cheby_points">[docs]</a>
+<span class="k">def</span> <span class="nf">cheby_points</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the points in at which a function must be evaluated to</span>
+<span class="sd">    generate the order $n$ Chebyshev approximation function.</span>
+
+<span class="sd">    Over the range [-1,1], the points are $p_k = \cos(\pi(2 k + 1)/(2n))$.</span>
+<span class="sd">    Adjusting the range to $[x_L,x_R]$, the points become</span>
+<span class="sd">    $x_k = \frac{1}{2} (p_k - x_L + 1)/(x_R-x_L)$.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+                  <span class="o">-</span> <span class="nb">range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nb">range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="cheby_coeff">
+<a class="viewcode-back" href="../../bumps.cheby.html#bumps.cheby.cheby_coeff">[docs]</a>
+<span class="k">def</span> <span class="nf">cheby_coeff</span><span class="p">(</span><span class="n">fx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute chebyshev coefficients for a polynomial of order n given</span>
+<span class="sd">    the function evaluated at the chebyshev points for order n.</span>
+
+<span class="sd">    This can be used as the basis of a direct interpolation method where</span>
+<span class="sd">    the n control points are positioned at cheby_points(n).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">exp</span><span class="p">((</span><span class="o">-</span><span class="mf">0.5</span><span class="n">j</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">fx</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">fx</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">real</span><span class="p">(</span><span class="n">fft</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">c</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.cheby</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.pymcfit &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pymcfit</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.pymcfit</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Bumps wrapper for PyMC models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PyMCProblem&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">asarray</span>
+
+<span class="c1"># pyMC model attributes:</span>
+<span class="c1"># - deterministics                     [Intermediate variables]</span>
+<span class="c1"># - stochastics (with observed=False)  [Fitted parameters]</span>
+<span class="c1"># - data (stochastic variables with observed=True)</span>
+<span class="c1"># - variables                          [stochastics+</span>
+<span class="c1"># - potentials</span>
+<span class="c1"># - containers</span>
+<span class="c1"># - nodes</span>
+<span class="c1"># - all_objects</span>
+<span class="c1"># - status: Not useful for the Model base class, but may be used by subclasses.</span>
+
+<div class="viewcode-block" id="PyMCProblem">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem">[docs]</a>
+<span class="k">class</span> <span class="nc">PyMCProblem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pymc.Model</span> <span class="kn">import</span> <span class="n">Model</span>
+        <span class="kn">from</span> <span class="nn">pymc.Node</span> <span class="kn">import</span> <span class="n">ZeroProbability</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="c1"># sort parameters by name</span>
+        <span class="n">ordered_pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">stochastics</span><span class="p">)</span>
+
+        <span class="c1"># Record parameter, shape, size, offset as a list</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ordered_pairs</span><span class="p">]</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">]</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="p">()</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">size</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">offset</span><span class="p">))</span>
+
+        <span class="c1"># List of cost functions contains both parameter and data, but not</span>
+        <span class="c1"># intermediate deterministic points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">variables</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">deterministics</span>
+
+        <span class="c1"># Degrees of freedom is #data - #pars</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">()</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">costs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">offset</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ZeroProbability</span> <span class="o">=</span> <span class="n">ZeroProbability</span>
+
+<div class="viewcode-block" id="PyMCProblem.model_reset">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.model_reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">model_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.chisq">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.chisq">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()</span> <span class="c1"># /self.dof</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.chisq_str">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.chisq_str">[docs]</a>
+    <span class="k">def</span> <span class="nf">chisq_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%g</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">()</span></div>
+
+    <span class="fm">__call__</span> <span class="o">=</span> <span class="n">chisq</span>
+
+<div class="viewcode-block" id="PyMCProblem.nllf">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pvec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">pvec</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">logp</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">costs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">ZeroProbability</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inf</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.setp">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.setp">[docs]</a>
+    <span class="k">def</span> <span class="nf">setp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
+                <span class="n">par</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">par</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span><span class="o">+</span><span class="n">size</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">size</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.getp">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.getp">[docs]</a>
+    <span class="k">def</span> <span class="nf">getp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([(</span><span class="n">par</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">if</span> <span class="n">shape</span> <span class="o">!=</span> <span class="p">()</span> <span class="k">else</span> <span class="n">par</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.show">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.show">[docs]</a>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># maybe print graph of model</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[chisq=</span><span class="si">%g</span><span class="s2">, nllf=</span><span class="si">%g</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">()))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summarize</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.summarize">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.summarize">[docs]</a>
+    <span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">par</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.labels">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.labels">[docs]</a>
+    <span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span>  <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_par_labels</span><span class="p">(</span><span class="n">par</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.randomize">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.randomize">[docs]</a>
+    <span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">draw_from_prior</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">draw_from_prior</span><span class="p">()</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getp</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.bounds">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">_par_bounds</span><span class="p">(</span><span class="n">par</span><span class="p">)</span> <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span><span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pars</span><span class="p">])</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="PyMCProblem.plot">
+<a class="viewcode-back" href="../../bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fignum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">figfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_par_bounds</span><span class="p">(</span><span class="n">par</span><span class="p">):</span>
+    <span class="c1"># Delay referencing</span>
+    <span class="kn">import</span> <span class="nn">pymc.distributions</span>
+
+    <span class="n">UNBOUNDED</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+    <span class="n">PYMC_BOUNDS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">pymc</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">DiscreteUniform</span><span class="p">:</span>
+            <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">]</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;upper&#39;</span><span class="p">]</span><span class="o">+</span><span class="mf">0.5</span><span class="p">),</span>
+        <span class="n">pymc</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">Uniform</span><span class="p">:</span>
+            <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;upper&#39;</span><span class="p">]),</span>
+        <span class="n">pymc</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">Exponential</span><span class="p">:</span>
+            <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="c1"># pyMC doesn&#39;t provide info about bounds on the distributions</span>
+    <span class="c1"># so we need a big table.</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">PYMC_BOUNDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">UNBOUNDED</span><span class="p">)(</span><span class="n">par</span><span class="o">.</span><span class="n">parents</span><span class="p">)</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+<span class="k">def</span> <span class="nf">_par_labels</span><span class="p">(</span><span class="n">par</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">par</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dims</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">dims</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+    <span class="k">elif</span> <span class="n">dims</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="k">elif</span> <span class="n">dims</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">]&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">par</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;limited to 3 dims for now&quot;</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pymcfit</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

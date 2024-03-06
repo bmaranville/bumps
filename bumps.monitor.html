@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.monitor module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.monitor module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.monitor">
+<span id="bumps-monitor-module"></span><h1>bumps.monitor module<a class="headerlink" href="#module-bumps.monitor" title="Link to this heading">¶</a></h1>
+<p>Progress monitors.</p>
+<p>Process monitors accept a <a class="reference internal" href="bumps.history.html#bumps.history.History" title="bumps.history.History"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.history.History</span></code></a> object each cycle
+and perform some sort of work.</p>
+<p>Monitors have a <a class="reference internal" href="#bumps.monitor.Monitor.config_history" title="bumps.monitor.Monitor.config_history"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Monitor.config_history()</span></code></a> method which calls
+<em>history.requires()</em> to set the amount of history it needs and a 
+<em>Monitor.__call__</em> method which takes the updated history and
+generates the monitor output.</p>
+<p>Most monitors are subclassed from <a class="reference internal" href="#bumps.monitor.TimedUpdate" title="bumps.monitor.TimedUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimedUpdate</span></code></a> to set a minimum
+time between updates and to only show updates when there is an improvement.
+The <em>TimedUpdate</em> subclasses must override <a class="reference internal" href="#bumps.monitor.TimedUpdate.show_progress" title="bumps.monitor.TimedUpdate.show_progress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TimedUpdate.show_progress()</span></code></a>
+and <a class="reference internal" href="#bumps.monitor.TimedUpdate.show_improvement" title="bumps.monitor.TimedUpdate.show_improvement"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TimedUpdate.show_improvement()</span></code></a> to control the output form. History
+must be updated with time, value, point and step. The
+bumps.fitters.MonitorRunner class manages history and updates.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.monitor.Logger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.monitor.</span></span><span class="sig-name descname"><span class="pre">Logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#Logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.Logger" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.monitor.Monitor" title="bumps.monitor.Monitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Monitor</span></code></a></p>
+<p>Keeps a record of all values for the desired fields.</p>
+<p><em>fields</em> is a list of history fields to store.</p>
+<p><em>table</em> is an object with a <em>store(field=value,…)</em> method, which gets
+the current value of each field every time the history is updated.</p>
+<p>Call <a class="reference internal" href="#bumps.monitor.Logger.config_history" title="bumps.monitor.Logger.config_history"><code class="xref py py-meth docutils literal notranslate"><span class="pre">config_history()</span></code></a> with the <a class="reference internal" href="bumps.history.html#bumps.history.History" title="bumps.history.History"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.history.History</span></code></a>
+object before starting so that the correct fields are stored.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.monitor.Logger.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#Logger.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.Logger.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Make sure history records each logged field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.monitor.Monitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.monitor.</span></span><span class="sig-name descname"><span class="pre">Monitor</span></span><a class="reference internal" href="_modules/bumps/monitor.html#Monitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.Monitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for monitors.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.monitor.Monitor.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#Monitor.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.Monitor.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate which fields are needed by the monitor and for what duration.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.monitor.TimedUpdate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.monitor.</span></span><span class="sig-name descname"><span class="pre">TimedUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">improvement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#TimedUpdate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.TimedUpdate" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bumps.monitor.Monitor" title="bumps.monitor.Monitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Monitor</span></code></a></p>
+<p>Indicate progress every n seconds.</p>
+<p>The process should provide time, value, point, and step to the
+history update. Call <a class="reference internal" href="#bumps.monitor.TimedUpdate.config_history" title="bumps.monitor.TimedUpdate.config_history"><code class="xref py py-meth docutils literal notranslate"><span class="pre">config_history()</span></code></a> with the
+<a class="reference internal" href="bumps.history.html#bumps.history.History" title="bumps.history.History"><code class="xref py py-class docutils literal notranslate"><span class="pre">bumps.history.History</span></code></a> object before starting so that
+these fields are stored.</p>
+<p><em>progress</em> is the number of seconds to go before showing progress, such
+as time or step number.</p>
+<p><em>improvement</em> is the number of seconds to go before showing
+improvements to value.</p>
+<p>By default, the update only prints step number and improved value.
+Subclass TimedUpdate with replaced <a class="reference internal" href="#bumps.monitor.TimedUpdate.show_progress" title="bumps.monitor.TimedUpdate.show_progress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">show_progress()</span></code></a> and
+<a class="reference internal" href="#bumps.monitor.TimedUpdate.show_improvement" title="bumps.monitor.TimedUpdate.show_improvement"><code class="xref py py-meth docutils literal notranslate"><span class="pre">show_improvement()</span></code></a> to trigger GUI updates or show parameter
+values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.monitor.TimedUpdate.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#TimedUpdate.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.TimedUpdate.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate which fields are needed by the monitor and for what duration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.monitor.TimedUpdate.show_improvement">
+<span class="sig-name descname"><span class="pre">show_improvement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#TimedUpdate.show_improvement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.TimedUpdate.show_improvement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.monitor.TimedUpdate.show_progress">
+<span class="sig-name descname"><span class="pre">show_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/monitor.html#TimedUpdate.show_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.monitor.TimedUpdate.show_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.monitor module</a><ul>
+<li><a class="reference internal" href="#bumps.monitor.Logger"><code class="docutils literal notranslate"><span class="pre">Logger</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.monitor.Logger.config_history"><code class="docutils literal notranslate"><span class="pre">Logger.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.monitor.Monitor"><code class="docutils literal notranslate"><span class="pre">Monitor</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.monitor.Monitor.config_history"><code class="docutils literal notranslate"><span class="pre">Monitor.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.monitor.TimedUpdate"><code class="docutils literal notranslate"><span class="pre">TimedUpdate</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.monitor.TimedUpdate.config_history"><code class="docutils literal notranslate"><span class="pre">TimedUpdate.config_history()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.monitor.TimedUpdate.show_improvement"><code class="docutils literal notranslate"><span class="pre">TimedUpdate.show_improvement()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.monitor.TimedUpdate.show_progress"><code class="docutils literal notranslate"><span class="pre">TimedUpdate.show_progress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.monitor.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.monitor module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

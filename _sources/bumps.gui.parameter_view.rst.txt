@@ -1,0 +1,7 @@
+bumps.gui.parameter\_view module
+================================
+
+.. automodule:: bumps.gui.parameter_view
+   :members:
+   :undoc-members:
+   :show-inheritance:

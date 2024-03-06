@@ -1,0 +1,7 @@
+bumps.mystic.util module
+========================
+
+.. automodule:: bumps.mystic.util
+   :members:
+   :undoc-members:
+   :show-inheritance:

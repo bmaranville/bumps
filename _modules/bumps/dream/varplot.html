@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.varplot &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.varplot</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.varplot</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Build layout for histogram plots</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;var_plot_size&#39;</span><span class="p">,</span> <span class="s1">&#39;plot_vars&#39;</span><span class="p">,</span> <span class="s1">&#39;plot_var&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">sqrt</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="c1"># Set space between plots in horiz and vert.</span>
+<span class="n">H_SPACE</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">V_SPACE</span> <span class="o">=</span> <span class="mf">0.2</span>
+
+<span class="c1"># Set top, bottom, left margins.</span>
+<span class="n">T_MARGIN</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">B_MARGIN</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">L_MARGIN</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">R_MARGIN</span> <span class="o">=</span> <span class="mf">0.4</span>
+
+<span class="c1"># Set desired plot sizes.</span>
+<span class="n">TILE_W</span> <span class="o">=</span> <span class="mf">3.0</span>
+<span class="n">TILE_H</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">CBAR_WIDTH</span> <span class="o">=</span> <span class="mf">0.75</span>
+
+
+<div class="viewcode-block" id="var_plot_size">
+<a class="viewcode-back" href="../../../dream/varplot.html#bumps.dream.varplot.var_plot_size">[docs]</a>
+<span class="k">def</span> <span class="nf">var_plot_size</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">ncol</span><span class="p">,</span> <span class="n">nrow</span> <span class="o">=</span> <span class="n">tile_axes_square</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="c1"># Calculate total width and figure size</span>
+    <span class="n">plots_width</span> <span class="o">=</span> <span class="p">(</span><span class="n">TILE_W</span><span class="o">+</span><span class="n">H_SPACE</span><span class="p">)</span><span class="o">*</span><span class="n">ncol</span>
+    <span class="n">figwidth</span> <span class="o">=</span> <span class="n">plots_width</span> <span class="o">+</span> <span class="n">CBAR_WIDTH</span> <span class="o">+</span> <span class="n">L_MARGIN</span> <span class="o">+</span> <span class="n">R_MARGIN</span>
+    <span class="n">figheight</span> <span class="o">=</span> <span class="p">(</span><span class="n">TILE_H</span><span class="o">+</span><span class="n">V_SPACE</span><span class="p">)</span><span class="o">*</span><span class="n">nrow</span> <span class="o">+</span> <span class="n">T_MARGIN</span> <span class="o">+</span> <span class="n">B_MARGIN</span>
+    <span class="k">return</span> <span class="n">figwidth</span><span class="p">,</span> <span class="n">figheight</span></div>
+
+
+<span class="k">def</span> <span class="nf">_make_var_axes</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a figure with one axis per parameter,</span>
+<span class="sd">    and one axis (the last one) to contain the colorbar.</span>
+<span class="sd">    Use to make the vars histogram figure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">total_width</span><span class="p">,</span> <span class="n">total_height</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_size_inches</span><span class="p">()</span>
+
+    <span class="n">ncol</span><span class="p">,</span> <span class="n">nrow</span> <span class="o">=</span> <span class="n">tile_axes_square</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="c1"># Calculate dimensions as a faction of figure size.</span>
+    <span class="n">v_space_f</span> <span class="o">=</span> <span class="n">V_SPACE</span><span class="o">/</span><span class="n">total_height</span>
+    <span class="n">h_space_f</span> <span class="o">=</span> <span class="n">H_SPACE</span><span class="o">/</span><span class="n">total_width</span>
+    <span class="n">t_margin_f</span> <span class="o">=</span> <span class="n">T_MARGIN</span><span class="o">/</span><span class="n">total_height</span>
+    <span class="n">b_margin_f</span> <span class="o">=</span> <span class="n">B_MARGIN</span><span class="o">/</span><span class="n">total_height</span>
+    <span class="n">l_margin_f</span> <span class="o">=</span> <span class="n">L_MARGIN</span><span class="o">/</span><span class="n">total_width</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t_margin_f</span><span class="o">+</span><span class="n">v_space_f</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">l_margin_f</span>
+
+    <span class="n">tile_h</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_height</span> <span class="o">-</span> <span class="n">T_MARGIN</span> <span class="o">-</span> <span class="n">B_MARGIN</span><span class="p">)</span><span class="o">/</span><span class="n">nrow</span> <span class="o">-</span> <span class="n">V_SPACE</span>
+    <span class="n">tile_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_width</span> <span class="o">-</span> <span class="n">L_MARGIN</span> <span class="o">-</span> <span class="n">R_MARGIN</span> <span class="o">-</span> <span class="n">CBAR_WIDTH</span><span class="p">)</span><span class="o">/</span><span class="n">ncol</span> <span class="o">-</span> <span class="n">H_SPACE</span>
+    <span class="n">tile_h_f</span> <span class="o">=</span> <span class="n">tile_h</span><span class="o">/</span><span class="n">total_height</span>
+    <span class="n">tile_w_f</span> <span class="o">=</span> <span class="n">tile_w</span><span class="o">/</span><span class="n">total_width</span>
+
+    <span class="c1"># Calculate colorbar location (left, bottom) and colorbar height.</span>
+    <span class="n">l_cbar_f</span> <span class="o">=</span> <span class="n">l_margin_f</span> <span class="o">+</span> <span class="n">ncol</span><span class="o">*</span><span class="p">(</span><span class="n">tile_w_f</span><span class="o">+</span><span class="n">h_space_f</span><span class="p">)</span>
+    <span class="n">b_cbar_f</span> <span class="o">=</span> <span class="n">b_margin_f</span> <span class="o">+</span> <span class="n">v_space_f</span>
+    <span class="n">cbar_w_f</span> <span class="o">=</span> <span class="n">CBAR_WIDTH</span><span class="o">/</span><span class="n">total_width</span>
+    <span class="n">cbar_h_f</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t_margin_f</span> <span class="o">-</span> <span class="n">b_margin_f</span> <span class="o">-</span> <span class="n">v_space_f</span>
+    <span class="n">cbar_box</span> <span class="o">=</span> <span class="p">[</span><span class="n">l_cbar_f</span><span class="p">,</span> <span class="n">b_cbar_f</span><span class="p">,</span> <span class="n">cbar_w_f</span><span class="p">,</span> <span class="n">cbar_h_f</span><span class="p">]</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nrow</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ncol</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">left</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">tile_w_f</span><span class="o">+</span><span class="n">h_space_f</span><span class="p">),</span>
+                    <span class="n">top</span> <span class="o">-</span> <span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">tile_h_f</span><span class="o">+</span><span class="n">v_space_f</span><span class="p">),</span>
+                    <span class="n">tile_w_f</span><span class="p">,</span>
+                    <span class="n">tile_h_f</span><span class="p">]</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span><span class="n">cbar_box</span><span class="p">)</span>
+    <span class="c1">#fig.set_size_inches(total_width, total_height)</span>
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="k">def</span> <span class="nf">tile_axes_square</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine number of columns by finding the</span>
+<span class="sd">    next greatest square, then determine number</span>
+<span class="sd">    of rows needed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">cols</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">cols</span><span class="p">,</span> <span class="n">rows</span>
+
+
+<div class="viewcode-block" id="plot_vars">
+<a class="viewcode-back" href="../../../dream/varplot.html#bumps.dream.varplot.plot_vars">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_vars</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">all_vstats</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_vstats</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">_make_var_axes</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">_make_fig_colorbar</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">logp</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">vstats</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_vstats</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">sca</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">plot_var</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">vstats</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">cbar</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_var">
+<a class="viewcode-back" href="../../../dream/varplot.html#bumps.dream.varplot.plot_var">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_var</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">vstats</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">cbar</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">points</span><span class="p">[:,</span> <span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">bin_range</span> <span class="o">=</span> <span class="n">vstats</span><span class="o">.</span><span class="n">p95_range</span>
+    <span class="c1">#bin_range = np.min(values), np.max(values)</span>
+    <span class="n">_make_logp_histogram</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">draw</span><span class="o">.</span><span class="n">logp</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">bin_range</span><span class="p">,</span>
+                         <span class="n">draw</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">cbar</span><span class="p">)</span>
+    <span class="n">_decorate_histogram</span><span class="p">(</span><span class="n">vstats</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_decorate_histogram</span><span class="p">(</span><span class="n">vstats</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.transforms</span> <span class="kn">import</span> <span class="n">blended_transform_factory</span> <span class="k">as</span> <span class="n">blend</span>
+
+    <span class="n">l95</span><span class="p">,</span> <span class="n">h95</span> <span class="o">=</span> <span class="n">vstats</span><span class="o">.</span><span class="n">p95_range</span>
+    <span class="n">l68</span><span class="p">,</span> <span class="n">h68</span> <span class="o">=</span> <span class="n">vstats</span><span class="o">.</span><span class="n">p68_range</span>
+
+    <span class="c1"># Shade things inside 1-sigma</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="n">l68</span><span class="p">,</span> <span class="n">h68</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># build transform with x=data, y=axes(0,1)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">blend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">marker</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">position</span> <span class="o">&lt;</span> <span class="n">l95</span><span class="p">:</span>
+            <span class="n">symbol</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ha</span> <span class="o">=</span> <span class="s1">&#39;&lt;&#39;</span><span class="o">+</span><span class="n">symbol</span><span class="p">,</span> <span class="n">l95</span><span class="p">,</span> <span class="s1">&#39;left&#39;</span>
+        <span class="k">elif</span> <span class="n">position</span> <span class="o">&gt;</span> <span class="n">h95</span><span class="p">:</span>
+            <span class="n">symbol</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ha</span> <span class="o">=</span> <span class="s1">&#39;&gt;&#39;</span><span class="o">+</span><span class="n">symbol</span><span class="p">,</span> <span class="n">h95</span><span class="p">,</span> <span class="s1">&#39;right&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">symbol</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ha</span> <span class="o">=</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="s1">&#39;center&#39;</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="n">ha</span><span class="p">,</span>
+                   <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+        <span class="c1">#pylab.axvline(v)</span>
+
+    <span class="n">marker</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="n">vstats</span><span class="o">.</span><span class="n">median</span><span class="p">)</span>
+    <span class="n">marker</span><span class="p">(</span><span class="s1">&#39;E&#39;</span><span class="p">,</span> <span class="n">vstats</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+    <span class="n">marker</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">vstats</span><span class="o">.</span><span class="n">best</span><span class="p">)</span>
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">vstats</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+               <span class="n">backgroundcolor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+               <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
+               <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
+               <span class="n">transform</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([])</span>
+
+
+<span class="k">def</span> <span class="nf">_make_fig_colorbar</span><span class="p">(</span><span class="n">logp</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+    <span class="kn">import</span> <span class="nn">pylab</span>
+
+    <span class="c1"># Option 1: min to min + 4</span>
+    <span class="c1">#vmin=-max(logp); vmax=vmin+4</span>
+    <span class="c1"># Option 1b: min to min log10(num samples)</span>
+    <span class="c1">#vmin=-max(logp); vmax=vmin+log10(len(logp))</span>
+    <span class="c1"># Option 2: full range of best 98%</span>
+    <span class="n">snllf</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="o">-</span><span class="n">logp</span><span class="p">)</span>
+    <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">snllf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">snllf</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.98</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">snllf</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))]</span>  <span class="c1"># robust range</span>
+    <span class="c1"># Option 3: full range</span>
+    <span class="c1">#vmin,vmax = -max(logp),-min(logp)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">copper</span>
+
+    <span class="c1"># Set the colormap and norm to correspond to the data for which</span>
+    <span class="c1"># the colorbar will be used.</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+
+    <span class="c1"># ColorbarBase derives from ScalarMappable and puts a colorbar</span>
+    <span class="c1"># in a specified axes, so it has everything needed for a</span>
+    <span class="c1"># standalone colorbar.  There are many more kwargs, but the</span>
+    <span class="c1"># following gives a basic continuous colorbar with ticks</span>
+    <span class="c1"># and labels.</span>
+    <span class="k">class</span> <span class="nc">MinDigitsFormatter</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">ticker</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">=</span> <span class="n">high</span> <span class="o">-</span> <span class="n">low</span>
+
+        <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">format_value</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span>
+
+    <span class="n">ticks</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1">#(vmin, vmax)</span>
+    <span class="n">formatter</span> <span class="o">=</span> <span class="n">MinDigitsFormatter</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ColorbarBase</span><span class="p">(</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+        <span class="n">ticks</span><span class="o">=</span><span class="n">ticks</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">formatter</span><span class="p">,</span>
+        <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">)</span>
+    <span class="c1">#cb.set_ticks(ticks)</span>
+    <span class="c1">#cb.set_ticklabels(labels)</span>
+    <span class="c1">#cb.set_label(&#39;negative log likelihood&#39;)</span>
+
+    <span class="n">cbar_box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span><span class="o">.</span><span class="n">bounds</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">cbar_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">cbar_box</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+             <span class="s1">&#39;</span><span class="si">{:.3G}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vmin</span><span class="p">),</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">cbar_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cbar_box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">cbar_box</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+             <span class="s1">&#39;</span><span class="si">{:.3G}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vmax</span><span class="p">),</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cbar</span>
+
+
+<span class="k">def</span> <span class="nf">_make_logp_histogram</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">cbar</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ones_like</span><span class="p">,</span> <span class="n">searchsorted</span><span class="p">,</span> <span class="n">linspace</span><span class="p">,</span> <span class="n">cumsum</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span>
+                       <span class="n">unique</span><span class="p">,</span> <span class="n">argsort</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">hstack</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">ones_like</span><span class="p">(</span><span class="n">logp</span><span class="p">)</span>
+    <span class="c1"># TODO: values are being sorted to collect stats and again to plot</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">argsort</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">weights</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">logp</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="c1">#open(&#39;/tmp/out&#39;,&#39;a&#39;).write(&quot;ci=%s, range=%s\n&quot;</span>
+    <span class="c1">#                           % (ci,(min(values),max(values))))</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="n">ci</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ci</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbins</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">searchsorted</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">edges</span><span class="p">)</span>
+    <span class="c1">#weightsum = cumsum(weights)</span>
+    <span class="c1">#heights = diff(weightsum[idx])/weightsum[-1]  # normalized weights</span>
+
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="n">edgecolors</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">cbar</span><span class="o">.</span><span class="n">cmap</span>
+    <span class="n">cmap_edges</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># marginalized maximum likelihood</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">xlo</span><span class="p">,</span> <span class="n">xhi</span> \
+            <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">idx</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c1"># parameter interval endpoints</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">xlo</span><span class="p">,</span> <span class="n">xhi</span><span class="p">],</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="c1"># -logp values within interval, with sort index from low to high</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="o">-</span><span class="n">logp</span><span class="p">[</span><span class="n">s</span><span class="p">:</span><span class="n">e</span><span class="p">]</span>
+        <span class="n">pidx</span> <span class="o">=</span> <span class="n">argsort</span><span class="p">(</span><span class="n">pv</span><span class="p">)</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[</span><span class="n">pidx</span><span class="p">]</span>
+        <span class="c1"># weights for samples within interval, sorted</span>
+        <span class="n">pw</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">s</span><span class="p">:</span><span class="n">e</span><span class="p">][</span><span class="n">pidx</span><span class="p">]</span>
+        <span class="c1"># vertical colorbar top edges is the cumulative sum of the weights</span>
+        <span class="n">y_top</span> <span class="o">=</span> <span class="n">cumsum</span><span class="p">(</span><span class="n">pw</span><span class="p">)</span>
+
+        <span class="c1"># For debugging compare with one rectangle per sample</span>
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">flag</span>
+            <span class="n">edgecolors</span> <span class="o">=</span> <span class="s1">&#39;k&#39;</span>
+            <span class="n">xmid</span> <span class="o">=</span> <span class="p">(</span><span class="n">xlo</span><span class="o">+</span><span class="n">xhi</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">xlo</span><span class="p">,</span> <span class="n">xmid</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">y_top</span><span class="p">))</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">cbar</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">xmid</span><span class="p">,</span> <span class="n">xhi</span><span class="p">]</span>
+
+        <span class="c1"># Possibly millions of samples, so group those which have the</span>
+        <span class="c1"># same colour instead of drawing each as its own rectangle.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Norm the values then look up the colormap edges in the sorted</span>
+        <span class="c1"># normed negative log probabilities.  Drop duplicates, which</span>
+        <span class="c1"># represent zero-width bars. Assign the value for each interval</span>
+        <span class="c1"># according to the value at the change point.</span>
+        <span class="c1">#</span>
+        <span class="c1"># The indexing logic is very ugly. The searchsorted() function</span>
+        <span class="c1"># returns 0 if before the first or N if after the last, so the</span>
+        <span class="c1"># end points of the range are dropped so that there is and implicit</span>
+        <span class="c1"># [-inf, ... interior points ..., inf] range. Similarly, colours</span>
+        <span class="c1"># below vmin go to vmin and above vmax go to vmax, so drop those</span>
+        <span class="c1"># end points as well. Then put the end points back on in the</span>
+        <span class="c1"># found indices [0, ... interior edges ..., N-1]. Use the value</span>
+        <span class="c1"># at the end of the boundary to colour the section.</span>
+        <span class="c1"># Something is not quite right: with this algorithm the first</span>
+        <span class="c1"># block appears to always be one element long and is often the</span>
+        <span class="c1"># same colour as the next block. This is only visible if edges</span>
+        <span class="c1"># are drawn so ignore it for now.</span>
+        <span class="n">change_point</span> <span class="o">=</span> <span class="n">searchsorted</span><span class="p">(</span><span class="n">cbar</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pv</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">cmap_edges</span><span class="p">)</span>
+        <span class="n">tops</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">hstack</span><span class="p">((</span><span class="n">change_point</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pv</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">y_top</span><span class="p">[</span><span class="n">tops</span><span class="p">]))</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">pv</span><span class="p">[</span><span class="n">tops</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">cbar</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="n">edgecolors</span><span class="p">)</span>
+
+        <span class="c1"># centerpoint, histogram height, maximum likelihood for each bin</span>
+        <span class="n">bins</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">xlo</span><span class="o">+</span><span class="n">xhi</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">y_top</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">exp</span><span class="p">(</span><span class="n">cbar</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">vmin</span><span class="o">-</span><span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+    <span class="c1"># Check for broken distribution</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bins</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">centers</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">maxlikelihood</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">bins</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="c1"># Normalize maximum likelihood plot so it contains the same area as the</span>
+    <span class="c1"># histogram, unless it is really spikey, in which case make sure it has</span>
+    <span class="c1"># about the same height as the histogram.</span>
+    <span class="n">maxlikelihood</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">height</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">maxlikelihood</span><span class="p">)</span>
+    <span class="n">hist_peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+    <span class="n">ml_peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">maxlikelihood</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ml_peak</span> <span class="o">&gt;</span> <span class="n">hist_peak</span><span class="o">*</span><span class="mf">1.3</span><span class="p">:</span>
+        <span class="n">maxlikelihood</span> <span class="o">*=</span> <span class="n">hist_peak</span><span class="o">*</span><span class="mf">1.3</span><span class="o">/</span><span class="n">ml_peak</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">maxlikelihood</span><span class="p">,</span> <span class="s1">&#39;-g&#39;</span><span class="p">)</span>
+
+    <span class="c1">## plot marginal gaussian approximation along with histogram</span>
+    <span class="c1">#def G(x, mean, std):</span>
+    <span class="c1">#    return np.exp(-((x-mean)/std)**2/2)/np.sqrt(2*np.pi*std**2)</span>
+    <span class="c1">## TODO: use weighted average for standard deviation</span>
+    <span class="c1">#mean, std = np.average(values, weights=weights), np.std(values, ddof=1)</span>
+    <span class="c1">#pdf = G(centers, mean, std)</span>
+    <span class="c1">#pylab.plot(centers, pdf*np.sum(height)/np.sum(pdf), &#39;-b&#39;)</span>
+
+
+<span class="k">def</span> <span class="nf">_make_var_histogram</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+    <span class="c1"># Produce a histogram</span>
+    <span class="n">hist</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nbins</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="n">ci</span><span class="p">,</span>
+                              <span class="c1">#new=True,</span>
+                              <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="c1"># Find the max likelihood for values in each bin</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bins</span><span class="p">)</span>
+    <span class="n">histbest</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">logp</span><span class="p">[</span><span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="k">if</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbins</span><span class="p">)]</span>
+
+    <span class="c1"># scale to marginalized probability with peak the same height as hist</span>
+    <span class="n">histbest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">histbest</span><span class="p">)</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">logp</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">pylab</span>
+    <span class="c1"># Plot the histogram</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">hist</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Plot the kernel density estimate</span>
+    <span class="c1">#density = KDE1D(values)</span>
+    <span class="c1">#x = linspace(bins[0],bins[-1],100)</span>
+    <span class="c1">#pylab.plot(x, density(x), &#39;-k&#39;)</span>
+
+    <span class="c1"># Plot the marginal maximum likelihood</span>
+    <span class="n">centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">histbest</span><span class="p">,</span> <span class="s1">&#39;-g&#39;</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.varplot</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Bumps Options &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Calculating Entropy" href="entropy.html" />
+    <link rel="prev" title="Optimizer Selection" href="optimizer.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="entropy.html" title="Calculating Entropy"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="optimizer.html" title="Optimizer Selection"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Bumps Options</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="bumps-options">
+<span id="option-guide"></span><h1>Bumps Options<a class="headerlink" href="#bumps-options" title="Link to this heading">¶</a></h1>
+<p><em>Bumps</em> has a number of options available to control the fits and the
+output.  On the command line, each option is either <em>–option</em> if it
+is True/False or <em>–option=value</em> if the option takes a value.  The
+fit control form is used by graphical users interfaces to set the optimizer
+and its controls and stopping conditions.  The long form name of the the
+option will be used on the form.  Not all controls will appear on the form,
+and will be set from the command line.</p>
+<p><strong>Need to describe the array of output files produced by optimizers,
+particularly dream.  Some of them (convergence plot, model plot, par file,
+model file) are common to all.  Others (mcmc points) are specific to one
+optimizer</strong></p>
+<section id="bumps-command-line">
+<h2>Bumps Command Line<a class="headerlink" href="#bumps-command-line" title="Link to this heading">¶</a></h2>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span> <span class="n">modelfile</span> <span class="p">[</span><span class="n">modelargs</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The modelfile is a Python script (i.e., a series of Python commands)
+which sets up the data, the models, and the fittable parameters.
+The model arguments are available in the modelfile as sys.argv[1:].
+Model arguments may not start with ‘-’.  The options all start with
+‘-’ and can appear in any order anywhere on the command line.</p>
+</section>
+<section id="problem-setup">
+<h2>Problem Setup<a class="headerlink" href="#problem-setup" title="Link to this heading">¶</a></h2>
+<section id="pars">
+<span id="option-pars"></span><h3><code class="docutils literal notranslate"><span class="pre">--pars</span></code><a class="headerlink" href="#pars" title="Link to this heading">¶</a></h3>
+<p>Set initial parameter values from a previous fit.  The par file is a list
+of lines with parameter name followed by parameter value on each line.
+The parameters must appear with the same name and in the same order as
+the fitted parameters in the model. Additional parameters are ignored. Missing
+parameters are filled using LHS. <a class="reference internal" href="#option-preview"><span class="std std-ref">--preview</span></a> will show the
+model parameters.</p>
+</section>
+<section id="shake">
+<span id="option-shake"></span><h3><code class="docutils literal notranslate"><span class="pre">--shake</span></code><a class="headerlink" href="#shake" title="Link to this heading">¶</a></h3>
+<p>Set random initial values for the parameters in the model.  Note that
+shake happens after <a class="reference internal" href="#option-simulate"><span class="std std-ref">--simulate</span></a> so that you can simulate a random
+model, shake it, then try to recover its initial values.</p>
+</section>
+<section id="simulate">
+<span id="option-simulate"></span><h3><code class="docutils literal notranslate"><span class="pre">--simulate</span></code><a class="headerlink" href="#simulate" title="Link to this heading">¶</a></h3>
+<p>Simulate a dataset using the initial problem parameters.  This is useful
+when setting up a model before an experiment to see what data it might
+produce, and for seeing how well the fitting program might recover the
+parameters of interest.</p>
+</section>
+<section id="simrandom">
+<span id="option-simrandom"></span><h3><code class="docutils literal notranslate"><span class="pre">--simrandom</span></code><a class="headerlink" href="#simrandom" title="Link to this heading">¶</a></h3>
+<p>Simulate a dataset using random initial parameters.  Because <a class="reference internal" href="#option-shake"><span class="std std-ref">--shake</span></a>
+is applied after <a class="reference internal" href="#option-simulate"><span class="std std-ref">--simulate</span></a>, we need a separate way to shake the
+parameters before simulating the model.</p>
+</section>
+<section id="noise">
+<span id="option-noise"></span><h3><code class="docutils literal notranslate"><span class="pre">--noise</span></code><a class="headerlink" href="#noise" title="Link to this heading">¶</a></h3>
+<p>Set the noise percentage on the simulated data.  The default is 5 for 5%
+normally distributed uncertainty in the measured values.  Use <code class="docutils literal notranslate"><span class="pre">--noise=data</span></code>
+to use the uncertainty on a dataset in the simulation.</p>
+</section>
+<section id="seed">
+<span id="option-seed"></span><h3><code class="docutils literal notranslate"><span class="pre">--seed</span></code><a class="headerlink" href="#seed" title="Link to this heading">¶</a></h3>
+<p>Set a specific seed to the random number generator.  This happens before
+shaking and simulating so that fitting tests, and particularly failures,
+can be reliably reproduced.  The numpy random number generator is used
+for all values, so any consistency guarantees between versions of bumps
+over time and across platforms depends on the consistency of the numpy
+generators. If no seed is specified then one will be generated and printed
+so that the fit can be rerun with the same random sequence.</p>
+</section>
+</section>
+<section id="stopping-conditions">
+<h2>Stopping Conditions<a class="headerlink" href="#stopping-conditions" title="Link to this heading">¶</a></h2>
+<section id="steps">
+<span id="option-steps"></span><h3><code class="docutils literal notranslate"><span class="pre">--steps</span></code><a class="headerlink" href="#steps" title="Link to this heading">¶</a></h3>
+<p><em>Steps</em> is the number of iterations that the algorithm will perform.  The
+meaning of iterations will differ from optimizer to optimizer.  In the case
+of population based optimizers such as <a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a>, each step is an update to
+every member of the population.  For local descent optimizers such as
+<a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a> each step is an iteration of the algorithm.
+<a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a> uses steps plus <a class="reference internal" href="#option-burn"><span class="std std-ref">--burn</span></a> for the total number
+of iterations.</p>
+</section>
+<section id="samples">
+<span id="option-samples"></span><h3><code class="docutils literal notranslate"><span class="pre">--samples</span></code><a class="headerlink" href="#samples" title="Link to this heading">¶</a></h3>
+<p><em>Samples</em> sets the number of function evaluations.  This is an alternative
+for setting the number of iterations of the algorithm, used when
+<a class="reference internal" href="#option-steps"><span class="std std-ref">--steps</span></a> is zero. Population optimizers perform <a class="reference internal" href="#option-pop"><span class="std std-ref">--pop</span></a>
+times the number of parameters in the fit for each step of the operation,
+so given the desired number of samples, you can control the number of steps.
+The number of samples is particularly convenient for <a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a>
+(the only optimizer for which it is implemented at the moment), where 100,000
+samples are needed to estimate the 1-sigma interval to 2 digits of accuracy
+(assuming an approximately gaussian distribution), and 1,000,000 samples are
+needed for the 95% confidence interval.  Like <a class="reference internal" href="#option-steps"><span class="std std-ref">--steps</span></a>, the total
+evaluations does not include any <a class="reference internal" href="#option-burn"><span class="std std-ref">--burn</span></a> iterations.</p>
+</section>
+<section id="ftol">
+<span id="option-ftol"></span><h3><code class="docutils literal notranslate"><span class="pre">--ftol</span></code><a class="headerlink" href="#ftol" title="Link to this heading">¶</a></h3>
+<p><em>f(x) tolerance</em> uses differences in the function value to decide when the
+fit is complete.  The different fitters will interpret this in different
+ways.  The Newton descent algorithms (<a class="reference internal" href="optimizer.html#fit-newton"><span class="std std-ref">Quasi-Newton BFGS</span></a>, <a class="reference internal" href="optimizer.html#fit-lm"><span class="std std-ref">Levenberg-Marquardt</span></a>) will use
+this as the minimum improvement of the function value with each step.  The
+population-based algorithms (<a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a>, <a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a>) will use the
+maximum difference between highest and lowest value in the population.
+<a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a> does not use this stopping condition.</p>
+</section>
+<section id="xtol">
+<span id="option-xtol"></span><h3><code class="docutils literal notranslate"><span class="pre">--xtol</span></code><a class="headerlink" href="#xtol" title="Link to this heading">¶</a></h3>
+<p><em>x tolerance</em> uses differences in the parameter value to decide when the
+fit is complete.  The different fitters will interpret this in different
+ways.  The Newton descent algorithms (<a class="reference internal" href="optimizer.html#fit-newton"><span class="std std-ref">Quasi-Newton BFGS</span></a>, <a class="reference internal" href="optimizer.html#fit-lm"><span class="std std-ref">Levenberg-Marquardt</span></a>) will use
+this as the minimum change in the parameter values with each step.   The
+population-based algorithgms (<a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a>, <a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a>) will use the
+maximum difference between highest and lowest parameter in the population.
+<a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a> does not use this stopping condition.</p>
+</section>
+<section id="time">
+<span id="option-time"></span><h3><code class="docutils literal notranslate"><span class="pre">--time</span></code><a class="headerlink" href="#time" title="Link to this heading">¶</a></h3>
+<p><em>Max time</em> is the maximum running time of the optimizer.  This forces
+the optimizer to stop even if tolerance or steps conditions are not met.
+It is particularly useful for batch jobs run in an environment where the
+queuing system stops the job unceremoniously when the time allocation is
+complete.  Time is checked between iterations, so be sure to set it well
+below the queue allocation so that it does not stop in the middle of an
+iteration, and so that it has time to save its state.</p>
+</section>
+<section id="alpha">
+<span id="option-alpha"></span><h3><code class="docutils literal notranslate"><span class="pre">--alpha</span></code><a class="headerlink" href="#alpha" title="Link to this heading">¶</a></h3>
+<p><em>Convergence</em> is the test criterion to use when deciding if stopping
+conditions are met. This is for the variety of stopping tests built into
+the DREAM algorithm. Usual values are <cite>–alpha=0.01</cite> or <cite>–alpha=0.05</cite>.
+Note that various stopping criteria depend on the the number samples and
+the chain length (where chain length x #pars x #pop = #samples), so there
+is no definitive value to use for alpha, but larger values will allow the
+fit to stop sooner.</p>
+</section>
+</section>
+<section id="optimizer-controls">
+<h2>Optimizer Controls<a class="headerlink" href="#optimizer-controls" title="Link to this heading">¶</a></h2>
+<section id="fit">
+<span id="option-fit"></span><h3><code class="docutils literal notranslate"><span class="pre">--fit</span></code><a class="headerlink" href="#fit" title="Link to this heading">¶</a></h3>
+<p><em>Fit Algorithm</em> selects the optimizer.  The available optimizers are:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>amoeba</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>de</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>dream</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>lm</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-lm"><span class="std std-ref">Levenberg-Marquardt</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>newton</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-newton"><span class="std std-ref">Quasi-Newton BFGS</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>pt</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-pt"><span class="std std-ref">Parallel Tempering</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>ps</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-ps"><span class="std std-ref">Particle Swarm</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>rl</p></td>
+<td><p><a class="reference internal" href="optimizer.html#fit-rl"><span class="std std-ref">Random Lines</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The default fit method is <code class="docutils literal notranslate"><span class="pre">--fit=amoeba</span></code>.</p>
+</section>
+<section id="pop">
+<span id="option-pop"></span><h3><code class="docutils literal notranslate"><span class="pre">--pop</span></code><a class="headerlink" href="#pop" title="Link to this heading">¶</a></h3>
+<p><em>Population</em> determines the size of the population.  For <a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a> and
+<a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a> it is a scale factor, where the number of individuals, <span class="math notranslate nohighlight">\(k\)</span>, is
+equal to the number of fitted parameters times pop.  For <a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a>
+the number of individuals is one plus the number of fitted parameters, as
+determined by the size of the simplex.</p>
+</section>
+<section id="init">
+<span id="option-init"></span><h3><code class="docutils literal notranslate"><span class="pre">--init</span></code><a class="headerlink" href="#init" title="Link to this heading">¶</a></h3>
+<p><em>Initializer</em>  is used by population-based algorithms (<a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a>)
+to set the initial population.  The options are as follows:</p>
+<blockquote>
+<div><p><em>lhs</em> (latin hypersquare), which chops the bounds within each dimension
+in <span class="math notranslate nohighlight">\(k\)</span> equal sized chunks where <span class="math notranslate nohighlight">\(k\)</span> is the size of the population and
+makes sure that each parameter has at least one value within each chunk
+across the population.</p>
+<p><em>eps</em> (epsilon ball), in which the entire initial population is chosen
+at random from within a tiny hypersphere centered about the initial point</p>
+<p><em>cov</em> (covariance matrix), in which the uncertainty is estimated using
+the covariance matrix at the initial point, and points are selected
+at random from the corresponding gaussian ellipsoid</p>
+<p><em>rand</em> (uniform random), in which the points are selected at random
+within the bounds of the parameters</p>
+</div></blockquote>
+<p><a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a> uses <a class="reference internal" href="#option-radius"><span class="std std-ref">--radius</span></a> to initialize its simplex.
+<a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a> uses a random number from the prior distribution for the
+parameter, if any.</p>
+</section>
+<section id="burn">
+<span id="option-burn"></span><h3><code class="docutils literal notranslate"><span class="pre">--burn</span></code><a class="headerlink" href="#burn" title="Link to this heading">¶</a></h3>
+<p><em>Burn-in Steps</em> is the number of iterations to required for the Markov
+chain to converge to the equilibrium distribution.  If the fit ends
+early, the tail of the burn will be saved to the start of the steps.
+<a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a> uses burn plus steps as the total number of iterations to run.</p>
+</section>
+<section id="thin">
+<span id="option-thin"></span><h3><code class="docutils literal notranslate"><span class="pre">--thin</span></code><a class="headerlink" href="#thin" title="Link to this heading">¶</a></h3>
+<p><em>Thinning</em> is used by the Markov chain analysis to give samples time to
+wander to different points in parameter space.  In an ideal chain, there
+would be no correlation between points in the chain other than that which
+is dictated by the equilibrium distribution.  However, if the space has
+complicated boundaries and taking a step can easily lead to a highly
+improbable point, then the chain may be stuck at the same value for
+long periods of time.  If this is observed, then thinning can be used to
+only keep every <span class="math notranslate nohighlight">\(n^\text{th}\)</span> step, giving the saved chain a better opportunity
+for good mixing.</p>
+</section>
+<section id="cr">
+<span id="option-cr"></span><h3><code class="docutils literal notranslate"><span class="pre">--CR</span></code><a class="headerlink" href="#cr" title="Link to this heading">¶</a></h3>
+<p><em>Crossover ratio</em> indicates the proportion of mixing which occurs with
+each iteration.  This is a value in [0,1] giving the probability that
+each individual dimension will be selected for update in the next generation.</p>
+</section>
+<section id="outliers">
+<span id="options-outliers"></span><h3><code class="docutils literal notranslate"><span class="pre">--outliers</span></code><a class="headerlink" href="#outliers" title="Link to this heading">¶</a></h3>
+<p><em>Outliers</em> is used to identify chains that are stuck in high local minima
+during dream burn-in. Options are:</p>
+<ul class="simple">
+<li><p>iqr: Use the interquartile range to determine the width of the distribution
+then exclude all chains whose log likelihood is more that two standard
+deviations below the first quartile.</p></li>
+<li><p>grubbs: Use a t-test to determine whether the samples in each chain are
+significantly different from the mean.</p></li>
+<li><p>mahal: Use the mahalanobis distance to determine whether the lowest
+probability chain is close to the remaining chain in parameter space.
+Only this chain will be marked as an outlier if the test fails.</p></li>
+<li><p>none: Don’t do any outlier trimming.</p></li>
+</ul>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">--outliers=none</span></code>. Outlier removal occurs every <span class="math notranslate nohighlight">\(2n\)</span> steps
+where <span class="math notranslate nohighlight">\(n\)</span> is #samples/(#pars #pop), or when the convergence test indicates
+the chains are stable.</p>
+<p>Note that outliers are marked at the end of the fit using IQR and not
+included in the statistics, though they are saved in the MCMC files. This
+is independent of the <code class="docutils literal notranslate"><span class="pre">--outliers</span></code> setting.</p>
+</section>
+<section id="f">
+<span id="option-f"></span><h3><code class="docutils literal notranslate"><span class="pre">--F</span></code><a class="headerlink" href="#f" title="Link to this heading">¶</a></h3>
+<p><em>Scale</em> is a factor applied to the difference vector before adding it to
+the parent in differential evolution.</p>
+</section>
+<section id="radius">
+<span id="option-radius"></span><h3><code class="docutils literal notranslate"><span class="pre">--radius</span></code><a class="headerlink" href="#radius" title="Link to this heading">¶</a></h3>
+<p><em>Simplex radius</em> is the radius of the initial simplex in <a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a></p>
+</section>
+<section id="nt">
+<span id="option-nt"></span><h3><code class="docutils literal notranslate"><span class="pre">--nT</span></code><a class="headerlink" href="#nt" title="Link to this heading">¶</a></h3>
+<p><em># Temperatures</em>  is the number of temperature chains to run using parallel
+tempering.  Default is 25.</p>
+</section>
+<section id="tmin">
+<span id="option-tmin"></span><h3><code class="docutils literal notranslate"><span class="pre">--Tmin</span></code><a class="headerlink" href="#tmin" title="Link to this heading">¶</a></h3>
+<p><em>Min temperature</em> is the minimum temperature in the log-spaced series of
+temperatures to run using parallel tempering.  Default is 0.1.</p>
+</section>
+<section id="tmax">
+<span id="option-tmax"></span><h3><code class="docutils literal notranslate"><span class="pre">--Tmax</span></code><a class="headerlink" href="#tmax" title="Link to this heading">¶</a></h3>
+<p><em>Max temperature</em> is the maximum temperature in the log-spaced series of
+temperatures to run using parallel tempering.  Default is 10.</p>
+</section>
+<section id="starts">
+<span id="option-starts"></span><h3><code class="docutils literal notranslate"><span class="pre">--starts</span></code><a class="headerlink" href="#starts" title="Link to this heading">¶</a></h3>
+<p><em>Starts</em> is the number of times to run the fit from random starting points.</p>
+</section>
+<section id="keep-best">
+<span id="option-keep-best"></span><h3><code class="docutils literal notranslate"><span class="pre">--keep_best</span></code><a class="headerlink" href="#keep-best" title="Link to this heading">¶</a></h3>
+<p>If <em>Keep best</em> is set, then the each subsequent restart for the multi-start
+fitter keeps the best value from the previous fit(s).</p>
+</section>
+</section>
+<section id="execution-controls">
+<h2>Execution Controls<a class="headerlink" href="#execution-controls" title="Link to this heading">¶</a></h2>
+<section id="store">
+<span id="option-store"></span><h3><code class="docutils literal notranslate"><span class="pre">--store</span></code><a class="headerlink" href="#store" title="Link to this heading">¶</a></h3>
+<p>Directory in which to store the results of the fit.  Fits produce multiple
+files and plots.  Rather than cluttering up the current directory, all the
+outputs are written to the store directory along with a copy of the model
+file.</p>
+</section>
+<section id="overwrite">
+<span id="option-overwrite"></span><h3><code class="docutils literal notranslate"><span class="pre">--overwrite</span></code><a class="headerlink" href="#overwrite" title="Link to this heading">¶</a></h3>
+<p>If the store directory already exists then you need to include overwrite on
+the command line to reuse it.  While inconvenient, this prevents accidental
+overwriting of fits that may have taken hours to generate.</p>
+</section>
+<section id="checkpoint">
+<span id="option-checkpoint"></span><h3><code class="docutils literal notranslate"><span class="pre">--checkpoint</span></code><a class="headerlink" href="#checkpoint" title="Link to this heading">¶</a></h3>
+<p>Save fit state every <code class="docutils literal notranslate"><span class="pre">--checkpoint=n</span></code> hours. [dream only]</p>
+</section>
+<section id="resume">
+<span id="option-resume"></span><h3><code class="docutils literal notranslate"><span class="pre">--resume</span></code><a class="headerlink" href="#resume" title="Link to this heading">¶</a></h3>
+<p>Continue fit from a previous store directory. Use <code class="docutils literal notranslate"><span class="pre">--resume</span></code> or <code class="docutils literal notranslate"><span class="pre">--resume=-</span></code>
+to reuse the existing store directory.</p>
+</section>
+<section id="parallel">
+<span id="option-parallel"></span><h3><code class="docutils literal notranslate"><span class="pre">--parallel</span></code><a class="headerlink" href="#parallel" title="Link to this heading">¶</a></h3>
+<p>Run fit using multiprocessing for parallelism. Use “–parallel=0” for all
+CPUs or “–parallel=n” for only “n” CPUs.</p>
+</section>
+<section id="mpi">
+<span id="option-mpi"></span><h3><code class="docutils literal notranslate"><span class="pre">--mpi</span></code><a class="headerlink" href="#mpi" title="Link to this heading">¶</a></h3>
+<p>Run fit using MPI for parallelism. Use command “mpirun -n cpus …”
+to run bumps for MPI. This will usually be the last line of a queue
+submission script. Be sure to include <code class="docutils literal notranslate"><span class="pre">--time=...</span></code> to limit the fit
+to run within the queue allocation time.</p>
+</section>
+<section id="batch">
+<span id="option-batch"></span><h3><code class="docutils literal notranslate"><span class="pre">--batch</span></code><a class="headerlink" href="#batch" title="Link to this heading">¶</a></h3>
+<p>Run fit in batch mode.  Progress updates are sent to <em>STORE/MODEL.mon</em>, and
+can be monitored using <em>tail -f</em> (unix, mac).  When the fit is complete, the
+plot png files are created as usual, but the interactive plots are not shown.
+This allows you to set up a sequence of runs in a shell script where the
+first run completes before the next run starts.  Batch is also useful for
+cluster computing where the cluster nodes do not have access to the outside
+network and can’t display an interactive window.  Batch is automatic
+when running with <a class="reference internal" href="#option-mpi"><span class="std std-ref">--mpi</span></a>.</p>
+</section>
+<section id="stepmon">
+<span id="option-stepmon"></span><h3><code class="docutils literal notranslate"><span class="pre">--stepmon</span></code><a class="headerlink" href="#stepmon" title="Link to this heading">¶</a></h3>
+<p>Create a log file tracking each point examined during the fit.  This does
+not provide any real utility except for generating plots of the population
+over time, which can be useful for understanding the different fitting
+methods.</p>
+</section>
+</section>
+<section id="output-controls">
+<h2>Output Controls<a class="headerlink" href="#output-controls" title="Link to this heading">¶</a></h2>
+<section id="err">
+<span id="option-err"></span><h3><code class="docutils literal notranslate"><span class="pre">`--err</span></code><a class="headerlink" href="#err" title="Link to this heading">¶</a></h3>
+<p>Show uncertainties at the end of the fit using the square root of the
+diagonals of the covariance matrix. See <a class="reference internal" href="#option-cov"><span class="std std-ref">--cov</span></a>.</p>
+</section>
+<section id="cov">
+<span id="option-cov"></span><h3><code class="docutils literal notranslate"><span class="pre">--cov</span></code><a class="headerlink" href="#cov" title="Link to this heading">¶</a></h3>
+<p>Compute the covariance matrix for the model at the minimum. With gaussian
+uncertainties on the data, bumps is minimizing the sum of squares, so the
+Jacobian matrix is used for the covariance, formed from the numerical
+derivative of each residual with respect to each parameter. If the
+likelihood function is not a simple sum of squared residuals, then
+the Hessian matrix is used for the covariance, formed from the numerical
+derivative of the likelihood with respect to pairs of parameters.</p>
+</section>
+<section id="entropy">
+<span id="option-entropy"></span><h3><code class="docutils literal notranslate"><span class="pre">--entropy</span></code><a class="headerlink" href="#entropy" title="Link to this heading">¶</a></h3>
+<p><em>Calculate entropy</em> is a flag which indicates whether entropy should be
+computed for the final fit. Entropy an estimate of the number of bits of
+information available from the fit. Use “–entropy=method” to specify the
+entropy calcualation method. This can be one of:</p>
+<ul class="simple">
+<li><p>gmm: fit sample to a gaussian mixture model (GMM) with <span class="math notranslate nohighlight">\(5 \sqrt{d}\)</span>
+components where <span class="math notranslate nohighlight">\(d\)</span> is the number fitted parameters and estimate
+entropy by sampling from the GMM.</p></li>
+<li><p>llf: estimates likelihood scale factor from ratio of density
+estimate to model likelihood, then computes Monte Carlo entropy
+from sample; this does not work for marginal likelihood estimates.
+DOI:10.1109/CCA.2010.5611198</p></li>
+<li><p>mvn: fit sample to a multi-variate Gaussian and return the entropy
+of the best fit gaussian; uses bootstrap to estimate uncertainty.
+This method is only valid if the sample distribution is approximately
+Gaussian.</p></li>
+<li><p>wnn: estimate entropy from weighted nearest-neighbor distances in sample.
+Note: use with caution. The results from this implementation are not
+consistent with other methods. DOI:10.1214/18-AOS1688</p></li>
+</ul>
+</section>
+<section id="plot">
+<span id="option-plot"></span><h3><code class="docutils literal notranslate"><span class="pre">--plot</span></code><a class="headerlink" href="#plot" title="Link to this heading">¶</a></h3>
+<p>For problems that have different view options for plotting, select the default
+option to display.  For example, when fitting a power law to a dataset, you
+may want to choose <em>log</em> or <em>linear</em> as the output plot type.</p>
+</section>
+<section id="trim">
+<span id="option-trim"></span><h3><code class="docutils literal notranslate"><span class="pre">--trim</span></code><a class="headerlink" href="#trim" title="Link to this heading">¶</a></h3>
+<p><em>Burn-in trim</em> finds the “burn point” after which the DREAM Markov chains
+appear to have converged and ignores all points before it when plotting or
+computing covariance and entropy. The trimmed points are still written to
+the MCMC output files so they will be available when the fit is resumed.
+Use <code class="docutils literal notranslate"><span class="pre">--trim=true</span></code> to set trimming.</p>
+</section>
+<section id="noshow">
+<span id="option-noshow"></span><h3><code class="docutils literal notranslate"><span class="pre">--noshow</span></code><a class="headerlink" href="#noshow" title="Link to this heading">¶</a></h3>
+<p><em>No show</em> suppresses the plot window after the fit. This is done automatically
+when <code class="docutils literal notranslate"><span class="pre">--batch</span></code> is selected.</p>
+</section>
+</section>
+<section id="bumps-controls">
+<h2>Bumps Controls<a class="headerlink" href="#bumps-controls" title="Link to this heading">¶</a></h2>
+<section id="preview">
+<span id="option-preview"></span><h3><code class="docutils literal notranslate"><span class="pre">--preview</span></code><a class="headerlink" href="#preview" title="Link to this heading">¶</a></h3>
+<p>If the command contains <em>preview</em> then display model but do not perform
+a fitting operation.  Use this to see the initial model before running a fit.
+It will also show the fit range.</p>
+</section>
+<section id="chisq">
+<span id="option-chisq"></span><h3><code class="docutils literal notranslate"><span class="pre">--chisq</span></code><a class="headerlink" href="#chisq" title="Link to this heading">¶</a></h3>
+<p>If the command contains <em>chisq</em> then show <span class="math notranslate nohighlight">\(\chi^2\)</span> and exit.  Use this to
+check that the model does not have any syntax errors.</p>
+</section>
+<section id="resynth">
+<span id="option-resynth"></span><h3><code class="docutils literal notranslate"><span class="pre">--resynth</span></code><a class="headerlink" href="#resynth" title="Link to this heading">¶</a></h3>
+<p>Run a resynth uncertainty analysis on the model.  After finding a good
+minimum, you can rerun bumps with:</p>
+<blockquote>
+<div><p>bumps –store=T1 –pars=T1/model.par –fit=amoeba –resynth=20 model.py</p>
+</div></blockquote>
+<p>This will generate 20 data simulated datasets using the initial data
+values as the mean and the data uncertainty as the standard deviation.
+Each of these datasets will be fit with the specified optimizer, and the
+resulting parameters saved in <em>T1/model.rsy</em>.  On completion, the parameter
+values can be loaded into python and averaged or histogrammed.</p>
+</section>
+<section id="time-model">
+<span id="option-time-model"></span><h3><code class="docutils literal notranslate"><span class="pre">--time_model</span></code><a class="headerlink" href="#time-model" title="Link to this heading">¶</a></h3>
+<p>Run the model <a class="reference internal" href="#option-steps"><span class="std std-ref">--steps</span></a> times and find the average run time per step.
+If <a class="reference internal" href="#option-parallel"><span class="std std-ref">--parallel</span></a> is used, then the models will be run in parallel.</p>
+</section>
+<section id="profile">
+<span id="option-profile"></span><h3><code class="docutils literal notranslate"><span class="pre">--profile</span></code><a class="headerlink" href="#profile" title="Link to this heading">¶</a></h3>
+<p>Run the model <a class="reference internal" href="#option-steps"><span class="std std-ref">--steps</span></a> times using the python profiler.  This can
+be useful for identifying slow parts of your model definition, or
+alternatively, finding out that the model runtime is smaller than the
+Bumps overhead.  Use a larger value of steps for better statistics.</p>
+</section>
+</section>
+<section id="special-options">
+<h2>Special Options<a class="headerlink" href="#special-options" title="Link to this heading">¶</a></h2>
+<section id="edit">
+<span id="option-edit"></span><h3><code class="docutils literal notranslate"><span class="pre">--edit</span></code><a class="headerlink" href="#edit" title="Link to this heading">¶</a></h3>
+<p>If the command contains <em>edit</em> then start the Bumps user interface so that
+you can interact with the model, adjusting fitted parameters with a slider
+and seeing how they impact the result.</p>
+</section>
+<section id="help-h">
+<span id="option-help"></span><h3><code class="docutils literal notranslate"><span class="pre">--help</span></code>, <code class="docutils literal notranslate"><span class="pre">-h</span></code>, <code class="docutils literal notranslate"><span class="pre">-?</span></code><a class="headerlink" href="#help-h" title="Link to this heading">¶</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">-?</span></code>, <code class="docutils literal notranslate"><span class="pre">-h</span></code> or <code class="docutils literal notranslate"><span class="pre">--help</span></code> to show a brief description of each
+command line option.</p>
+</section>
+<section id="i-m-c-p">
+<span id="option-python"></span><h3><code class="docutils literal notranslate"><span class="pre">-i</span></code>, <code class="docutils literal notranslate"><span class="pre">-m</span></code>, <code class="docutils literal notranslate"><span class="pre">-c</span></code>, <code class="docutils literal notranslate"><span class="pre">-p</span></code><a class="headerlink" href="#i-m-c-p" title="Link to this heading">¶</a></h3>
+<p>The bumps program can be used as a python interpreter with numpy, scipy,
+matplotlib and bumps packages available.  This is useful if you do not have
+python set up on your system, and you are using a bundled executable like
+Bumps or Refl1D on windows.  Even if you have python, you may want to run the
+bumps post-analysis scripts through the bumps command which already has
+the appropriate path set up to bumps on your system.</p>
+<p>The options are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-i</span></code>: run an interactive interpreter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">package.module</span></code>: run a module as main. This is similar to
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">package.module</span></code> with the python interpreter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">expression</span></code>: run a python command and quit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">script.py</span></code>: run a python script.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Bumps Options</a><ul>
+<li><a class="reference internal" href="#bumps-command-line">Bumps Command Line</a></li>
+<li><a class="reference internal" href="#problem-setup">Problem Setup</a><ul>
+<li><a class="reference internal" href="#pars"><code class="docutils literal notranslate"><span class="pre">--pars</span></code></a></li>
+<li><a class="reference internal" href="#shake"><code class="docutils literal notranslate"><span class="pre">--shake</span></code></a></li>
+<li><a class="reference internal" href="#simulate"><code class="docutils literal notranslate"><span class="pre">--simulate</span></code></a></li>
+<li><a class="reference internal" href="#simrandom"><code class="docutils literal notranslate"><span class="pre">--simrandom</span></code></a></li>
+<li><a class="reference internal" href="#noise"><code class="docutils literal notranslate"><span class="pre">--noise</span></code></a></li>
+<li><a class="reference internal" href="#seed"><code class="docutils literal notranslate"><span class="pre">--seed</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#stopping-conditions">Stopping Conditions</a><ul>
+<li><a class="reference internal" href="#steps"><code class="docutils literal notranslate"><span class="pre">--steps</span></code></a></li>
+<li><a class="reference internal" href="#samples"><code class="docutils literal notranslate"><span class="pre">--samples</span></code></a></li>
+<li><a class="reference internal" href="#ftol"><code class="docutils literal notranslate"><span class="pre">--ftol</span></code></a></li>
+<li><a class="reference internal" href="#xtol"><code class="docutils literal notranslate"><span class="pre">--xtol</span></code></a></li>
+<li><a class="reference internal" href="#time"><code class="docutils literal notranslate"><span class="pre">--time</span></code></a></li>
+<li><a class="reference internal" href="#alpha"><code class="docutils literal notranslate"><span class="pre">--alpha</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#optimizer-controls">Optimizer Controls</a><ul>
+<li><a class="reference internal" href="#fit"><code class="docutils literal notranslate"><span class="pre">--fit</span></code></a></li>
+<li><a class="reference internal" href="#pop"><code class="docutils literal notranslate"><span class="pre">--pop</span></code></a></li>
+<li><a class="reference internal" href="#init"><code class="docutils literal notranslate"><span class="pre">--init</span></code></a></li>
+<li><a class="reference internal" href="#burn"><code class="docutils literal notranslate"><span class="pre">--burn</span></code></a></li>
+<li><a class="reference internal" href="#thin"><code class="docutils literal notranslate"><span class="pre">--thin</span></code></a></li>
+<li><a class="reference internal" href="#cr"><code class="docutils literal notranslate"><span class="pre">--CR</span></code></a></li>
+<li><a class="reference internal" href="#outliers"><code class="docutils literal notranslate"><span class="pre">--outliers</span></code></a></li>
+<li><a class="reference internal" href="#f"><code class="docutils literal notranslate"><span class="pre">--F</span></code></a></li>
+<li><a class="reference internal" href="#radius"><code class="docutils literal notranslate"><span class="pre">--radius</span></code></a></li>
+<li><a class="reference internal" href="#nt"><code class="docutils literal notranslate"><span class="pre">--nT</span></code></a></li>
+<li><a class="reference internal" href="#tmin"><code class="docutils literal notranslate"><span class="pre">--Tmin</span></code></a></li>
+<li><a class="reference internal" href="#tmax"><code class="docutils literal notranslate"><span class="pre">--Tmax</span></code></a></li>
+<li><a class="reference internal" href="#starts"><code class="docutils literal notranslate"><span class="pre">--starts</span></code></a></li>
+<li><a class="reference internal" href="#keep-best"><code class="docutils literal notranslate"><span class="pre">--keep_best</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#execution-controls">Execution Controls</a><ul>
+<li><a class="reference internal" href="#store"><code class="docutils literal notranslate"><span class="pre">--store</span></code></a></li>
+<li><a class="reference internal" href="#overwrite"><code class="docutils literal notranslate"><span class="pre">--overwrite</span></code></a></li>
+<li><a class="reference internal" href="#checkpoint"><code class="docutils literal notranslate"><span class="pre">--checkpoint</span></code></a></li>
+<li><a class="reference internal" href="#resume"><code class="docutils literal notranslate"><span class="pre">--resume</span></code></a></li>
+<li><a class="reference internal" href="#parallel"><code class="docutils literal notranslate"><span class="pre">--parallel</span></code></a></li>
+<li><a class="reference internal" href="#mpi"><code class="docutils literal notranslate"><span class="pre">--mpi</span></code></a></li>
+<li><a class="reference internal" href="#batch"><code class="docutils literal notranslate"><span class="pre">--batch</span></code></a></li>
+<li><a class="reference internal" href="#stepmon"><code class="docutils literal notranslate"><span class="pre">--stepmon</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#output-controls">Output Controls</a><ul>
+<li><a class="reference internal" href="#err"><code class="docutils literal notranslate"><span class="pre">`--err</span></code></a></li>
+<li><a class="reference internal" href="#cov"><code class="docutils literal notranslate"><span class="pre">--cov</span></code></a></li>
+<li><a class="reference internal" href="#entropy"><code class="docutils literal notranslate"><span class="pre">--entropy</span></code></a></li>
+<li><a class="reference internal" href="#plot"><code class="docutils literal notranslate"><span class="pre">--plot</span></code></a></li>
+<li><a class="reference internal" href="#trim"><code class="docutils literal notranslate"><span class="pre">--trim</span></code></a></li>
+<li><a class="reference internal" href="#noshow"><code class="docutils literal notranslate"><span class="pre">--noshow</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps-controls">Bumps Controls</a><ul>
+<li><a class="reference internal" href="#preview"><code class="docutils literal notranslate"><span class="pre">--preview</span></code></a></li>
+<li><a class="reference internal" href="#chisq"><code class="docutils literal notranslate"><span class="pre">--chisq</span></code></a></li>
+<li><a class="reference internal" href="#resynth"><code class="docutils literal notranslate"><span class="pre">--resynth</span></code></a></li>
+<li><a class="reference internal" href="#time-model"><code class="docutils literal notranslate"><span class="pre">--time_model</span></code></a></li>
+<li><a class="reference internal" href="#profile"><code class="docutils literal notranslate"><span class="pre">--profile</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#special-options">Special Options</a><ul>
+<li><a class="reference internal" href="#edit"><code class="docutils literal notranslate"><span class="pre">--edit</span></code></a></li>
+<li><a class="reference internal" href="#help-h"><code class="docutils literal notranslate"><span class="pre">--help</span></code>, <code class="docutils literal notranslate"><span class="pre">-h</span></code>, <code class="docutils literal notranslate"><span class="pre">-?</span></code></a></li>
+<li><a class="reference internal" href="#i-m-c-p"><code class="docutils literal notranslate"><span class="pre">-i</span></code>, <code class="docutils literal notranslate"><span class="pre">-m</span></code>, <code class="docutils literal notranslate"><span class="pre">-c</span></code>, <code class="docutils literal notranslate"><span class="pre">-p</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="optimizer.html"
+                          title="previous chapter">Optimizer Selection</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="entropy.html"
+                          title="next chapter">Calculating Entropy</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/options.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="entropy.html" title="Calculating Entropy"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="optimizer.html" title="Optimizer Selection"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Bumps Options</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

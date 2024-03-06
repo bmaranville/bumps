@@ -1,0 +1,7 @@
+bumps.dream.gelman module
+=========================
+
+.. automodule:: bumps.dream.gelman
+   :members:
+   :undoc-members:
+   :show-inheritance:

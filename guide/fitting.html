@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fitting &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimizer Selection" href="optimizer.html" />
+    <link rel="prev" title="Parameters" href="parameter.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="optimizer.html" title="Optimizer Selection"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="parameter.html" title="Parameters"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitting">
+<span id="fitting-guide"></span><h1>Fitting<a class="headerlink" href="#fitting" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#quick-fit" id="id1">Quick Fit</a></p></li>
+<li><p><a class="reference internal" href="#uncertainty-analysis" id="id2">Uncertainty Analysis</a></p></li>
+<li><p><a class="reference internal" href="#using-the-posterior-distribution" id="id3">Using the posterior distribution</a></p></li>
+<li><p><a class="reference internal" href="#publication-graphics" id="id4">Publication Graphics</a></p></li>
+<li><p><a class="reference internal" href="#tough-problems" id="id5">Tough Problems</a></p></li>
+<li><p><a class="reference internal" href="#command-line" id="id6">Command Line</a></p></li>
+</ul>
+</nav>
+<p>Obtaining a good fit depends foremost on having the correct model to fit.</p>
+<p>For example, if you are modeling a curve with spline, you will overfit
+the data if you have too many spline points, or underfit it if you do not
+have enough.  If the underlying data is ultimately an exponential, then
+the spline order required to model it will require many more parameters
+than the corresponding exponential.</p>
+<p>Even with the correct model, there are systematic errors to address
+(see <a class="reference internal" href="data.html#data-guide"><span class="std std-ref">Data Representation</span></a>).  A distorted sample can lead to broader resolution
+than expected for the measurement technique, and you will need to adjust your
+resolution function.  Imprecise instrument control will lead to uncertainty
+in the position of the sample, and corresponding changes to the measured
+values.  For high precision experiments, your models will need to incorporate
+these instrument effects so that the uncertainty in instrument configuration
+can be properly accounted for in the uncertainty in the fitted parameter
+values.</p>
+<section id="quick-fit">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Quick Fit</a><a class="headerlink" href="#quick-fit" title="Link to this heading">¶</a></h2>
+<p>While generating an appropriate model, you will want to perform a number
+of quick fits.  The <a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a> works well for this.  You will want
+to run enough iterations <code class="docutils literal notranslate"><span class="pre">--steps=1000</span></code> so the algorithm has a
+chance to  converge.  Restarting a number of times <code class="docutils literal notranslate"><span class="pre">--starts=10</span></code> gives
+a reasonably thorough search of the fit space.  Once the fit converges,
+additional starts are very quick.  From the graphical user interface, using
+<code class="docutils literal notranslate"><span class="pre">--starts=1</span></code> and clicking the fit button to improve the fit as needed works
+pretty well. From the command line interface, the command line will be
+something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">fit</span><span class="o">=</span><span class="n">amoeba</span> <span class="o">--</span><span class="n">steps</span><span class="o">=</span><span class="mi">1000</span> <span class="o">--</span><span class="n">starts</span><span class="o">=</span><span class="mi">20</span> <span class="o">--</span><span class="n">parallel</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">store</span><span class="o">=</span><span class="n">T1</span>
+</pre></div>
+</div>
+<p>Here, the results are kept in a directory <code class="docutils literal notranslate"><span class="pre">--store=T1</span></code> relative to the current
+directory, with files containing the current model in <em>model.py</em>, the fit
+result in <em>model.par</em> and a plots in <em>model-*.png</em>.  The parallel option
+indicates that multiple cores should be used on the cpu when running the fit.</p>
+<p>The fit may be able to be improved by using the current best fit value as
+the starting point for a new fit:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">fit</span><span class="o">=</span><span class="n">amoeba</span> <span class="o">--</span><span class="n">steps</span><span class="o">=</span><span class="mi">1000</span> <span class="o">--</span><span class="n">starts</span><span class="o">=</span><span class="mi">20</span> <span class="o">--</span><span class="n">parallel</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">store</span><span class="o">=</span><span class="n">T1</span> <span class="o">--</span><span class="n">pars</span><span class="o">=</span><span class="n">T1</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">par</span>
+</pre></div>
+</div>
+<p>If the fit is well behaved, and a numerical derivative exists, then
+switching to <a class="reference internal" href="optimizer.html#fit-newton"><span class="std std-ref">Quasi-Newton BFGS</span></a> is useful, in that it will very rapidly
+converge to a nearby local minimum.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">fit</span><span class="o">=</span><span class="n">newton</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">pars</span><span class="o">=</span><span class="n">T1</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">par</span> <span class="o">--</span><span class="n">store</span><span class="o">=</span><span class="n">T1</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="optimizer.html#fit-de"><span class="std std-ref">Differential Evolution</span></a> is an alternative to <a class="reference internal" href="optimizer.html#fit-amoeba"><span class="std std-ref">Nelder-Mead Simplex</span></a>, perhaps a little
+more likely to find the global minimum but somewhat slower.  This is a
+population based algorithms in which several points from the current
+population are selected, and based on the position and value, a new point
+is generated.  The population is specified as a multiplier on the number
+of parameters in the model, so for example an 8 parameter model with
+DE’s default population <code class="docutils literal notranslate"><span class="pre">--pop=10</span></code> would create 80 points each generation.
+This algorithms can be called from the command line as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">fit</span><span class="o">=</span><span class="n">de</span> <span class="o">--</span><span class="n">steps</span><span class="o">=</span><span class="mi">3000</span> <span class="o">--</span><span class="n">parallel</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">store</span><span class="o">=</span><span class="n">T1</span>
+</pre></div>
+</div>
+<p>Some fitters save the complete state of the fitter on termination so that
+the fit can be resumed.  Use <code class="docutils literal notranslate"><span class="pre">--resume=path/to/previous/store</span></code> to resume.
+The resumed fit also needs a <code class="docutils literal notranslate"><span class="pre">--store=path/to/store</span></code>, which could be the
+same as the resume path if you want to update it, or it could be a completely
+new path.</p>
+<p>See <a class="reference internal" href="optimizer.html#optimizer-guide"><span class="std std-ref">Optimizer Selection</span></a> for a description of the available optimizers, and
+<a class="reference internal" href="options.html#option-guide"><span class="std std-ref">Bumps Options</span></a> for a description of all the bumps options.</p>
+</section>
+<section id="uncertainty-analysis">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Uncertainty Analysis</a><a class="headerlink" href="#uncertainty-analysis" title="Link to this heading">¶</a></h2>
+<p>More important than the optimal value of the parameters is an estimate
+of the uncertainty in those values. The best fit is an accident
+of the measurement; perform the measurement again and you will get a
+different optimum. Given the uncertainty in the measurement, there is a
+joint distribution of parameter values that are consistent with the
+measurement. For example, when fitting a line, the choice of slope will
+affect the range of intercepts that fit the data. The goal of uncertainty
+analysis is to determine this distribution and summarize it for the reader.</p>
+<p>By casting our problem as the likelihood of seeing the data given the model,
+we not only give ourselves the ability to incorporate prior information into
+the fit systematically, but we also give ourselves a strong foundation for
+assessing the uncertainty of the parameters.</p>
+<p>There are multiple ways to perform the analysis:</p>
+<ol class="arabic simple">
+<li><p>Bayesian inference. Given the probability on the parameters and the
+probability that the measured data will be seen with those parameters,
+infer the probability of the parameters given the measured data.  This
+is the primary method in Bumps and will be discussed at length below.</p></li>
+<li><p>Sensitivity analysis. Given the best fit parameter values, look at the
+curvature around that point as a normal distribution with covariance
+computed from the Hessian matrix. Further, pretend that there is no
+interaction between the parameters (that is they are uncorrelated
+and independent), and report the uncertainty as the square root of the
+diagonal. This is the default method for most optimizers in Bumps.</p></li>
+<li><p>Uncertainty contour. Assuming the measurement data is independent and
+normally distributed, a given increase in <span class="math notranslate nohighlight">\(\chi^2\)</span> above the minimum
+corresponds to 1-$sigma$ confidence interval. By following this contour
+you can find the set of all points <span class="math notranslate nohighlight">\(\xi\)</span> such that
+<span class="math notranslate nohighlight">\(\chi^2(\xi) = \chi^2(x) + C\)</span> where <span class="math notranslate nohighlight">\(x\)</span> is the point of maximum
+likelihood. Look in Numerical Recipes chapter on nonlinear least squares
+for a more complete discussion.  Bumps does not include algorithms
+for this kind of analysis.</p></li>
+<li><p>Forward Monte Carlo. Bumps has the option <a class="reference internal" href="options.html#option-resynth"><span class="std std-ref">--resynth</span></a> to perform
+a forward Monte Carlo estimate of the maximum likelihood.  That is, you
+can use the measurement uncertainty to “rerun” the experiment, synthesizing
+a new dataset with the same uncertainty but slightly different values,
+then find the new maximum likelihood. After <span class="math notranslate nohighlight">\(n\)</span> runs you will be able
+to estimate the uncertainty in the best fit parameters. This method can
+be applied with any of the optimizers.</p></li>
+<li><p>Repeated measurement. A direct way to estimate the parameter uncertainty
+is to repeat the experiment many times and look at the distribution
+of best fit results. This is the classic approach which you need to
+follow if you don’t know anything about the uncertainty in your
+measurement processes (other than the assumption of independence between
+measurements).  You can use this during experimental design, simulating the
+experiment in different conditions to figure out the best strategy to
+retrieve the quantity of interest. For example, to plan a reflectometry
+experiment you want to know if it would be better to measure with a pair
+of contrast agents, or to spend twice as long on a single contrast. The
+result gives the expected uncertainty in the parameters before the
+measurement is ever performed. You might call this model driven forward
+Monte Carlo as opposed to the data driven forward MC listed above.</p></li>
+</ol>
+<p>Bayesian inference is performed using <a class="reference internal" href="optimizer.html#fit-dream"><span class="std std-ref">DREAM</span></a>.  This is a
+Markov chain Monte Carlo (MCMC) method with a differential evolution
+step generator.  Like simulated annealing, the MCMC explores the space
+using a random walk, always accepting a better point, but sometimes
+accepting a worse point depending on how much worse it is.</p>
+<p>DREAM can be started with a variety of initial populations.  The
+random population <code class="docutils literal notranslate"><span class="pre">--init=random</span></code> distributes the initial points using
+a uniform distribution across the space of the parameters.  Latin
+hypersquares <code class="docutils literal notranslate"><span class="pre">--init=lhs</span></code> improves on random by making sure that
+there is on value for each subrange of every variable. The covariance
+population <code class="docutils literal notranslate"><span class="pre">--init=cov</span></code> selects points from the uncertainty ellipse
+computed from the derivative at the initial point.  This method
+will fail if the fitting parameters are highly correlated and the
+covariance matrix is singular.  The $epsilon$-ball population <code class="docutils literal notranslate"><span class="pre">--init=eps</span></code>
+starts DREAM from a tiny region near the initial point and lets it
+expand from there.  It can be useful to start with an epsilon ball
+from the previous best point when DREAM fails to converge using
+a more diverse initial population.</p>
+<p>The Markov chain will take time to converge on a stable population.
+This burn in time needs to be specified at the start of the analysis.
+After burn, DREAM will collect all points visited for N iterations
+of the algorithm.  If the burn time was long enough, the resulting
+points can be used to estimate uncertainty on parameters.</p>
+<p>A common command line for running DREAM is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">fit</span><span class="o">=</span><span class="n">dream</span> <span class="o">--</span><span class="n">burn</span><span class="o">=</span><span class="mi">1000</span> <span class="o">--</span><span class="n">samples</span><span class="o">=</span><span class="mf">1e5</span> <span class="o">--</span><span class="n">init</span><span class="o">=</span><span class="n">cov</span> <span class="o">--</span><span class="n">parallel</span> <span class="o">--</span><span class="n">pars</span><span class="o">=</span><span class="n">T1</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">par</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">store</span><span class="o">=</span><span class="n">T2</span>
+</pre></div>
+</div>
+<p>Bayesian uncertainty analysis is described in the GUM Supplement 1,[8]
+and is a valid technique for reporting parameter uncertainties in NIST
+publications.   Given sufficient burn time, points in the search space
+will be visited with probability proportional to the goodness of fit.
+The file T1/model.err contains a table showing for each
+parameter the mean(std), median and best values, and the 68% and 95%
+credible intervals.  The mean and standard deviation are computed from
+all the samples in the returned distribution.  These statistics are not
+robust: if the Markov process has not yet converged, then outliers will
+significantly distort the reported values.  Standard deviation is
+reported in compact notation, with the two digits in parentheses
+representing uncertainty in the last two digits of the mean.  Thus, for
+example, <span class="math notranslate nohighlight">\(24.9(28)\)</span> is <span class="math notranslate nohighlight">\(24.9 \pm 2.8\)</span>.  Median is the best value in the
+distribution.  Best is the best value ever seen.  The 68% and 95%
+intervals are the shortest intervals that contain 68% and 95% of
+the points respectively.  In order to report 2 digits of precision on
+the 95% interval, approximately 1000000 samples drawn from the distribution
+are required, or steps = 1000000/(#parameters  #pop).  The 68% interval
+will require fewer draws, though how many has not yet been determined.</p>
+<a class="reference internal image-reference" href="../_images/var.png"><img alt="../_images/var.png" src="../_images/var.png" style="width: 800.0px; height: 430.0px;" /></a>
+<p>Histogramming the set of points visited will gives a picture of the
+probability density function for each parameter.  This histogram is
+generated automatically and saved in T1/model-var.png.  The histogram
+range represents the 95% credible interval, and the shaded region
+represents the 68% credible interval.  The green line shows the highest
+probability observed given that the parameter value is restricted to
+that bin of the histogram.  With enough samples, this will correspond
+to the maximum likelihood value of the function given that one parameter
+is restricted to that bin.  In practice, the analysis has converged
+when the green line follows the general shape of the histogram.</p>
+<a class="reference internal image-reference" href="../_images/corr.png"><img alt="../_images/corr.png" src="../_images/corr.png" style="width: 800.0px; height: 430.0px;" /></a>
+<p>The correlation plots show that the parameters are not uniquely
+determined from the data.  For example, the thickness of
+lamellae 3 and 4 are strongly anti-correlated, yielding a 95% CI of
+about 1 nm for each compared to the bulk nafion thickness CI of 0.2 nm.
+Summing lamellae thickness in the sampled points, we see the overall
+lamellae thickness has a CI of about 0.3 nm.  The correlation
+plot is saved in T1/model-corr.png.</p>
+<a class="reference internal image-reference" href="../_images/error.png"><img alt="../_images/error.png" src="../_images/error.png" style="width: 800.0px; height: 430.0px;" /></a>
+<p>To assure ourselves that the uncertainties produced by DREAM do
+indeed correspond to the underlying uncertainty in the model, we perform
+a Monte Carlo forward uncertainty analysis by selecting 50 samples from
+the computed posterior distribution, computing the corresponding
+theory function and calculating the normalized residuals.  Assuming that
+our measurement uncertainties are approximately normally distributed,
+approximately 68% of the normalized residuals should be within +/- 1 of
+the residual for the best model, and 98% should be within +/- 2. Note
+that our best fit does not capture all the details of the data, and the
+underlying systematic bias is not included in the uncertainty estimates.</p>
+<p>Plotting the profiles generated from the above sampling method, aligning
+them such that the cross correlation with the best profile is maximized,
+we see that the precise details of the lamellae are uncertain but the
+total thickness of the lamellae structure is well determined.  Bayesian
+analysis can also be used to determine relative likelihood of different
+number of layers, but we have not yet performed this analysis.  This plot
+is stored in <em>T1/model-errors.png</em>.</p>
+<p>The trace plot, <em>T1/model-trace.png</em>, shows the mixing properties of the
+first fitting parameter.  If the Markov process is well behaved, the
+trace plot will show a lot of mixing.  If it is ill behaved, and each
+chain is stuck in its own separate local minimum, then distinct lines
+will be visible in this plot.</p>
+<p>The convergence plot, <em>T1/model-logp.png</em>, shows the log likelihood
+values for each member of the population.  When the Markov process
+has converged, this plot will be flat with no distinct lines visible.
+If it shows a general upward sweep, then the burn time was not
+sufficient, and the analysis should be restarted.  The ability to
+continue to burn from the current population is not yet implemented.</p>
+<p>Just because all the plots are well behaved does not mean that the
+Markov process has converged on the best result.  It is practically
+impossible to rule out a deep minimum with a narrow acceptance
+region in an otherwise unpromising part of the search space.</p>
+<p>In order to assess the DREAM algorithm for suitability for our
+problem space we did a number of tests.  Given that our fit surface is
+multimodal, we need to know that the uncertainty analysis can return
+multiple modes.  Because the fit problems may also be ill-conditioned,
+with strong correlations or anti-correlations between some parameters,
+the uncertainty analysis needs to be able to correctly indicate that
+the correlations exist. Simple Metropolis-Hastings sampling does not
+work well in these conditions, but we found that DREAM is able to
+handle them.  We are still affected by the curse of dimensionality.
+For correlated parameters in high dimensional spaces, even DREAM has
+difficulty taking steps which lead to improved likelihood.  For
+example, we can recover an eight point spline with generous ranges
+on its 14 free parameters close to 100% of the time, but a 10 point
+spline is rarely recovered.</p>
+</section>
+<section id="using-the-posterior-distribution">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Using the posterior distribution</a><a class="headerlink" href="#using-the-posterior-distribution" title="Link to this heading">¶</a></h2>
+<p>You can load the DREAM output population an perform uncertainty analysis
+operations after the fact.  To run an interactive bumps session
+use the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">-</span><span class="n">i</span>
+</pre></div>
+</div>
+<p>First you need to import some functions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">bumps.dream.state</span> <span class="kn">import</span> <span class="n">load_state</span>
+<span class="kn">from</span> <span class="nn">bumps.dream.views</span> <span class="kn">import</span> <span class="n">plot_corrmatrix</span>
+<span class="kn">from</span> <span class="nn">bumps.dream.stats</span> <span class="kn">import</span> <span class="n">var_stats</span><span class="p">,</span> <span class="n">format_vars</span>
+<span class="kn">from</span> <span class="nn">bumps.dream.varplot</span> <span class="kn">import</span> <span class="n">plot_vars</span>
+</pre></div>
+</div>
+<p>Then you need to reload the MCMC chains:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">store</span> <span class="o">=</span> <span class="s2">&quot;/tmp/t1&quot;</span>   <span class="c1"># path to the --store=/tmp/t1 directory</span>
+<span class="n">modelname</span> <span class="o">=</span> <span class="s2">&quot;model&quot;</span>  <span class="c1"># model file name without .py extension</span>
+
+<span class="c1"># Reload the MCMC data</span>
+<span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">modelname</span><span class="p">)</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">load_state</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+<span class="n">state</span><span class="o">.</span><span class="n">mark_outliers</span><span class="p">()</span> <span class="c1"># ignore outlier chains</span>
+
+<span class="c1"># Attach the labels from the .par file:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">basename</span><span class="o">+</span><span class="s2">&quot;.par&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fid</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Now you can plot the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">state</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># Create the standard plots</span>
+</pre></div>
+</div>
+<p>You can choose to plot only some of the variables:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select the data to plot (the 3rd and the last two in this case):</span>
+<span class="n">draw</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="nb">vars</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Histograms</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">var_stats</span><span class="p">(</span><span class="n">draw</span><span class="p">)</span>  <span class="c1"># Compute statistics such as the 90% interval</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">format_vars</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plot_vars</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+
+<span class="c1"># Correlation plots</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plot_corrmatrix</span><span class="p">(</span><span class="n">draw</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can restrict those variables to a certain range. For example, to
+restrict the third parameter to <span class="math notranslate nohighlight">\([0.8,1.0]\)</span> and the last to <span class="math notranslate nohighlight">\([0.2,0.4]\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.dream</span> <span class="kn">import</span> <span class="n">views</span>
+<span class="n">selection</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">:(</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.4</span><span class="p">),</span><span class="o">...</span><span class="p">}</span>
+<span class="n">draw</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="nb">vars</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>You can add create derived variables using a function to generate the new
+variable from some combination of existing variables.  For example, to add
+the first two variables together to create the derived variable “x+y” use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">state</span><span class="o">.</span><span class="n">derive_vars</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x+y&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>You can generate multiple derived parameters at a time with a function
+that returns a sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">state</span><span class="o">.</span><span class="n">derive_vars</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x*y&quot;</span><span class="p">,</span><span class="s2">&quot;x-y&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>These new parameters will show up in the plots:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">state</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Here is an example from a fit to bovine serum albumin with a two layer model.
+The parameter of interest ($Gamma$) is derived from the SLD <span class="math notranslate nohighlight">\(\rho\)</span> and
+thickness <span class="math notranslate nohighlight">\(t\)</span> of the constituent layers using
+<span class="math notranslate nohighlight">\(\Gamma = 0.06955(\rho_1 t_1 + \rho_2 t_2)\)</span>.
+Using intermediate values for <span class="math notranslate nohighlight">\(\rho_1 t_1\)</span> and <span class="math notranslate nohighlight">\(\rho_2 t_2\)</span> to show the
+difference between gaussian error propagation and full correlation analysis,
+the derived parameters as set up as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.dream.state</span> <span class="kn">import</span> <span class="n">load_state</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">load_state</span><span class="p">(</span><span class="s2">&quot;1000ppm_Ph4.9 NRW_0M_2layer model&quot;</span><span class="p">)</span>
+<span class="n">state</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;r1&quot;</span><span class="p">,</span> <span class="s2">&quot;t1&quot;</span><span class="p">,</span> <span class="s2">&quot;r2&quot;</span><span class="p">,</span> <span class="s2">&quot;t2&quot;</span><span class="p">]</span>
+<span class="n">state</span><span class="o">.</span><span class="n">derive_vars</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="mf">0.06955</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">])),</span>
+                  <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;r1t1&quot;</span><span class="p">,</span><span class="s2">&quot;r2t2&quot;</span><span class="p">,</span><span class="s2">&quot;G&quot;</span><span class="p">])</span>
+<span class="n">state</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This gives the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">Parameter</span>    <span class="n">mean</span>     <span class="n">median</span>    <span class="n">best</span> <span class="p">[</span>   <span class="mi">68</span><span class="o">%</span> <span class="n">interval</span><span class="p">]</span> <span class="p">[</span>   <span class="mi">95</span><span class="o">%</span> <span class="n">interval</span><span class="p">]</span>
+<span class="mi">1</span>        <span class="n">r1</span> <span class="mf">0.3321</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>  <span class="mf">0.3322</span>  <span class="mf">0.3327</span> <span class="p">[</span>  <span class="mf">0.322</span>   <span class="mf">0.342</span><span class="p">]</span> <span class="p">[</span>  <span class="mf">0.312</span>   <span class="mf">0.351</span><span class="p">]</span>
+<span class="mi">2</span>        <span class="n">t1</span>  <span class="mf">50.37</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>  <span class="mf">50.381</span>  <span class="mf">50.286</span> <span class="p">[</span>  <span class="mf">49.47</span>   <span class="mf">51.21</span><span class="p">]</span> <span class="p">[</span>  <span class="mf">48.49</span>   <span class="mf">52.21</span><span class="p">]</span>
+<span class="mi">3</span>        <span class="n">r2</span>  <span class="mf">1.199</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>  <span class="mf">1.1976</span>  <span class="mf">1.1980</span> <span class="p">[</span>  <span class="mf">1.177</span>   <span class="mf">1.224</span><span class="p">]</span> <span class="p">[</span>  <span class="mf">1.158</span>   <span class="mf">1.242</span><span class="p">]</span>
+<span class="mi">4</span>        <span class="n">t2</span>  <span class="mf">24.90</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>  <span class="mf">24.892</span>  <span class="mf">24.901</span> <span class="p">[</span>  <span class="mf">24.06</span>   <span class="mf">25.76</span><span class="p">]</span> <span class="p">[</span>  <span class="mf">23.37</span>   <span class="mf">26.44</span><span class="p">]</span>
+<span class="mi">5</span>      <span class="n">r1t1</span>  <span class="mf">16.73</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>  <span class="mf">16.712</span>  <span class="mf">16.729</span> <span class="p">[</span>  <span class="mf">16.16</span>   <span class="mf">17.30</span><span class="p">]</span> <span class="p">[</span>  <span class="mf">15.61</span>   <span class="mf">17.86</span><span class="p">]</span>
+<span class="mi">6</span>      <span class="n">r2t2</span>  <span class="mf">29.84</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span>  <span class="mf">29.863</span>  <span class="mf">29.832</span> <span class="p">[</span>  <span class="mf">29.36</span>   <span class="mf">30.33</span><span class="p">]</span> <span class="p">[</span>  <span class="mf">28.87</span>   <span class="mf">30.78</span><span class="p">]</span>
+<span class="mi">7</span>         <span class="n">G</span>  <span class="mf">3.239</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>   <span class="mf">3.238</span>   <span class="mf">3.238</span> <span class="p">[</span>   <span class="mf">3.21</span>    <span class="mf">3.27</span><span class="p">]</span> <span class="p">[</span>   <span class="mf">3.19</span>    <span class="mf">3.29</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Using simple gaussian propagation of errors (from the wonderfully
+convenient uncertainties package) can compare the computed uncertainties:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uncertainties</span> <span class="kn">import</span> <span class="n">ufloat</span> <span class="k">as</span> <span class="n">U</span>
+<span class="n">C</span> <span class="o">=</span> <span class="mf">0.06955</span>
+<span class="n">r1t1</span> <span class="o">=</span> <span class="n">U</span><span class="p">(</span><span class="mf">0.3321</span><span class="p">,</span> <span class="mf">0.0098</span><span class="p">)</span> <span class="o">*</span> <span class="n">U</span><span class="p">(</span><span class="mf">50.37</span><span class="p">,</span> <span class="mf">0.89</span><span class="p">)</span>
+<span class="n">r2t2</span> <span class="o">=</span> <span class="n">U</span><span class="p">(</span><span class="mf">1.199</span><span class="p">,</span> <span class="mf">0.022</span><span class="p">)</span> <span class="o">*</span> <span class="n">U</span><span class="p">(</span><span class="mf">24.90</span><span class="p">,</span> <span class="mf">0.80</span><span class="p">)</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">C</span><span class="o">*</span><span class="p">(</span><span class="n">r1t1</span> <span class="o">+</span> <span class="n">r2t2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;r1*t1 =&quot;</span><span class="p">,</span> <span class="n">r1t1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;r2*t2 =&quot;</span><span class="p">,</span> <span class="n">r2t2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;G =&quot;</span><span class="p">,</span> <span class="n">C</span><span class="o">*</span><span class="p">(</span><span class="n">r1t1</span> <span class="o">+</span> <span class="n">r2t2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>which produces:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>r1*t1 = 16.7 ± 0.6   # same as forward MC
+r2*t2 = 29.9 ± 1.1   # compared to 29.8 ± 0.5 from forward MC
+G = 3.24 ± 0.09      # compared to 3.24 ± 0.03 from forward MC
+</pre></div>
+</div>
+<p>That is, the gaussian approximation assuming uncorrelated uncertainties is
+3x larger than the forward Monte Carlo approximation from the joint
+distribution of the fitted parameters. Much of the reduction comes from
+the strong negative correlation between <span class="math notranslate nohighlight">\(\rho_2\)</span> and <span class="math notranslate nohighlight">\(t_2\)</span>, with the remainder
+coming from the negative correlation between the products
+<span class="math notranslate nohighlight">\(\rho_1 t_1\)</span> and <span class="math notranslate nohighlight">\(\rho_2 t_2\)</span>.</p>
+<p>You can see this in the correlation plots, with r2:t2 having a very narrow
+diagonal (hence strong correlation) and r1t1:r2×t2 having a somewhat wider
+diagonal (hence weaker correlation).</p>
+<a class="reference internal image-reference" href="../_images/intermediate_mcmc.png"><img alt="../_images/intermediate_mcmc.png" src="../_images/intermediate_mcmc.png" style="width: 640.0px; height: 480.0px;" /></a>
+<p>The plotting code is somewhat complicated, and matplotlib doesn’t have a
+good way of changing plots interactively.  If you are running directly
+from the source tree, you can modify the dream plotting libraries as you
+need for a one-off plot, then replot the graph:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># ... change the plotting code in dream.views/dream.corrplot</span>
+<span class="n">reload</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">views</span><span class="p">)</span>
+<span class="n">reload</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">corrplot</span><span class="p">)</span>
+<span class="n">state</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Be sure to restore the original versions when you are done.  If the change
+is so good that everyone should use it, be sure to feed it back to the
+community via the bumps source control system at
+<a class="reference external" href="https://github.com/bumps">github</a>.</p>
+</section>
+<section id="publication-graphics">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Publication Graphics</a><a class="headerlink" href="#publication-graphics" title="Link to this heading">¶</a></h2>
+<p>The matplotlib package is capable of producing publication quality
+graphics for your models and fit results, but it requires you to write
+scripts to get the control that you need.  These scripts can be run
+from the Bumps application by first loading the model and the fit
+results then accessing their data directly to produce the plots that
+you need.</p>
+<p>The model file (call it <em>plot.py</em>) will start with the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">bumps.cli</span> <span class="kn">import</span> <span class="n">load_problem</span><span class="p">,</span> <span class="n">load_best</span>
+
+<span class="n">model</span><span class="p">,</span> <span class="n">store</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">load_problem</span><span class="p">([</span><span class="n">model</span><span class="p">])</span>
+<span class="n">load_best</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">model</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.par&quot;</span><span class="p">))</span>
+<span class="n">chisq</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">chisq</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;chisq&quot;</span><span class="p">,</span> <span class="n">chisq</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Assuming your model script is in model.py and you have run a fit with
+<code class="docutils literal notranslate"><span class="pre">--store=X5</span></code>, you can run this file using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bumps plot.py model.py X5
+</pre></div>
+</div>
+<p>Now <em>model.py</em> is loaded and the best fit parameters are set.</p>
+<p>To produce plots, you will need access to the data and the theory.  This
+can be complex depending on how many models you are fitting and how many
+datasets there are per model.  For single experiment models defined
+by <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem</span></code></a>, your original
+experiment object  is referenced by <em>problem.fitness</em>.  For simultaneous
+refinement defined by <em>FitProblem</em> with multiple <em>Fitness</em> objects,
+use <code class="docutils literal notranslate"><span class="pre">problem.models[k].fitness</span></code> to access the experiment for
+model <em>k</em>.  Your experiment object should provide methods for retrieving
+the data and plotting data vs. theory.</p>
+<p>How does this work in practice?  Consider the reflectivity modeling
+problem where we have a simple model such as nickel film on a silicon
+substrate.  We measure the specular reflectivity as various angles and
+try to recover the film thickness.  We want to make sure that our
+model fits the data within the uncertainty of our measurements, and
+we want some graphical representation of the uncertainty in our film
+of interest.  The refl1d package provides tools for generating the
+sample profile uncertainty plots.  We access the experiment information
+as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">experiment</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">fitness</span>
+<span class="n">z</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">irho</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">smooth_profile</span><span class="p">(</span><span class="n">dz</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="c1"># ... insert profile plotting code here ...</span>
+<span class="n">QR</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">reflectivity</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">th</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">(</span><span class="n">QR</span><span class="p">):</span>
+    <span class="n">Q</span><span class="p">,</span><span class="n">dQ</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">dR</span><span class="p">,</span><span class="n">theory</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">Q</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">dQ</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">dR</span><span class="p">,</span> <span class="n">th</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># ... insert reflectivity plotting code here ...</span>
+</pre></div>
+</div>
+<p>Next we can reload the the error sample data from the DREAM MCMC sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dream.state</span>
+<span class="kn">from</span> <span class="nn">bumps.errplot</span> <span class="kn">import</span> <span class="n">calc_errors_from_state</span><span class="p">,</span> <span class="n">align_profiles</span>
+
+<span class="n">state</span> <span class="o">=</span> <span class="n">load_state</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">model</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]))</span>
+<span class="n">state</span><span class="o">.</span><span class="n">mark_outliers</span><span class="p">()</span>
+<span class="c1"># ... insert correlation plots, etc. here ...</span>
+<span class="n">profiles</span><span class="p">,</span><span class="n">slabs</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">residuals</span> <span class="o">=</span> <span class="n">calc_errors_from_state</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+<span class="n">aligned_profiles</span> <span class="o">=</span> <span class="n">align_profiles</span><span class="p">(</span><span class="n">profiles</span><span class="p">,</span> <span class="n">slabs</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+<span class="c1"># ... insert profile and residuals uncertainty plots here ...</span>
+</pre></div>
+</div>
+<p>The function <a class="reference internal" href="../bumps.errplot.html#bumps.errplot.calc_errors_from_state" title="bumps.errplot.calc_errors_from_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">bumps.errplot.calc_errors_from_state()</span></code></a> calls the
+calc_errors function defined by the reflectivity model.  The return value is
+arbitrary, but should be suitable for the show_errors function defined
+by the reflectivity model.</p>
+<p>Putting the pieces together, here is a skeleton for a specialized
+plotting script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pylab</span>
+<span class="kn">from</span> <span class="nn">bumps.dream.state</span> <span class="kn">import</span> <span class="n">load_state</span>
+<span class="kn">from</span> <span class="nn">bumps.cli</span> <span class="kn">import</span> <span class="n">load_problem</span><span class="p">,</span> <span class="n">load_best</span>
+<span class="kn">from</span> <span class="nn">bumps.errplot</span> <span class="kn">import</span> <span class="n">calc_errors_from_state</span>
+<span class="kn">from</span> <span class="nn">refl1d.align</span> <span class="kn">import</span> <span class="n">align_profiles</span>
+
+<span class="n">model</span><span class="p">,</span> <span class="n">store</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">load_problem</span><span class="p">([</span><span class="n">model</span><span class="p">])</span>
+<span class="n">load_best</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">model</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;.par&quot;</span><span class="p">))</span>
+
+<span class="n">chisq</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">chisq</span>
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">fitness</span>
+<span class="n">z</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">irho</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">smooth_profile</span><span class="p">(</span><span class="n">dz</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="c1"># ... insert profile plotting code here ...</span>
+<span class="n">QR</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">reflectivity</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">th</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">(</span><span class="n">QR</span><span class="p">):</span>
+    <span class="n">Q</span><span class="p">,</span><span class="n">dQ</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">dR</span><span class="p">,</span><span class="n">theory</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">Q</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">dQ</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">dR</span><span class="p">,</span> <span class="n">th</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># ... insert reflectivity plotting code here ...</span>
+
+<span class="k">if</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Loading errors is expensive; may not want to do so all the time.</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">load_state</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">model</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]))</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">mark_outliers</span><span class="p">()</span>
+    <span class="c1"># ... insert correlation plots, etc. here ...</span>
+    <span class="n">profiles</span><span class="p">,</span><span class="n">slabs</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">residuals</span> <span class="o">=</span> <span class="n">calc_errors_from_state</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="n">aligned_profiles</span> <span class="o">=</span> <span class="n">align_profiles</span><span class="p">(</span><span class="n">profiles</span><span class="p">,</span> <span class="n">slabs</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+    <span class="c1"># ... insert profile and residuals uncertainty plots here ...</span>
+
+<span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>  <span class="c1"># We are just plotting; don&#39;t run the model</span>
+</pre></div>
+</div>
+</section>
+<section id="tough-problems">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Tough Problems</a><a class="headerlink" href="#tough-problems" title="Link to this heading">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>DREAM is currently our most robust fitting algorithm.  We are
+exploring other algorithms such as parallel tempering, but they
+are not currently competitive with DREAM.</p>
+</div>
+<p>With the toughest fits, for example freeform models with arbitrary
+control points, DREAM only succeeds if the model is small or the
+control points are constrained.  We have developed a parallel
+tempering (fit=pt) extension to DREAM.  Whereas DREAM runs with a
+constant temperature, <span class="math notranslate nohighlight">\(T=1\)</span>, parallel tempering runs with multiple
+temperatures concurrently.   The high temperature points are able to
+walk up steep hills in the search space, possibly crossing over into a
+neighbouring valley.  The low temperature points agressively seek the
+nearest local minimum, rejecting any proposed point that is worse than
+the current.  Differential evolution helps adapt the steps to the shape
+of the search space, increasing the chances that the random step will be
+a step in the right direction.  The current implementation uses a fixed
+set of temperatures defaulting to <code class="docutils literal notranslate"><span class="pre">--Tmin=0.1</span></code> through <code class="docutils literal notranslate"><span class="pre">--Tmax=10</span></code> in
+<code class="docutils literal notranslate"><span class="pre">--nT=25</span></code> steps; future versions should adapt the temperature based
+on the fitting problem.</p>
+<p>Parallel tempering is run like dream, but with optional temperature
+controls:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">fit</span><span class="o">=</span><span class="n">dream</span> <span class="o">--</span><span class="n">burn</span><span class="o">=</span><span class="mi">1000</span> <span class="o">--</span><span class="n">samples</span><span class="o">=</span><span class="mf">1e5</span> <span class="o">--</span><span class="n">init</span><span class="o">=</span><span class="n">cov</span> <span class="o">--</span><span class="n">parallel</span> <span class="o">--</span><span class="n">pars</span><span class="o">=</span><span class="n">T1</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">par</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">store</span><span class="o">=</span><span class="n">T2</span>
+</pre></div>
+</div>
+<p>Parallel tempering does not yet generate the uncertainty plots provided
+by DREAM.  The state is retained along the temperature for each point,
+but the code to generate histograms from points weighted by inverse
+temperature has not yet been written.</p>
+<p>Parallel tempering performance has been disappointing.  In theory it
+should be more robust than DREAM, but in practice, we are using a
+restricted version of differential evolution with the population
+defined by the current chain rather than a set of chains running in
+parallel.  When the Markov chain has converged these populations
+should be equivalent, but apparently this optimization interferes
+with convergence.  Time permitting, we will improve this algorithm
+and look for other ways to improve upon the robustness of DREAM.</p>
+</section>
+<section id="command-line">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Command Line</a><a class="headerlink" href="#command-line" title="Link to this heading">¶</a></h2>
+<p>The GUI version of Bumps is slower because it frequently updates the graphs
+showing the best current fit.</p>
+<p>Run multiple models overnight, starting one after the last is complete
+by creating a batch file (e.g., run.bat) with one line per model.  Append
+the parameter –batch to the end of the command lines so the program
+doesn’t stop to show interactive graphs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">...</span> <span class="o">--</span><span class="n">parallel</span> <span class="o">--</span><span class="n">batch</span>
+</pre></div>
+</div>
+<p>You can view the fitted results in the GUI the next morning using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bumps</span> <span class="o">--</span><span class="n">edit</span> <span class="n">model</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">pars</span><span class="o">=</span><span class="n">T1</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">par</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Fitting</a><ul>
+<li><a class="reference internal" href="#quick-fit">Quick Fit</a></li>
+<li><a class="reference internal" href="#uncertainty-analysis">Uncertainty Analysis</a></li>
+<li><a class="reference internal" href="#using-the-posterior-distribution">Using the posterior distribution</a></li>
+<li><a class="reference internal" href="#publication-graphics">Publication Graphics</a></li>
+<li><a class="reference internal" href="#tough-problems">Tough Problems</a></li>
+<li><a class="reference internal" href="#command-line">Command Line</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="parameter.html"
+                          title="previous chapter">Parameters</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="optimizer.html"
+                          title="next chapter">Optimizer Selection</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/fitting.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="optimizer.html" title="Optimizer Selection"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="parameter.html" title="Parameters"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Fitting</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

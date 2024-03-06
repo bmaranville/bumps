@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.core &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.core</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">DiffeRential Evolution Adaptive Metropolis algorithm</span>
+
+<span class="sd">DREAM runs multiple different chains simultaneously for global exploration,</span>
+<span class="sd">and automatically tunes the scale and orientation of the proposal</span>
+<span class="sd">distribution using differential evolution.  The algorithm maintains</span>
+<span class="sd">detailed balance and ergodicity and works well and efficient for a large</span>
+<span class="sd">range of problems, especially in the presence of high-dimensionality and</span>
+<span class="sd">multimodality.</span>
+
+<span class="sd">DREAM developed by Jasper A. Vrugt and Cajo ter Braak</span>
+
+<span class="sd">This algorithm has been described in:</span>
+
+<span class="sd">   Vrugt, J.A., C.J.F. ter Braak, M.P. Clark, J.M. Hyman, and B.A. Robinson,</span>
+<span class="sd">      *Treatment of input uncertainty in hydrologic modeling: Doing hydrology</span>
+<span class="sd">      backward with Markov chain Monte Carlo simulation*,</span>
+<span class="sd">      Water Resources Research, 44, W00B09, 2008.</span>
+<span class="sd">      `doi:10.1029/2007WR006720 &lt;http://dx.doi.org/10.1029/2007WR006720&gt;`_</span>
+
+<span class="sd">   Vrugt, J.A., C.J.F. ter Braak, C.G.H. Diks, D. Higdon, B.A. Robinson,</span>
+<span class="sd">       and J.M. Hyman,</span>
+<span class="sd">       *Accelerating Markov chain Monte Carlo simulation by differential</span>
+<span class="sd">       evolution with self-adaptive randomized subspace sampling*,</span>
+<span class="sd">       International Journal of Nonlinear Sciences and Numerical Simulation,</span>
+<span class="sd">       10(3), 271-288, 2009.</span>
+
+<span class="sd">   Vrugt, J.A., C.J.F. ter Braak, H.V. Gupta, and B.A. Robinson,</span>
+<span class="sd">       *Equifinality of formal (DREAM) and informal (GLUE) Bayesian approaches</span>
+<span class="sd">       in hydrologic modeling*,</span>
+<span class="sd">       Stochastic Environmental Research and Risk Assessment,</span>
+<span class="sd">       1-16, 2009, In Press.</span>
+<span class="sd">       `doi:10.1007/s00477-008-0274-y</span>
+<span class="sd">       &lt;http://dx.doi.org/10.1007/s00477-008-0274-y&gt;`_</span>
+
+<span class="sd">For more information please read:</span>
+
+<span class="sd">   Ter Braak, C.J.F.,</span>
+<span class="sd">       *A Markov Chain Monte Carlo version of the genetic algorithm Differential</span>
+<span class="sd">       Evolution: easy Bayesian computing for real parameter spaces*,</span>
+<span class="sd">       Stat. Comput., 16, 239 - 249, 2006.</span>
+<span class="sd">       `doi:10.1007/s11222-006-8769-1</span>
+<span class="sd">       &lt;http://dx.doi.org/10.1007/s11222-006-8769-1&gt;`_</span>
+
+<span class="sd">   Vrugt, J.A., H.V. Gupta, W. Bouten and S. Sorooshian,</span>
+<span class="sd">       *A Shuffled Complex Evolution Metropolis algorithm for optimization</span>
+<span class="sd">       and uncertainty assessment of hydrologic model parameters*,</span>
+<span class="sd">       Water Resour. Res., 39 (8), 1201, 2003.</span>
+<span class="sd">       `doi:10.1029/2002WR001642 &lt;http://dx.doi.org/10.1029/2002WR001642&gt;`_</span>
+
+<span class="sd">   Ter Braak, C.J.F., and J.A. Vrugt,</span>
+<span class="sd">       *Differential Evolution Markov Chain with snooker updater</span>
+<span class="sd">       and fewer chains*,</span>
+<span class="sd">       Statistics and Computing, 2008.</span>
+<span class="sd">       `doi:10.1007/s11222-008-9104-9</span>
+<span class="sd">       &lt;http://dx.doi.org/2008.10.1007/s11222-008-9104-9&gt;`_</span>
+
+<span class="sd">   Vrugt, J.A., C.J.F. ter Braak, and J.M. Hyman,</span>
+<span class="sd">       *Differential evolution adaptive Metropolis with snooker update and</span>
+<span class="sd">       sampling from past states*,</span>
+<span class="sd">       SIAM journal on Optimization, 2009.</span>
+
+<span class="sd">   Vrugt, J.A., C.J.F. ter Braak, and J.M. Hyman,</span>
+<span class="sd">       *Parallel Markov chain Monte Carlo simulation on distributed computing</span>
+<span class="sd">       networks using multi-try Metropolis with sampling from past states*,</span>
+<span class="sd">       SIAM journal on Scientific Computing, 2009.</span>
+
+<span class="sd">   G. Schoups, and J.A. Vrugt,</span>
+<span class="sd">       *A formal likelihood function for Bayesian inference of hydrologic</span>
+<span class="sd">       models with correlated, heteroscedastic and non-Gaussian errors*,</span>
+<span class="sd">       Water Resources Research, 2010, In Press.</span>
+
+<span class="sd">   G. Schoups, J.A. Vrugt, F. Fenicia, and N.C. van de Giesen,</span>
+<span class="sd">       *Inaccurate numerical solution of hydrologic models corrupts efficiency</span>
+<span class="sd">       and robustness of MCMC simulation*,</span>
+<span class="sd">       Water Resources Research, 2010, In Press.</span>
+
+<span class="sd">Copyright (c) 2008, Los Alamos National Security, LLC</span>
+<span class="sd">All rights reserved.</span>
+
+<span class="sd">Copyright 2008. Los Alamos National Security, LLC. This software was produced</span>
+<span class="sd">under U.S. Government contract DE-AC52-06NA25396 for Los Alamos National</span>
+<span class="sd">Laboratory (LANL), which is operated by Los Alamos National Security, LLC</span>
+<span class="sd">for the U.S. Department of Energy. The U.S. Government has rights to use,</span>
+<span class="sd">reproduce, and distribute this software.</span>
+
+<span class="sd">NEITHER THE GOVERNMENT NOR LOS ALAMOS NATIONAL SECURITY, LLC MAKES ANY</span>
+<span class="sd">WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LIABILITY FOR THE USE OF</span>
+<span class="sd">THIS SOFTWARE.  If software is modified to produce derivative works, such</span>
+<span class="sd">modified software should be clearly marked, so as not to confuse it with</span>
+<span class="sd">the version available from LANL.</span>
+
+<span class="sd">Additionally, redistribution and use in source and binary forms, with or without</span>
+<span class="sd">modification, are permitted provided that the following conditions are met:</span>
+
+<span class="sd">* Redistributions of source code must retain the above copyright notice,</span>
+<span class="sd">  this list of conditions and the following disclaimer.</span>
+
+<span class="sd">* Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="sd">  this list of conditions and the following disclaimer in the documentation</span>
+<span class="sd">  and/or other materials provided with the distribution.</span>
+
+<span class="sd">* Neither the name of Los Alamos National Security, LLC, Los Alamos National</span>
+<span class="sd">  Laboratory, LANL the U.S. Government, nor the names of its contributors</span>
+<span class="sd">  may be used to endorse or promote products derived from this software</span>
+<span class="sd">  without specific prior written permission.</span>
+
+<span class="sd">THIS SOFTWARE IS PROVIDED BY LOS ALAMOS NATIONAL SECURITY, LLC AND</span>
+<span class="sd">CONTRIBUTORS &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,</span>
+<span class="sd">BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS</span>
+<span class="sd">FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LOS ALAMOS NATIONAL</span>
+<span class="sd">SECURITY, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,</span>
+<span class="sd">SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="sd">PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;</span>
+<span class="sd">OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,</span>
+<span class="sd">WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR</span>
+<span class="sd">OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF</span>
+<span class="sd">ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">MATLAB code written by Jasper A. Vrugt, Center for NonLinear Studies (CNLS)</span>
+
+<span class="sd">Written by Jasper A. Vrugt: vrugt@lanl.gov</span>
+
+<span class="sd">Version 0.5: June 2008</span>
+<span class="sd">Version 1.0: October 2008  Adaption updated and generalized CR implementation</span>
+
+
+
+<span class="sd">2010-04-20 Paul Kienzle</span>
+<span class="sd">* Convert to python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Dream&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">c_double</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.state</span> <span class="kn">import</span> <span class="n">MCMCDraw</span>
+<span class="kn">from</span> <span class="nn">.metropolis</span> <span class="kn">import</span> <span class="n">metropolis</span><span class="p">,</span> <span class="n">metropolis_dr</span><span class="p">,</span> <span class="n">dr_step</span>
+<span class="kn">from</span> <span class="nn">.gelman</span> <span class="kn">import</span> <span class="n">gelman</span>
+<span class="kn">from</span> <span class="nn">.crossover</span> <span class="kn">import</span> <span class="n">AdaptiveCrossover</span><span class="p">,</span> <span class="n">LogAdaptiveCrossover</span>
+<span class="kn">from</span> <span class="nn">.diffev</span> <span class="kn">import</span> <span class="n">de_step</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">make_bounds_handler</span>
+<span class="kn">from</span> <span class="nn">.compiled</span> <span class="kn">import</span> <span class="n">dll</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">rng</span>
+<span class="kn">from</span> <span class="nn">.convergence</span> <span class="kn">import</span> <span class="n">ks_converged</span>
+<span class="kn">from</span> <span class="nn">.outliers</span> <span class="kn">import</span> <span class="n">identify_outliers</span>
+
+<span class="c1"># Everything should be available in state, but lets be lazy for now</span>
+<span class="n">LAST_TIME</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">console_monitor</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">logp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print progress of fit on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">LAST_TIME</span>
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#gen&quot;</span><span class="p">,</span> <span class="s2">&quot;logp(x)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;&lt;</span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="n">par</span> <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">labels</span><span class="p">))</span>
+        <span class="n">LAST_TIME</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">current_time</span> <span class="o">&gt;=</span> <span class="n">LAST_TIME</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">LAST_TIME</span> <span class="o">=</span> <span class="n">current_time</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">generation</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">_best_logp</span><span class="p">,</span>
+              <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.15g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">_best_x</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Dream">
+<a class="viewcode-back" href="../../../dream/core.html#bumps.dream.core.Dream">[docs]</a>
+<span class="k">class</span> <span class="nc">Dream</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data structure containing the details of the running DREAM analysis code.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Sampling parameters</span>
+    <span class="n">burn</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">draws</span> <span class="o">=</span> <span class="mi">100000</span>
+    <span class="n">thinning</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># TODO: change the default outlier test to IQR and control with options</span>
+    <span class="n">outlier_test</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: convergence criteria</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="c1"># DE parameters</span>
+    <span class="n">DE_steps</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">DE_pairs</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">DE_eps</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">DE_snooker_rate</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">DE_noise</span> <span class="o">=</span> <span class="mf">1e-6</span>
+    <span class="n">bounds_style</span> <span class="o">=</span> <span class="s1">&#39;reflect&#39;</span>
+    <span class="c1"># Crossover parameters</span>
+    <span class="n">CR</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">CR_spacing</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>  <span class="c1"># &#39;log&#39; or &#39;linear&#39;</span>
+    <span class="c1"># Delay rejection parameters</span>
+    <span class="n">use_delayed_rejection</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">DR_scale</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 1-sigma step size using cov of population</span>
+    <span class="c1"># Local optimizer best fit injection  The optimizer has</span>
+    <span class="c1"># the following interface:</span>
+    <span class="c1">#    x, fx = goalseek(mapper, bounds_handler, pop, fpop)</span>
+    <span class="c1"># where:</span>
+    <span class="c1">#    x, fx are the local optimum point and its value</span>
+    <span class="c1">#    pop is the starting population</span>
+    <span class="c1">#    fpop is the nllf for each point in pop</span>
+    <span class="c1">#    mapper is a function which takes pop and returns fpop</span>
+    <span class="c1">#    bounds_handler takes pop and forces all points into the range</span>
+    <span class="n">goalseek_optimizer</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">goalseek_interval</span> <span class="o">=</span> <span class="mf">1e100</span>  <span class="c1"># close enough to never</span>
+    <span class="n">goalseek_minburn</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># type: MCMCDraw</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">console_monitor</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unknown attribute &quot;</span><span class="o">+</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Dream.sample">
+<a class="viewcode-back" href="../../../dream/core.html#bumps.dream.core.Dream.sample">[docs]</a>
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">abort_test</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pull the requisite number of samples from the distribution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_run_dream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abort_test</span><span class="o">=</span><span class="n">abort_test</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">_run_dream</span><span class="p">(</span><span class="n">dream</span><span class="p">,</span> <span class="n">abort_test</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect posterior distribution samples using DREAM sampler.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">dll</span><span class="p">:</span>
+        <span class="n">dll</span><span class="o">.</span><span class="n">rand_init</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mf">1e9</span><span class="p">))</span>
+    <span class="c1"># Step 1: Sample s points in the parameter space</span>
+    <span class="c1"># [PAK] I moved this out of dream so that the user can use whatever</span>
+    <span class="c1"># complicated sampling scheme they want.  Unfortunately, this means</span>
+    <span class="c1"># the user needs to know some complex sampling scheme.</span>
+    <span class="k">if</span> <span class="n">dream</span><span class="o">.</span><span class="n">population</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;initial population not defined&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Remember the problem dimensions</span>
+    <span class="n">n_gen</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">,</span> <span class="n">n_var</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">population</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n_pop</span> <span class="o">=</span> <span class="n">n_gen</span><span class="o">*</span><span class="n">n_chain</span>
+
+    <span class="k">if</span> <span class="n">dream</span><span class="o">.</span><span class="n">CR</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dream</span><span class="o">.</span><span class="n">CR_spacing</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+            <span class="n">dream</span><span class="o">.</span><span class="n">CR</span> <span class="o">=</span> <span class="n">LogAdaptiveCrossover</span><span class="p">(</span><span class="n">n_var</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># linear</span>
+            <span class="n">dream</span><span class="o">.</span><span class="n">CR</span> <span class="o">=</span> <span class="n">AdaptiveCrossover</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Calculate posterior density associated with each value in x</span>
+    <span class="n">apply_bounds</span> <span class="o">=</span> <span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span>
+                                       <span class="n">style</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">bounds_style</span><span class="p">)</span>
+
+    <span class="c1"># Record initial state</span>
+    <span class="n">allocate_state</span><span class="p">(</span><span class="n">dream</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">state</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">previous_draws</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">draws</span>
+    <span class="k">if</span> <span class="n">previous_draws</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">logp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_last_gen</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># No initial state, so evaluate initial population</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dream</span><span class="o">.</span><span class="n">population</span><span class="p">:</span>
+            <span class="n">apply_bounds</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="c1"># ********************** MAP *****************************</span>
+            <span class="n">logp</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">_generation</span><span class="p">(</span><span class="n">new_draws</span><span class="o">=</span><span class="n">n_chain</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                              <span class="n">logp</span><span class="o">=</span><span class="n">logp</span><span class="p">,</span> <span class="n">accept</span><span class="o">=</span><span class="n">n_chain</span><span class="p">,</span>
+                              <span class="n">force_keep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">dream</span><span class="o">.</span><span class="n">monitor</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">)</span>
+
+    <span class="n">state</span><span class="o">.</span><span class="n">_update</span><span class="p">(</span><span class="n">CR_weight</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+
+    <span class="c1"># Now start drawing samples</span>
+    <span class="c1">#print &quot;previous draws&quot;, previous_draws, &quot;new draws&quot;, dream.draws+dream.burn</span>
+    <span class="n">last_goalseek</span> <span class="o">=</span> <span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">draws</span> <span class="o">+</span> <span class="n">dream</span><span class="o">.</span><span class="n">burn</span><span class="p">)</span><span class="o">/</span><span class="n">n_pop</span> <span class="o">-</span> <span class="n">dream</span><span class="o">.</span><span class="n">goalseek_minburn</span>
+    <span class="n">next_goalseek</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">+</span> <span class="n">dream</span><span class="o">.</span><span class="n">goalseek_interval</span> \
+        <span class="k">if</span> <span class="n">dream</span><span class="o">.</span><span class="n">goalseek_optimizer</span> <span class="k">else</span> <span class="mf">1e100</span>
+
+    <span class="k">if</span> <span class="n">dll</span><span class="p">:</span>
+        <span class="n">xtry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_chain</span><span class="p">,</span> <span class="n">n_var</span><span class="p">),</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="n">step_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_chain</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="n">CR_used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_chain</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="c1">#serial_time = parallel_time = 0.</span>
+    <span class="c1">#last_time = time.time()</span>
+
+    <span class="c1"># Make sure that the pop we are drawing doesn&#39;t need to be copied before</span>
+    <span class="c1"># sending it to the compiled C code.</span>
+    <span class="n">pop</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_draw_pop</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">pop</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">next_outlier_test</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Ngen</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">state</span><span class="o">.</span><span class="n">Ngen</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">next_convergence_test</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span>
+    <span class="n">final_gen</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">draws</span> <span class="o">+</span> <span class="n">dream</span><span class="o">.</span><span class="n">burn</span>
+    <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">draws</span> <span class="o">&lt;</span> <span class="n">final_gen</span><span class="p">:</span>
+
+        <span class="c1"># Age the population using differential evolution</span>
+        <span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">CR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">CR</span><span class="p">,</span> <span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">weight</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_steps</span><span class="p">):</span>
+
+            <span class="c1"># Define the current locations and associated posterior densities</span>
+            <span class="n">xold</span><span class="p">,</span> <span class="n">logp_old</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">logp</span>
+            <span class="n">pop</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_draw_pop</span><span class="p">()</span>
+            <span class="c1">#print(pop.ctypes.data, np.ascontiguousarray(pop).ctypes.data)</span>
+            <span class="c1">#print(pop)</span>
+            <span class="c1">#print(&quot;gen&quot;, gen, pop.shape)</span>
+
+            <span class="c1"># Generate candidates for each sequence</span>
+            <span class="k">if</span> <span class="n">dll</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">xtry</span><span class="p">,</span> <span class="n">step_alpha</span><span class="p">,</span> <span class="n">CR_used</span> \
+                    <span class="o">=</span> <span class="n">de_step</span><span class="p">(</span><span class="n">n_chain</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">CR</span><span class="p">,</span>
+                              <span class="n">max_pairs</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_pairs</span><span class="p">,</span>
+                              <span class="n">eps</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_eps</span><span class="p">,</span>
+                              <span class="n">snooker_rate</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_snooker_rate</span><span class="p">,</span>
+                              <span class="n">noise</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_noise</span><span class="p">,</span>
+                              <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dll</span><span class="o">.</span><span class="n">de_step</span><span class="p">(</span><span class="n">n_chain</span><span class="p">,</span> <span class="n">n_var</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">CR</span><span class="p">),</span>
+                            <span class="n">pop</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span> <span class="n">CR</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span>
+                            <span class="n">dream</span><span class="o">.</span><span class="n">DE_pairs</span><span class="p">,</span>
+                            <span class="n">c_double</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_eps</span><span class="p">),</span>
+                            <span class="n">c_double</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_snooker_rate</span><span class="p">),</span>
+                            <span class="n">c_double</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_noise</span><span class="p">),</span>
+                            <span class="n">c_double</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span>
+                            <span class="n">xtry</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span> <span class="n">step_alpha</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span> <span class="n">CR_used</span><span class="o">.</span><span class="n">ctypes</span><span class="p">)</span>
+            <span class="c1">#print(&quot;try&quot;, xtry)</span>
+
+
+            <span class="c1"># PAK: Try a local optimizer every N generations</span>
+            <span class="k">if</span> <span class="n">next_goalseek</span> <span class="o">&lt;=</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">&lt;=</span> <span class="n">last_goalseek</span><span class="p">:</span>
+                <span class="n">best</span><span class="p">,</span> <span class="n">logp_best</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">goalseek_optimizer</span><span class="p">(</span>
+                    <span class="n">dream</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">,</span> <span class="n">apply_bounds</span><span class="p">,</span> <span class="n">xold</span><span class="p">,</span> <span class="n">logp_old</span><span class="p">)</span>
+                <span class="n">xtry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+                <span class="c1"># Note: it is slightly inefficient to throw away logp_best,</span>
+                <span class="c1"># but it makes the the code cleaner if we do</span>
+                <span class="n">next_goalseek</span> <span class="o">+=</span> <span class="n">dream</span><span class="o">.</span><span class="n">goalseek_interval</span>
+
+            <span class="c1"># Compute the likelihood of the candidates</span>
+            <span class="n">apply_bounds</span><span class="p">(</span><span class="n">xtry</span><span class="p">)</span>
+<span class="c1"># ********************** MAP *****************************</span>
+            <span class="c1">#next_time = time.time()</span>
+            <span class="c1">#serial_time += next_time - last_time</span>
+            <span class="c1">#last_time = next_time</span>
+            <span class="n">logp_try</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">xtry</span><span class="p">)</span>
+            <span class="c1">#next_time = time.time()</span>
+            <span class="c1">#parallel_time  += next_time - last_time</span>
+            <span class="c1">#last_time = next_time</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logp_try</span><span class="p">)</span>
+
+            <span class="c1"># Apply the metropolis acceptance/rejection rule</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">accept</span> \
+                <span class="o">=</span> <span class="n">metropolis</span><span class="p">(</span><span class="n">xtry</span><span class="p">,</span> <span class="n">logp_try</span><span class="p">,</span>
+                             <span class="n">xold</span><span class="p">,</span> <span class="n">logp_old</span><span class="p">,</span>
+                             <span class="n">step_alpha</span><span class="p">)</span>
+
+            <span class="c1"># Process delayed rejection</span>
+            <span class="c1"># PAK NOTE: this updates according to the covariance matrix of the</span>
+            <span class="c1"># current sample, which may be useful on unimodal systems, but</span>
+            <span class="c1"># doesn&#39;t seem to be of any value in general; the DREAM papers</span>
+            <span class="c1"># found that the acceptance rate did indeed improve with delayed</span>
+            <span class="c1"># rejection, but the overall performance did not.  Worse, this</span>
+            <span class="c1"># requires a linear system solution O(nPop^3) which can be near</span>
+            <span class="c1"># singular for complex posterior distributions.</span>
+            <span class="k">if</span> <span class="n">dream</span><span class="o">.</span><span class="n">use_delayed_rejection</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">accept</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="c1"># Generate alternate candidates using the covariance of xold</span>
+                <span class="n">xdr</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">dr_step</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xold</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">DR_scale</span><span class="p">)</span>
+
+                <span class="c1"># Compute the likelihood of the new candidates</span>
+                <span class="n">reject</span> <span class="o">=</span> <span class="o">~</span><span class="n">accept</span>
+                <span class="n">apply_bounds</span><span class="p">(</span><span class="n">xdr</span><span class="p">)</span>
+<span class="c1"># ********************** MAP *****************************</span>
+                <span class="n">logp_xdr</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">xdr</span><span class="p">[</span><span class="n">reject</span><span class="p">])</span>
+                <span class="n">draws</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">logp_xdr</span><span class="p">)</span>
+
+                <span class="c1"># Apply the metropolis delayed rejection rule.</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">logp</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">alpha</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">accept</span><span class="p">[</span><span class="n">reject</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">metropolis_dr</span><span class="p">(</span><span class="n">xtry</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">logp_try</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span>
+                                  <span class="n">x</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">logp</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span>
+                                  <span class="n">xold</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">logp_old</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span>
+                                  <span class="n">alpha</span><span class="p">[</span><span class="n">reject</span><span class="p">],</span> <span class="n">r</span><span class="p">)</span>
+
+            <span class="c1"># els = zip(logp_old, logp_try, logp, x[:, -2], x[:, -1], accept)</span>
+            <span class="c1">#print &quot;pop&quot;, &quot;\n &quot;.join(((&quot;%12.3e &quot;*(len(el)-1))%el[:-1])</span>
+            <span class="c1">#                       +(&quot;T &quot; if el[-3]&lt;=el[-2] else &quot;  &quot;)</span>
+            <span class="c1">#                       +(&quot;accept&quot; if el[-1] else &quot;&quot;)</span>
+            <span class="c1">#                       for el in els)</span>
+
+            <span class="c1"># Update Sequences with the new population.</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">_generation</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">accept</span><span class="p">)</span>
+<span class="c1"># ********************** NOTIFY **************************</span>
+            <span class="n">dream</span><span class="o">.</span><span class="n">monitor</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">)</span>
+            <span class="c1">#print state.generation, &quot;:&quot;, state._best_logp</span>
+
+            <span class="c1"># Keep track of which CR ratios were successful</span>
+            <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">draws</span> <span class="o">&lt;=</span> <span class="n">dream</span><span class="o">.</span><span class="n">burn</span><span class="p">:</span>
+                <span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">xold</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">CR_used</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">abort_test</span><span class="p">():</span>
+                <span class="k">break</span>
+
+        <span class="c1">#print(&quot;serial&amp;parallel&quot;,serial_time,parallel_time)</span>
+        <span class="c1"># End of differential evolution aging</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+
+        <span class="c1"># Save update information</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">_update</span><span class="p">(</span><span class="n">CR_weight</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">abort_test</span><span class="p">():</span>
+            <span class="k">break</span>
+
+        <span class="c1">#if state.draws &lt;= 0.1 * dream.draws:</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">draws</span> <span class="o">&lt;=</span> <span class="n">dream</span><span class="o">.</span><span class="n">burn</span><span class="p">:</span>
+            <span class="c1"># Adapt the crossover ratio, but only during burn-in.</span>
+            <span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">adapt</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="c1"># Suppress scale update until we have a chance to verify that it</span>
+            <span class="c1"># doesn&#39;t skew the resulting statistics.</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">acceptance_rate</span><span class="p">()</span>
+            <span class="n">ravg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="n">dream</span><span class="o">.</span><span class="n">DE_steps</span><span class="p">:])</span>
+            <span class="k">if</span> <span class="n">ravg</span> <span class="o">&gt;</span> <span class="mf">0.4</span><span class="p">:</span>
+                <span class="n">scale</span> <span class="o">*=</span> <span class="mf">1.01</span>
+            <span class="k">elif</span> <span class="n">ravg</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">:</span>
+                <span class="n">scale</span> <span class="o">/=</span> <span class="mf">1.01</span>
+
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;=</span> <span class="n">next_convergence_test</span><span class="p">:</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="n">ks_converged</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">dream</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># See whether there are any outlier chains, and remove them</span>
+        <span class="c1"># Only do this once per frame, and only if there is some time</span>
+        <span class="c1"># left to adapt the distribution.  Also do it if we believe</span>
+        <span class="c1"># that we have converged.</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">converged</span> <span class="ow">or</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">&gt;=</span> <span class="n">next_outlier_test</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span> <span class="o">&lt;</span> <span class="n">final_gen</span><span class="p">):</span>
+            <span class="n">outliers</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">remove_outliers</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">logp</span><span class="p">,</span> <span class="n">dream</span><span class="o">.</span><span class="n">outlier_test</span><span class="p">)</span>
+            <span class="n">next_outlier_test</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">state</span><span class="o">.</span><span class="n">Ngen</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outliers</span><span class="p">):</span>
+                <span class="c1"># TODO: use monitors to report arbitrary information</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;step </span><span class="si">%d</span><span class="s2"> trimmed </span><span class="si">%d</span><span class="s2"> outliers from </span><span class="si">%d</span><span class="s2"> chains&quot;</span>
+                      <span class="o">%</span> <span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">generation</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">outliers</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">logp</span><span class="p">)))</span>
+                <span class="n">next_convergence_test</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span>
+                <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
+            <span class="c1">#_show_logp_frame(dream, state, frame+1)</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Draw the next frame (for debugging...)</span>
+        <span class="n">next_frame</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">generation</span> <span class="o">//</span> <span class="n">state</span><span class="o">.</span><span class="n">Ngen</span>
+        <span class="c1">#if frame != next_frame: _show_logp_frame(dream, state, next_frame)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">next_frame</span>
+
+<span class="k">def</span> <span class="nf">_show_logp_frame</span><span class="p">(</span><span class="n">dream</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="n">clf</span><span class="p">,</span> <span class="n">savefig</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">views</span>
+    <span class="n">clf</span><span class="p">()</span>
+    <span class="n">views</span><span class="o">.</span><span class="n">plot_logp</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;logp</span><span class="si">%03d</span><span class="s1">.png&#39;</span><span class="o">%</span><span class="n">frame</span><span class="p">)</span>
+    <span class="n">clf</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">allocate_state</span><span class="p">(</span><span class="n">dream</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate the size of the output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Determine problem dimensions from the initial population</span>
+    <span class="n">n_pop</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">,</span> <span class="n">n_var</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">population</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">DE_steps</span>
+    <span class="n">thinning</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">thinning</span>
+    <span class="n">n_cr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dream</span><span class="o">.</span><span class="n">CR</span><span class="o">.</span><span class="n">CR</span><span class="p">)</span>
+    <span class="n">draws</span> <span class="o">=</span> <span class="n">dream</span><span class="o">.</span><span class="n">draws</span>
+
+    <span class="n">n_update</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">draws</span><span class="o">/</span><span class="p">(</span><span class="n">steps</span><span class="o">*</span><span class="n">n_chain</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n_gen</span> <span class="o">=</span> <span class="n">n_update</span> <span class="o">*</span> <span class="n">steps</span>
+    <span class="n">n_thin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_gen</span><span class="o">/</span><span class="n">thinning</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1">#print(&quot;new state&quot;, n_var, n_chain, n_cr, n_gen, n_thin, n_update, draws, steps)</span>
+    <span class="k">if</span> <span class="n">dream</span><span class="o">.</span><span class="n">state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1">#print(&quot;existing&quot;, dream.state.Nvar, dream.state.Npop, dream.state.Ncr)</span>
+        <span class="n">dream</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span>
+            <span class="n">n_gen</span><span class="p">,</span> <span class="n">n_thin</span><span class="p">,</span> <span class="n">n_update</span><span class="p">,</span> <span class="n">n_var</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">,</span> <span class="n">n_cr</span><span class="p">,</span> <span class="n">thinning</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dream</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">MCMCDraw</span><span class="p">(</span>
+            <span class="n">n_gen</span><span class="p">,</span> <span class="n">n_thin</span><span class="p">,</span> <span class="n">n_update</span><span class="p">,</span> <span class="n">n_var</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">,</span> <span class="n">n_cr</span><span class="p">,</span> <span class="n">thinning</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.core</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

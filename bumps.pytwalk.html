@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.pytwalk module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pytwalk module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.pytwalk">
+<span id="bumps-pytwalk-module"></span><h1>bumps.pytwalk module<a class="headerlink" href="#module-bumps.pytwalk" title="Link to this heading">¶</a></h1>
+<p>T-walk self adjusting MCMC.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.pytwalk.</span></span><span class="sig-name descname"><span class="pre">pytwalk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U=&lt;function</span> <span class="pre">pytwalk.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Supp=&lt;function</span> <span class="pre">pytwalk.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ww=(0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.4918</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.4918</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.0082</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.0082)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aw=1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at=6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n1phi=4.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This is the t-walk class.</p>
+<p>Initiates defining the dimension= n and -log of the objective function= U,
+Supp defines the support, returns True if x within the support, eg:</p>
+<p>Mytwalk = twalk( n=3, U=MyMinusLogf, Supp=MySupportFunction).</p>
+<p>Then do: Mytwalk.Run?</p>
+<p>Other parameter are:
+ww= the prob. of choosing each kernel, aw, at, n1phi (see inside twalk.py)
+with default values as in the paper, normally NOT needed to be changed.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.Ana">
+<span class="sig-name descname"><span class="pre">Ana</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.Ana"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.Ana" title="Link to this definition">¶</a></dt>
+<dd><p>Output Analysis, TS plots, acceptance rates, IAT etc.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.GBlowU">
+<span class="sig-name descname"><span class="pre">GBlowU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.GBlowU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.GBlowU" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.GHopU">
+<span class="sig-name descname"><span class="pre">GHopU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.GHopU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.GHopU" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.Hist">
+<span class="sig-name descname"><span class="pre">Hist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g=&lt;function</span> <span class="pre">pytwalk.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlab='g'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins=20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.Hist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.Hist" title="Link to this definition">¶</a></dt>
+<dd><p>Basic histograms and output analysis.  If par=-1, use g.
+The function g provides a transformation to be applied to the data,
+eg g=(lambda x: abs(x[0]-x[1]) would plot a histogram of the distance
+between parameters 0 and 1, etc.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.IAT">
+<span class="sig-name descname"><span class="pre">IAT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.IAT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.IAT" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the Integrated Autocorrelation Times of parameters par
+the default value par=-1 is for the IAT of the U’s</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.Run">
+<span class="sig-name descname"><span class="pre">Run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.Run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.Run" title="Link to this definition">¶</a></dt>
+<dd><p>Run the twalk.</p>
+<p>Run( T, x0, xp0),
+T = Number of iterations.
+x0, xp0, two initial points within the support,
+<strong>*each entry of x0 and xp0 most be different*</strong>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.RunRWMH">
+<span class="sig-name descname"><span class="pre">RunRWMH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.RunRWMH"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.RunRWMH" title="Link to this definition">¶</a></dt>
+<dd><p>Run a simple Random Walk M-H</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.Save">
+<span class="sig-name descname"><span class="pre">Save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fnam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.Save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.Save" title="Link to this definition">¶</a></dt>
+<dd><p>Saves the Output as a text file, starting at start (burn in), with thinning (thin).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.SimBlow">
+<span class="sig-name descname"><span class="pre">SimBlow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.SimBlow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.SimBlow" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.SimHop">
+<span class="sig-name descname"><span class="pre">SimHop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.SimHop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.SimHop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.SimTraverse">
+<span class="sig-name descname"><span class="pre">SimTraverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.SimTraverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.SimTraverse" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.SimWalk">
+<span class="sig-name descname"><span class="pre">SimWalk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.SimWalk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.SimWalk" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.Simbeta">
+<span class="sig-name descname"><span class="pre">Simbeta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.Simbeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.Simbeta" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.TS">
+<span class="sig-name descname"><span class="pre">TS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">par</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.TS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.TS" title="Link to this definition">¶</a></dt>
+<dd><p>Plot time series of parameter par (default = log f) etc.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.pytwalk.pytwalk.onemove">
+<span class="sig-name descname"><span class="pre">onemove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">up</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/pytwalk.html#pytwalk.onemove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.pytwalk.pytwalk.onemove" title="Link to this definition">¶</a></dt>
+<dd><p>One move of the twalk.  This is basically the raw twalk kernel.
+It is usefull if the twalk is needed inside a more complex MCMC.</p>
+<p>onemove(x, u, xp, up),
+x, xp, two points WITHIN the support <strong>*each entry of x0 and xp0 must be different*</strong>.
+and the value of the objective at x, and xp
+u=U(x), up=U(xp).</p>
+<p>It returns: [y, yp, ke, A, u_prop, up_prop]
+y, yp: the proposed jump
+ke: The kernel used, 0=nothing, 1=Walk, 2=Traverse, 3=Blow, 4=Hop
+A: the M-H ratio
+u_prop, up_prop: The values for the objective func. at the proposed jumps</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.pytwalk module</a><ul>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk"><code class="docutils literal notranslate"><span class="pre">pytwalk</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.Ana"><code class="docutils literal notranslate"><span class="pre">pytwalk.Ana()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.GBlowU"><code class="docutils literal notranslate"><span class="pre">pytwalk.GBlowU()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.GHopU"><code class="docutils literal notranslate"><span class="pre">pytwalk.GHopU()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.Hist"><code class="docutils literal notranslate"><span class="pre">pytwalk.Hist()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.IAT"><code class="docutils literal notranslate"><span class="pre">pytwalk.IAT()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.Run"><code class="docutils literal notranslate"><span class="pre">pytwalk.Run()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.RunRWMH"><code class="docutils literal notranslate"><span class="pre">pytwalk.RunRWMH()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.Save"><code class="docutils literal notranslate"><span class="pre">pytwalk.Save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.SimBlow"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimBlow()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.SimHop"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimHop()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.SimTraverse"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimTraverse()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.SimWalk"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimWalk()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.Simbeta"><code class="docutils literal notranslate"><span class="pre">pytwalk.Simbeta()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.TS"><code class="docutils literal notranslate"><span class="pre">pytwalk.TS()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.pytwalk.pytwalk.onemove"><code class="docutils literal notranslate"><span class="pre">pytwalk.onemove()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.pytwalk.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.pytwalk module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

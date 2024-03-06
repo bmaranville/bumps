@@ -1,0 +1,7 @@
+master\_builder module
+======================
+
+.. automodule:: master_builder
+   :members:
+   :undoc-members:
+   :show-inheritance:

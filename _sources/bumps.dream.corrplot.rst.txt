@@ -1,0 +1,7 @@
+bumps.dream.corrplot module
+===========================
+
+.. automodule:: bumps.dream.corrplot
+   :members:
+   :undoc-members:
+   :show-inheritance:

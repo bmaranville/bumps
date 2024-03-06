@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.acr &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.acr</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.acr</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ACR upper percentiles critical value for test of single multivariate</span>
+<span class="sd">normal outlier.</span>
+
+<span class="sd">From the method given by Wilks (1963) and approaching to a F distribution</span>
+<span class="sd">function by the Yang and Lee (1987) formulation, we compute the critical</span>
+<span class="sd">value of the maximum squared Mahalanobis distance to detect outliers from</span>
+<span class="sd">a normal multivariate sample.</span>
+
+<span class="sd">We can generate all the critical values of the maximum squared Mahalanobis</span>
+<span class="sd">distance presented on the Table XXXII of by Barnett and Lewis (1978) and</span>
+<span class="sd">Table A.6 of Rencher (2002). Also with any given significance level (alpha).</span>
+
+<span class="sd">Example::</span>
+
+<span class="sd">    &gt;&gt;&gt; print(&quot;%.4f&quot;%ACR(3, 25, 0.01))</span>
+<span class="sd">    13.1753</span>
+
+<span class="sd">Created by::</span>
+
+<span class="sd">    A. Trujillo-Ortiz, R. Hernandez-Walls, A. Castro-Perez and K. Barba-Rojo</span>
+<span class="sd">    Facultad de Ciencias Marinas</span>
+<span class="sd">    Universidad Autonoma de Baja California</span>
+<span class="sd">    Apdo. Postal 453</span>
+<span class="sd">    Ensenada, Baja California</span>
+<span class="sd">    Mexico.</span>
+<span class="sd">    atrujo@uabc.mx</span>
+
+<span class="sd">Copyright. August 20, 2006.</span>
+
+<span class="sd">To cite this file, this would be an appropriate format::</span>
+
+<span class="sd">    Trujillo-Ortiz, A., R. Hernandez-Walls, A. Castro-Perez and K. Barba-Rojo.</span>
+<span class="sd">    (2006). *ACR:Upper percentiles critical value for test of single</span>
+<span class="sd">    multivariate  normal outlier.* A MATLAB file. [WWW document].  URL</span>
+<span class="sd">    http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=12161</span>
+
+<span class="sd">The function&#39;s name is given in honour of Dr. Alvin C. Rencher for his</span>
+<span class="sd">invaluable contribution to multivariate statistics with his text &#39;Methods of</span>
+<span class="sd">Multivariate Analysis&#39;.</span>
+
+<span class="sd">References:</span>
+
+<span class="sd">[1] Barnett, V. and Lewis, T. (1978), Outliers on Statistical Data.</span>
+<span class="sd">     New-York:John Wiley &amp; Sons.</span>
+<span class="sd">[2] Rencher, A. C. (2002), Methods of Multivariate Analysis. 2nd. ed.</span>
+<span class="sd">     New-Jersey:John Wiley &amp; Sons. Chapter 13 (pp. 408-450).</span>
+<span class="sd">[3] Wilks, S. S. (1963), Multivariate Statistical Outliers. Sankhya,</span>
+<span class="sd">     Series A, 25: 407-426.</span>
+<span class="sd">[4] Yang, S. S. and Lee, Y. (1987), Identification of a Multivariate</span>
+<span class="sd">     Outlier. Presented at the Annual  Meeting of the American</span>
+<span class="sd">     Statistical Association, San Francisco, August 1987.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ACR&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">f</span>
+<span class="n">finv</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">ppf</span>
+
+
+<div class="viewcode-block" id="ACR">
+<a class="viewcode-back" href="../../../dream/acr.html#bumps.dream.acr.ACR">[docs]</a>
+<span class="k">def</span> <span class="nf">ACR</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return critical value for test of single multivariate normal outlier</span>
+<span class="sd">    using the Mahalanobis distance metric.</span>
+
+<span class="sd">    *p* is the number of independent variables,</span>
+<span class="sd">    *n* is the number of samples, and</span>
+<span class="sd">    *alpha* is the significance level cutoff (default=0.05).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">alpha</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">alpha</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;significance level must be between 0 and 1&quot;</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">alpha</span>
+    <span class="c1"># F distribution critical value with p and n-p-1 degrees of freedom</span>
+    <span class="c1"># using the Bonferroni correction.</span>
+    <span class="n">fc</span> <span class="o">=</span> <span class="n">finv</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">a</span><span class="o">/</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">fc</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">p</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">p</span><span class="o">*</span><span class="n">fc</span><span class="p">))</span>
+    <span class="c1"># = ((-1*((1/(1+(fc*p/(n-p-1))))-1))*((n-1)^2))/n;</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ACR</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">-</span> <span class="mf">13.1753251622586</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-13</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.acr</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

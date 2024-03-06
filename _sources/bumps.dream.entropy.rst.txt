@@ -1,0 +1,7 @@
+bumps.dream.entropy module
+==========================
+
+.. automodule:: bumps.dream.entropy
+   :members:
+   :undoc-members:
+   :show-inheritance:

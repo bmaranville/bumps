@@ -1,0 +1,7 @@
+bumps.dream.metropolis module
+=============================
+
+.. automodule:: bumps.dream.metropolis
+   :members:
+   :undoc-members:
+   :show-inheritance:

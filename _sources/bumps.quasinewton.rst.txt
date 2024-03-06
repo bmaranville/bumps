@@ -1,0 +1,7 @@
+bumps.quasinewton module
+========================
+
+.. automodule:: bumps.quasinewton
+   :members:
+   :undoc-members:
+   :show-inheritance:

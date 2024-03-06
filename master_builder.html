@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>master_builder module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">master_builder module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-master_builder">
+<span id="master-builder-module"></span><h1>master_builder module<a class="headerlink" href="#module-master_builder" title="Link to this heading">¶</a></h1>
+<p>This script builds the Bumps application and documentation from source and
+runs unit tests and doc tests.  It supports building on Windows and Linux.</p>
+<p>Usually, you downloaded this script into a top-level directory (the root)
+and run it from there which downloads the files from the application
+repository into a subdirectory (the package directory).  For example if
+test1 is the root directory, we might have:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>E:/work/test1/master_builder.py</dt><dd><p>/bumps/master_builder.py
+/bumps/…</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Alternatively, you can download the whole application repository and run
+this script from the application’s package directory where it is stored.
+The script determines whether it is executing from the root or the package
+directory and makes the necessary adjustments.  In this case, the root
+directory is defined as one-level-up and the repository is not downloaded
+(as it is assumed to be fully present).  In the example below test1 is the
+implicit root (i.e. top-level) directory.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>E:/work/test1/bumps/master_builder.py</dt><dd><p>/bumps/…</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Need to update this for bumps rather refl1d standalone gui distribution.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.build_documentation">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">build_documentation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#build_documentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.build_documentation" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.build_it">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">build_it</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#build_it"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.build_it" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.check_dependencies">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">check_dependencies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#check_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.check_dependencies" title="Link to this definition">¶</a></dt>
+<dd><p>Checks that the system has the necessary Python packages installed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.checkout_code">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">checkout_code</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#checkout_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.checkout_code" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.clean">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">clean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#clean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.clean" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.create_archive">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">create_archive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#create_archive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.create_archive" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.create_windows_exe">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">create_windows_exe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#create_windows_exe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.create_windows_exe" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.create_windows_installer">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">create_windows_installer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#create_windows_installer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.create_windows_installer" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.exec_cmd">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">exec_cmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#exec_cmd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.exec_cmd" title="Link to this definition">¶</a></dt>
+<dd><p>Runs the specified command in a subprocess.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.get_version">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">get_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#get_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.get_version" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.install_package">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">install_package</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#install_package"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.install_package" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="master_builder.run_tests">
+<span class="sig-prename descclassname"><span class="pre">master_builder.</span></span><span class="sig-name descname"><span class="pre">run_tests</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/master_builder.html#run_tests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#master_builder.run_tests" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">master_builder module</a><ul>
+<li><a class="reference internal" href="#master_builder.build_documentation"><code class="docutils literal notranslate"><span class="pre">build_documentation()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.build_it"><code class="docutils literal notranslate"><span class="pre">build_it()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.check_dependencies"><code class="docutils literal notranslate"><span class="pre">check_dependencies()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.checkout_code"><code class="docutils literal notranslate"><span class="pre">checkout_code()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.clean"><code class="docutils literal notranslate"><span class="pre">clean()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.create_archive"><code class="docutils literal notranslate"><span class="pre">create_archive()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.create_windows_exe"><code class="docutils literal notranslate"><span class="pre">create_windows_exe()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.create_windows_installer"><code class="docutils literal notranslate"><span class="pre">create_windows_installer()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.exec_cmd"><code class="docutils literal notranslate"><span class="pre">exec_cmd()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.get_version"><code class="docutils literal notranslate"><span class="pre">get_version()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.install_package"><code class="docutils literal notranslate"><span class="pre">install_package()</span></code></a></li>
+<li><a class="reference internal" href="#master_builder.run_tests"><code class="docutils literal notranslate"><span class="pre">run_tests()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/master_builder.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">master_builder module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

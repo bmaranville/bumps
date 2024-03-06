@@ -1,0 +1,7 @@
+bumps.plotutil module
+=====================
+
+.. automodule:: bumps.plotutil
+   :members:
+   :undoc-members:
+   :show-inheritance:

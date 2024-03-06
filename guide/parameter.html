@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Parameters &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fitting" href="fitting.html" />
+    <link rel="prev" title="Experiment" href="experiment.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitting.html" title="Fitting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="experiment.html" title="Experiment"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Parameters</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="parameters">
+<span id="parameter-guide"></span><h1>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#free-variables" id="id1">Free Variables</a></p></li>
+</ul>
+</nav>
+<p>Bumps fitting is centered on <a class="reference internal" href="../bumps.parameter.html#bumps.parameter.Parameter" title="bumps.parameter.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> objects.  Parameters define
+the search space, the uncertainty analysis and even the user interface.
+Constraints within and between models are implemented through parameters.
+Prior probabilities are defined by for parameters.</p>
+<p>Model classes for Bumps should make it easy to define the initial
+value of fitting parameters and tie parameters together.  When creating
+a model, you should be able specify <em>parameter=value</em> for each of the
+model parameters.  Later, you should be able to reference the parameter
+within the model using <em>M.parameter</em>.  Parameters can also be tied together
+by assigning the same <em>Parameter</em> object to two different parameters.
+For example, a hollow cylinder can be created using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solvent</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;solvent&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">shell</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;shell&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">4.5</span><span class="p">)</span>
+<span class="n">M</span> <span class="o">=</span> <span class="n">CoreShellCylinder</span><span class="p">(</span><span class="n">core</span><span class="o">=</span><span class="n">solvent</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="n">shell</span><span class="p">,</span> <span class="n">solvent</span><span class="o">=</span><span class="n">solvent</span><span class="p">,</span>
+                      <span class="n">radius</span><span class="o">=</span><span class="mi">95</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The model parameter can also be a derived value that is the result of
+a parameter expression.  For example, the following creates a cylinder
+whose length is twice the radius:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">radius</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;radius&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">M</span> <span class="o">=</span> <span class="n">Cylinder</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">radius</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Any time you ask for <em>M.length.value</em> it will compute the result as
+<em>2*radius.value</em> and return that.</p>
+<p>You can also tie parameters together after the fact.  For example, you
+can create the constrained cylinder using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">Cylinder</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">M</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">M</span><span class="o">.</span><span class="n">radius</span>
+</pre></div>
+</div>
+<p>The advantage of this method is that you can easily comment out the
+constraint when exploring the model space, and fit <em>length</em> and <em>radius</em>
+freely.</p>
+<p>Once you have defined your models and constraints you can set up
+you fitting parameters.  There are several parameter methods which
+are helpful:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.range" title="bumps.parameter.Parameter.range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">range</span></code></a> forces the parameter to lie within
+a fixed range.  The parameter value can take on any value within
+the range with equal probability, and has zero probability outside
+the range.</p></li>
+<li><p><a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.pm" title="bumps.parameter.Parameter.pm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pm</span></code></a> is a convenient way to set up a range
+based on the initial value of parameter.  For example, <em>M.thickness.pm(10)</em>
+will allow the thickness parameter to vary by plus or minus 10.  You
+can do asymmetric ranges by calling <em>pm</em> with plus and minus values,
+such as <em>M.thickness.pm(-3,2)</em>.  The actual range gets set to a
+<a class="reference internal" href="../bumps.bounds.html#bumps.bounds.nice_range" title="bumps.bounds.nice_range"><code class="xref py py-func docutils literal notranslate"><span class="pre">nice_range</span></code></a> that includes the bounds.</p></li>
+<li><p><a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.pmp" title="bumps.parameter.Parameter.pmp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pmp</span></code></a> is like <em>pm</em> but the range is specified as
+a percent.  For example, to let thickness vary by 10%, use
+<em>M.thickness.pmp(10)</em>.  Again, a <em>nice_range</em> is used.</p></li>
+<li><p><a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.dev" title="bumps.parameter.Parameter.dev"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dev</span></code></a> sets up a parameter whose prior probability
+is not equal across its range, but instead follows a normal distribution.
+If for example, you have measure the thickness to be <span class="math notranslate nohighlight">\(32.1 \pm 0.6\)</span>
+by some other technique, you can use this information to constrain your
+model by initializing <em>thickness</em> to 32.1 and setting
+<em>M.thickness.dev(0.6)</em> as a fitting constraint.  The <em>dev</em> method also
+accepts absolute limits, creating a truncated normal distribution.  You
+can set the central value <em>mu</em> as well, but you probably want to do this
+in the model initialization so that you are free to turn fitting of the
+parameter on and off by commenting out the <em>dev</em> line.</p></li>
+<li><p><a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.soft_range" title="bumps.parameter.Parameter.soft_range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">soft_range</span></code></a> is a combination of <em>range</em>
+and <em>dev</em> in that the parameter has equal probability within [<em>low</em>,*high*]
+but Gaussian probability of width <em>std</em> as it strays outside of the range.</p></li>
+<li><p><a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.pdf" title="bumps.parameter.Parameter.pdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pdf</span></code></a> is like <em>dev</em> but works with any continuous
+<a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/stats.html">scipy.stats distribution</a>.</p></li>
+</ul>
+<p>All these methods set the <em>bounds</em> attribute on the parameter in one way
+or another.  See <a class="reference internal" href="../bumps.bounds.html#module-bumps.bounds" title="bumps.bounds"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.bounds</span></code></a> for details.  Technically, setting
+the parameter to <em>dev</em>, <em>soft_range</em> or <em>pdf</em> is equivalent to creating
+a probability distribution model with a single data point and
+<a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.Fitness.nllf" title="bumps.fitproblem.Fitness.nllf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Fitness.nllf</span></code></a> equal to the negative
+log likelihood of seeing the parameter value in the distribution.  This
+<em>PDF</em> model would be fit simultaneously with your target model with the
+parameter shared between them.  The result is statistically sound (it is
+just more prior information), and conveniently, it does not affect the
+number of degrees of freedom in the fit.</p>
+<p>When defining new model classes, use the static method
+<a class="reference internal" href="../bumps.parameter.html#bumps.parameter.Parameter.default" title="bumps.parameter.Parameter.default"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Parameter.default()</span></code></a> to initialize the parameter.  This will
+accept the input argument passed in by the user and depending on its
+type, either create a new parameter slot and set its initial value,
+or link the slot to another parameter.</p>
+<section id="free-variables">
+<span id="freevariables"></span><h2><a class="toc-backref" href="#id1" role="doc-backlink">Free Variables</a><a class="headerlink" href="#free-variables" title="Link to this heading">¶</a></h2>
+<p>When fitting multiple datasets, you will undoubtedly have models with
+many shared parameters, and some parameters that differ between the models.
+Common patterns include:</p>
+<ul class="simple">
+<li><p>different measurements may use the same material but different contrast agents,</p></li>
+<li><p>they may use the same contrast agent but different materials,</p></li>
+<li><p>the same material and contrast, but different sizes, or</p></li>
+<li><p>a cross product with several materials and several sizes.</p></li>
+</ul>
+<p>Often with complex models the parameter of interest is buried within the
+model structure.  One approach is to clone the models using a deep copy of
+the entire structure, then tie together parameters for the bits
+that are changing.  This proves to be confusing and difficult for new python
+programmers, so instead <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem</span></code></a> was
+extended to support <a class="reference internal" href="../bumps.parameter.html#bumps.parameter.FreeVariables" title="bumps.parameter.FreeVariables"><code class="xref py py-class docutils literal notranslate"><span class="pre">FreeVariables</span></code></a>.  The FreeVariables class allows
+you to use the same model structure with different data sets, but have
+some parameters that vary between the models.  Each varying parameter
+is a slot, and FreeVariables keeps an array of parameters
+(actually a <a class="reference internal" href="../bumps.parameter.html#bumps.parameter.ParameterSet" title="bumps.parameter.ParameterSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterSet</span></code></a>) to fill that slot, one for each model.</p>
+<p>To define the free variables, you need the names of the different
+models, a parameter slot to hold the values, and a list of the
+different parameter values for each model.  You then define the
+free variables as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">free</span> <span class="o">=</span> <span class="n">FreeVariables</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;model1&quot;</span><span class="p">,</span> <span class="s2">&quot;model2&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+                 <span class="n">p1</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">experiments</span><span class="p">,</span> <span class="n">freevars</span><span class="o">=</span><span class="n">free</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The slots can be referenced by name, with the underlying parameters
+referenced by variable number.  In the above, <em>free.p1[1]</em> refers to
+the parameter p1 when fitting data2.  You can also refer to
+the slots by name, such as <em>free.p1[data2.name]</em>.  The parameters in the
+slots have the usual properties of parameters, such as values and
+fit ranges.  Setting the fit range makes the parameter a fitted parameter,
+and the fit will give the uncertainty on each parameter independently.
+Parameters can be copied, so that a pair of models can share the same value.</p>
+<p>The following examples shows a neutron scattering problems with two datasets,
+one measured with light water and the other measured with heavy water, you
+can share the same material object, but use the light water scattering
+factors in the first and the heavy water scattering factors in the
+second.  The problem would be composed as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">material</span> <span class="o">=</span> <span class="n">SLD</span><span class="p">(</span><span class="s1">&#39;silicon&#39;</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">2.07</span><span class="p">)</span>
+<span class="n">solvent</span> <span class="o">=</span> <span class="n">SLD</span><span class="p">(</span><span class="s1">&#39;solvent&#39;</span><span class="p">)</span> <span class="c1"># unspecified rho</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span> <span class="n">solvent</span><span class="o">=</span><span class="n">solvent</span><span class="p">)</span>
+<span class="n">M1</span> <span class="o">=</span> <span class="n">ScatteringFitness</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">hydrogenated_data</span><span class="p">)</span>
+<span class="n">M2</span> <span class="o">=</span> <span class="n">ScatteringFitness</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">deuterated_data</span><span class="p">)</span>
+<span class="n">free</span> <span class="o">=</span> <span class="n">FreeVariables</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hydrogenated&#39;</span><span class="p">,</span> <span class="s1">&#39;deuterated&#39;</span><span class="p">],</span>
+                     <span class="n">solvent</span><span class="o">=</span><span class="n">solvent</span><span class="o">.</span><span class="n">sld</span><span class="p">)</span>
+<span class="n">free</span><span class="o">.</span><span class="n">solvent</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.561</span><span class="p">,</span> <span class="mf">6.402</span><span class="p">]</span>
+<span class="n">model</span><span class="o">.</span><span class="n">radius</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">35</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">([</span><span class="n">M1</span><span class="p">,</span> <span class="n">M2</span><span class="p">],</span> <span class="n">freevars</span><span class="o">=</span><span class="n">free</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this particular example, the solvent is fixed for each measurement, and
+the sphere radius is allowed to vary between 1 and 35.  Since the radius
+is not a free variable, the fitted radius will be chosen such that it minimizes
+the combined fitness of both models.   In a more complicated situation, we may
+not know either the sphere radius or the solvent densities, but still the
+radius is shared between the two models.  In this case we could set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span><span class="o">.</span><span class="n">solvent</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and the SLD of the solvent would be fitted independently in the two data sets.
+Notice that we did not refer to the individual model index when setting the
+range.  This is a convenience—range, pm and pmp can be set on the entire
+set as above, or individually using, e.g.,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span><span class="o">.</span><span class="n">solvent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">fv</span><span class="o">.</span><span class="n">solvent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Parameters</a><ul>
+<li><a class="reference internal" href="#free-variables">Free Variables</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="experiment.html"
+                          title="previous chapter">Experiment</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="fitting.html"
+                          title="next chapter">Fitting</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/parameter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fitting.html" title="Fitting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="experiment.html" title="Experiment"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Parameters</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>fitters - Wrappers for various optimization algorithms &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="formatnum - Format numbers and uncertainties" href="formatnum.html" />
+    <link rel="prev" title="fitservice - Remote job plugin for fit jobs" href="fitservice.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formatnum.html" title="formatnum - Format numbers and uncertainties"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fitservice.html" title="fitservice - Remote job plugin for fit jobs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fitters - Wrappers for various optimization algorithms</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fitters-wrappers-for-various-optimization-algorithms">
+<h1>fitters - Wrappers for various optimization algorithms<a class="headerlink" href="#fitters-wrappers-for-various-optimization-algorithms" title="Link to this heading">¶</a></h1>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.BFGSFit" title="bumps.fitters.BFGSFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BFGSFit</span></code></a></p></td>
+<td><p>BFGS quasi-newton optimizer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.CheckpointMonitor" title="bumps.fitters.CheckpointMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CheckpointMonitor</span></code></a></p></td>
+<td><p>Periodically save fit state so that it can be resumed later.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.ConsoleMonitor" title="bumps.fitters.ConsoleMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConsoleMonitor</span></code></a></p></td>
+<td><p>Display fit progress on the console</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.DEFit" title="bumps.fitters.DEFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFit</span></code></a></p></td>
+<td><p>Classic Storn and Price differential evolution optimizer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.DreamFit" title="bumps.fitters.DreamFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DreamFit</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.DreamModel" title="bumps.fitters.DreamModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DreamModel</span></code></a></p></td>
+<td><p>DREAM wrapper for fit problems.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitBase</span></code></a></p></td>
+<td><p>FitBase defines the interface from bumps models to the various fitting engines available within bumps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitDriver" title="bumps.fitters.FitDriver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitDriver</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit" title="bumps.fitters.LevenbergMarquardtFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LevenbergMarquardtFit</span></code></a></p></td>
+<td><p>Levenberg-Marquardt optimizer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.MPFit" title="bumps.fitters.MPFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MPFit</span></code></a></p></td>
+<td><p>MPFit optimizer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.MonitorRunner" title="bumps.fitters.MonitorRunner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MonitorRunner</span></code></a></p></td>
+<td><p>Adaptor which allows solvers to accept progress monitors.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.MultiStart" title="bumps.fitters.MultiStart"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiStart</span></code></a></p></td>
+<td><p>Multi-start monte carlo fitter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.PSFit" title="bumps.fitters.PSFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PSFit</span></code></a></p></td>
+<td><p>Particle swarm optimizer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.PTFit" title="bumps.fitters.PTFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PTFit</span></code></a></p></td>
+<td><p>Parallel tempering optimizer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.RLFit" title="bumps.fitters.RLFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLFit</span></code></a></p></td>
+<td><p>Random lines optimizer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.Resampler" title="bumps.fitters.Resampler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Resampler</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.SimplexFit" title="bumps.fitters.SimplexFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimplexFit</span></code></a></p></td>
+<td><p>Nelder-Mead simplex optimizer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.SnobFit" title="bumps.fitters.SnobFit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SnobFit</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.StepMonitor" title="bumps.fitters.StepMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StepMonitor</span></code></a></p></td>
+<td><p>Collect information at every step of the fit and save it to a file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.fit" title="bumps.fitters.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Simplified fit interface.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.load_history" title="bumps.fitters.load_history"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_history</span></code></a></p></td>
+<td><p>Load fitter details from a history file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.parse_tolerance" title="bumps.fitters.parse_tolerance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_tolerance</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.register" title="bumps.fitters.register"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register</span></code></a></p></td>
+<td><p>Register a new fitter with bumps, if it is not already there.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../bumps.fitters.html#bumps.fitters.save_history" title="bumps.fitters.save_history"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_history</span></code></a></p></td>
+<td><p>Save fitter details to a history file as JSON.</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-bumps.fitters">Interfaces to various optimizers.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.BFGSFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">BFGSFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#BFGSFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.BFGSFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>BFGS quasi-newton optimizer.</p>
+<p>BFGS estimates Hessian and its Cholesky decomposition, but initial
+tests give uncertainties quite different from the directly computed
+Jacobian in Levenburg-Marquardt or the Hessian estimated at the
+minimum by numerical differentiation.</p>
+<p>To use the internal ‘H’ and ‘L’ and save some computation time, then
+use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">chol_cov</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">])</span>
+<span class="n">stderr</span> <span class="o">=</span> <span class="n">lsqerror</span><span class="o">.</span><span class="n">stderr</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.BFGSFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'newton'</span></em><a class="headerlink" href="#bumps.fitters.BFGSFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.BFGSFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Quasi-Newton</span> <span class="pre">BFGS'</span></em><a class="headerlink" href="#bumps.fitters.BFGSFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.BFGSFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">3000),</span> <span class="pre">('starts',</span> <span class="pre">1),</span> <span class="pre">('ftol',</span> <span class="pre">1e-06),</span> <span class="pre">('xtol',</span> <span class="pre">1e-12)]</span></em><a class="headerlink" href="#bumps.fitters.BFGSFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.BFGSFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#BFGSFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.BFGSFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.CheckpointMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">CheckpointMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1800</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#CheckpointMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.CheckpointMonitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.monitor.html#bumps.monitor.TimedUpdate" title="bumps.monitor.TimedUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimedUpdate</span></code></a></p>
+<p>Periodically save fit state so that it can be resumed later.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.CheckpointMonitor.checkpoint">
+<span class="sig-name descname"><span class="pre">checkpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.fitters.CheckpointMonitor.checkpoint" title="Link to this definition">¶</a></dt>
+<dd><p>Function to call at each checkpoint.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.CheckpointMonitor.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitters.CheckpointMonitor.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate which fields are needed by the monitor and for what duration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.CheckpointMonitor.show_improvement">
+<span class="sig-name descname"><span class="pre">show_improvement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#CheckpointMonitor.show_improvement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.CheckpointMonitor.show_improvement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.CheckpointMonitor.show_progress">
+<span class="sig-name descname"><span class="pre">show_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#CheckpointMonitor.show_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.CheckpointMonitor.show_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.ConsoleMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">ConsoleMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">improvement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#ConsoleMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.ConsoleMonitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.monitor.html#bumps.monitor.TimedUpdate" title="bumps.monitor.TimedUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimedUpdate</span></code></a></p>
+<p>Display fit progress on the console</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.ConsoleMonitor.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitters.ConsoleMonitor.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate which fields are needed by the monitor and for what duration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.ConsoleMonitor.show_improvement">
+<span class="sig-name descname"><span class="pre">show_improvement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#ConsoleMonitor.show_improvement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.ConsoleMonitor.show_improvement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.ConsoleMonitor.show_progress">
+<span class="sig-name descname"><span class="pre">show_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#ConsoleMonitor.show_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.ConsoleMonitor.show_progress" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">DEFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DEFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DEFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Classic Storn and Price differential evolution optimizer.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'de'</span></em><a class="headerlink" href="#bumps.fitters.DEFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DEFit.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DEFit.load" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Differential</span> <span class="pre">Evolution'</span></em><a class="headerlink" href="#bumps.fitters.DEFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DEFit.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DEFit.save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">1000),</span> <span class="pre">('pop',</span> <span class="pre">10),</span> <span class="pre">('CR',</span> <span class="pre">0.9),</span> <span class="pre">('F',</span> <span class="pre">2.0),</span> <span class="pre">('ftol',</span> <span class="pre">1e-08),</span> <span class="pre">('xtol',</span> <span class="pre">1e-06)]</span></em><a class="headerlink" href="#bumps.fitters.DEFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DEFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DEFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DEFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">DreamFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.entropy">
+<span class="sig-name descname"><span class="pre">entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.entropy" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.error_plot">
+<span class="sig-name descname"><span class="pre">error_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figfile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.error_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.error_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'dream'</span></em><a class="headerlink" href="#bumps.fitters.DreamFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.load" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DREAM'</span></em><a class="headerlink" href="#bumps.fitters.DreamFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('samples',</span> <span class="pre">10000),</span> <span class="pre">('burn',</span> <span class="pre">100),</span> <span class="pre">('pop',</span> <span class="pre">10),</span> <span class="pre">('init',</span> <span class="pre">'eps'),</span> <span class="pre">('thin',</span> <span class="pre">1),</span> <span class="pre">('alpha',</span> <span class="pre">0.01),</span> <span class="pre">('outliers',</span> <span class="pre">'none'),</span> <span class="pre">('trim',</span> <span class="pre">False),</span> <span class="pre">('steps',</span> <span class="pre">0)]</span></em><a class="headerlink" href="#bumps.fitters.DreamFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.show" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamFit.stderr">
+<span class="sig-name descname"><span class="pre">stderr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamFit.stderr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamFit.stderr" title="Link to this definition">¶</a></dt>
+<dd><p>Approximate standard error as 1/2 the 68% interval fo the sample,
+which is a more robust measure than the mean of the sample for
+non-normal distributions.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">DreamModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../dream/model.html#bumps.dream.model.MCMCModel" title="bumps.dream.model.MCMCModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></p>
+<p>DREAM wrapper for fit problems.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.fitters.DreamModel.bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#bumps.fitters.DreamModel.labels" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel.log_density">
+<span class="sig-name descname"><span class="pre">log_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamModel.log_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamModel.log_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamModel.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamModel.map" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel.nllf">
+<span class="sig-name descname"><span class="pre">nllf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#DreamModel.nllf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.DreamModel.nllf" title="Link to this definition">¶</a></dt>
+<dd><p>Negative log likelihood of seeing models given <em>x</em></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.DreamModel.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bumps.fitters.DreamModel.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.FitBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">FitBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitBase" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>FitBase defines the interface from bumps models to the various fitting
+engines available within bumps.</p>
+<p>Each engine is defined in its own class with a specific set of attributes
+and methods.</p>
+<p>The <em>name</em> attribute is the name of the optimizer.  This is just a simple
+string.</p>
+<p>The <em>settings</em> attribute is a list of pairs (name, default), where the
+names are defined as fields in FitOptions.  A best attempt should be
+made to map the fit options for the optimizer to the standard fit options,
+since each of these becomes a new command line option when running
+bumps.  If that is not possible, then a new option should be added
+to FitOptions.  A plugin architecture might be appropriate here, if
+there are reasons why specific problem domains might need custom fitters,
+but this is not yet supported.</p>
+<p>Each engine takes a fit problem in its constructor.</p>
+<p>The <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase.solve" title="bumps.fitters.FitBase.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method runs the fit.  It accepts a
+monitor to track updates, a mapper to distribute work and
+key-value pairs defining the settings.</p>
+<p>There are a number of optional methods for the fitting engines.  Basically,
+all the methods in <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitDriver" title="bumps.fitters.FitDriver"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitDriver</span></code></a> first check if they are specialized
+in the fit engine before performing a default action.</p>
+<p>The <em>load</em>/<em>save</em> methods load and save the fitter state in a given
+directory with a specific base file name.  The fitter can choose a file
+extension to add to the base name.  Some care is needed to be sure that
+the extension doesn’t collide with other extensions such as .mon for
+the fit monitor.</p>
+<p>The <em>plot</em> method shows any plots to help understand the performance of
+the fitter, such as a convergence plot showing the the range of values
+in the population over time, as well as plots of the parameter uncertainty
+if available.  The plot should work within  is given a figure canvas to work with</p>
+<p>The <em>stderr</em>/<em>cov</em> methods should provide summary statistics for the
+parameter uncertainties.  Some fitters, such as MCMC, will compute these
+directly from the population.  Others, such as BFGS, will produce an
+estimate of the uncertainty as they go along.  If the fitter does not
+provide these estimates, then they will be computed from numerical
+derivatives at the minimum in the FitDriver method.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitBase.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitBase.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitBase.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">FitDriver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.chisq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.chisq" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.clip">
+<span class="sig-name descname"><span class="pre">clip</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.clip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.clip" title="Link to this definition">¶</a></dt>
+<dd><p>Force parameters within bounds so constraints are finite.</p>
+<p>The problem is updated with the new parameter values.</p>
+<p>Returns a list of parameter names that were clipped.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.cov">
+<span class="sig-name descname"><span class="pre">cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.cov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.cov" title="Link to this definition">¶</a></dt>
+<dd><p>Return an estimate of the covariance of the fit.</p>
+<p>Depending on the fitter and the problem, this may be computed from
+existing evaluations within the fitter, or from numerical
+differentiation around the minimum.</p>
+<p>If the problem uses <span class="math notranslate nohighlight">\(\chi^2/2\)</span> as its nllf, then the covariance
+is derived from the Jacobian:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">bumps</span><span class="o">.</span><span class="n">lsqerror</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="n">cov</span> <span class="o">=</span> <span class="n">bumps</span><span class="o">.</span><span class="n">lsqerror</span><span class="o">.</span><span class="n">jacobian_cov</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Otherwise, the numerical differentiation will use the Hessian
+estimated from nllf:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">getp</span><span class="p">()</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">bumps</span><span class="o">.</span><span class="n">lsqerror</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="n">cov</span> <span class="o">=</span> <span class="n">bumps</span><span class="o">.</span><span class="n">lsqerror</span><span class="o">.</span><span class="n">hessian_cov</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.entropy">
+<span class="sig-name descname"><span class="pre">entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.entropy" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.fit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.load" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.show" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.show_cov">
+<span class="sig-name descname"><span class="pre">show_cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.show_cov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.show_cov" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.show_entropy">
+<span class="sig-name descname"><span class="pre">show_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.show_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.show_entropy" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.show_err">
+<span class="sig-name descname"><span class="pre">show_err</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.show_err"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.show_err" title="Link to this definition">¶</a></dt>
+<dd><p>Display the error approximation from the numerical derivative.</p>
+<p>Warning: cost grows as the cube of the number of parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.stderr">
+<span class="sig-name descname"><span class="pre">stderr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.stderr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.stderr" title="Link to this definition">¶</a></dt>
+<dd><p>Return an estimate of the standard error of the fit.</p>
+<p>Depending on the fitter and the problem, this may be computed from
+existing evaluations within the fitter, or from numerical
+differentiation around the minimum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.FitDriver.stderr_from_cov">
+<span class="sig-name descname"><span class="pre">stderr_from_cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#FitDriver.stderr_from_cov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.FitDriver.stderr_from_cov" title="Link to this definition">¶</a></dt>
+<dd><p>Return an estimate of standard error of the fit from covariance matrix.</p>
+<p>Unlike stderr, which uses the estimate from the underlying
+fitter (DREAM uses the MCMC sample for this), <em>stderr_from_cov</em>
+estimates the error from the diagonal of the covariance matrix.
+Here, the covariance matrix may have been estimated by the fitter
+instead of the Hessian.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.LevenbergMarquardtFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">LevenbergMarquardtFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#LevenbergMarquardtFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.LevenbergMarquardtFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Levenberg-Marquardt optimizer.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.LevenbergMarquardtFit.cov">
+<span class="sig-name descname"><span class="pre">cov</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#LevenbergMarquardtFit.cov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.LevenbergMarquardtFit.cov" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.LevenbergMarquardtFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'scipy.leastsq'</span></em><a class="headerlink" href="#bumps.fitters.LevenbergMarquardtFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.LevenbergMarquardtFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Levenberg-Marquardt</span> <span class="pre">(scipy.leastsq)'</span></em><a class="headerlink" href="#bumps.fitters.LevenbergMarquardtFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.LevenbergMarquardtFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">200),</span> <span class="pre">('ftol',</span> <span class="pre">1.5e-08),</span> <span class="pre">('xtol',</span> <span class="pre">1.5e-08)]</span></em><a class="headerlink" href="#bumps.fitters.LevenbergMarquardtFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.LevenbergMarquardtFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#LevenbergMarquardtFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.LevenbergMarquardtFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.MPFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">MPFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#MPFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.MPFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>MPFit optimizer.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.MPFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lm'</span></em><a class="headerlink" href="#bumps.fitters.MPFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.MPFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Levenberg-Marquardt'</span></em><a class="headerlink" href="#bumps.fitters.MPFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.MPFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">200),</span> <span class="pre">('ftol',</span> <span class="pre">1e-10),</span> <span class="pre">('xtol',</span> <span class="pre">1e-10)]</span></em><a class="headerlink" href="#bumps.fitters.MPFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.MPFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#MPFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.MPFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.MonitorRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">MonitorRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#MonitorRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.MonitorRunner" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Adaptor which allows solvers to accept progress monitors.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.MultiStart">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">MultiStart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#MultiStart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.MultiStart" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Multi-start monte carlo fitter.</p>
+<p>This fitter wraps a local optimizer, restarting it a number of times
+to give it a chance to find a different local minimum.  If the keep_best
+option is True, then restart near the best fit, otherwise restart at
+random.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.MultiStart.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Multistart</span> <span class="pre">Monte</span> <span class="pre">Carlo'</span></em><a class="headerlink" href="#bumps.fitters.MultiStart.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.MultiStart.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('starts',</span> <span class="pre">100)]</span></em><a class="headerlink" href="#bumps.fitters.MultiStart.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.MultiStart.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#MultiStart.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.MultiStart.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.PSFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">PSFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#PSFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.PSFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Particle swarm optimizer.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.PSFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ps'</span></em><a class="headerlink" href="#bumps.fitters.PSFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.PSFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Particle</span> <span class="pre">Swarm'</span></em><a class="headerlink" href="#bumps.fitters.PSFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.PSFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">3000),</span> <span class="pre">('pop',</span> <span class="pre">1)]</span></em><a class="headerlink" href="#bumps.fitters.PSFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.PSFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#PSFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.PSFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.PTFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">PTFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#PTFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.PTFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Parallel tempering optimizer.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.PTFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pt'</span></em><a class="headerlink" href="#bumps.fitters.PTFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.PTFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Parallel</span> <span class="pre">Tempering'</span></em><a class="headerlink" href="#bumps.fitters.PTFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.PTFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">400),</span> <span class="pre">('nT',</span> <span class="pre">24),</span> <span class="pre">('CR',</span> <span class="pre">0.9),</span> <span class="pre">('burn',</span> <span class="pre">100),</span> <span class="pre">('Tmin',</span> <span class="pre">0.1),</span> <span class="pre">('Tmax',</span> <span class="pre">10)]</span></em><a class="headerlink" href="#bumps.fitters.PTFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.PTFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#PTFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.PTFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.RLFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">RLFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#RLFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.RLFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Random lines optimizer.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.RLFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rl'</span></em><a class="headerlink" href="#bumps.fitters.RLFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.RLFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Random</span> <span class="pre">Lines'</span></em><a class="headerlink" href="#bumps.fitters.RLFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.RLFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">3000),</span> <span class="pre">('starts',</span> <span class="pre">20),</span> <span class="pre">('pop',</span> <span class="pre">0.5),</span> <span class="pre">('CR',</span> <span class="pre">0.9)]</span></em><a class="headerlink" href="#bumps.fitters.RLFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.RLFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#RLFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.RLFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.Resampler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">Resampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#Resampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.Resampler" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.Resampler.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#Resampler.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.Resampler.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.SimplexFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">SimplexFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#SimplexFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.SimplexFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<p>Nelder-Mead simplex optimizer.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.SimplexFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'amoeba'</span></em><a class="headerlink" href="#bumps.fitters.SimplexFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.SimplexFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Nelder-Mead</span> <span class="pre">Simplex'</span></em><a class="headerlink" href="#bumps.fitters.SimplexFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.SimplexFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">1000),</span> <span class="pre">('starts',</span> <span class="pre">1),</span> <span class="pre">('radius',</span> <span class="pre">0.15),</span> <span class="pre">('xtol',</span> <span class="pre">1e-06),</span> <span class="pre">('ftol',</span> <span class="pre">1e-08)]</span></em><a class="headerlink" href="#bumps.fitters.SimplexFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.SimplexFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#SimplexFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.SimplexFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.SnobFit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">SnobFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#SnobFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.SnobFit" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.fitters.html#bumps.fitters.FitBase" title="bumps.fitters.FitBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitBase</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.SnobFit.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'snobfit'</span></em><a class="headerlink" href="#bumps.fitters.SnobFit.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.SnobFit.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SNOBFIT'</span></em><a class="headerlink" href="#bumps.fitters.SnobFit.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.SnobFit.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('steps',</span> <span class="pre">200)]</span></em><a class="headerlink" href="#bumps.fitters.SnobFit.settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.SnobFit.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#SnobFit.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.SnobFit.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bumps.fitters.StepMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">StepMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['step',</span> <span class="pre">'time',</span> <span class="pre">'value',</span> <span class="pre">'point']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#StepMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.StepMonitor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../bumps.monitor.html#bumps.monitor.Monitor" title="bumps.monitor.Monitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Monitor</span></code></a></p>
+<p>Collect information at every step of the fit and save it to a file.</p>
+<p><em>fid</em> is the file to save the information to
+<em>fields</em> is the list of “step|time|value|point” fields to save</p>
+<p>The point field should be last in the list.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bumps.fitters.StepMonitor.FIELDS">
+<span class="sig-name descname"><span class="pre">FIELDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['step',</span> <span class="pre">'time',</span> <span class="pre">'value',</span> <span class="pre">'point']</span></em><a class="headerlink" href="#bumps.fitters.StepMonitor.FIELDS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bumps.fitters.StepMonitor.config_history">
+<span class="sig-name descname"><span class="pre">config_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">history</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#StepMonitor.config_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.StepMonitor.config_history" title="Link to this definition">¶</a></dt>
+<dd><p>Indicate which fields are needed by the monitor and for what duration.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitters.fit">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'amoeba'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Simplified fit interface.</p>
+<p>Given a fit problem, the name of a fitter and the fitter options,
+it will run the fit and return the best value and standard error of
+the parameters.  If <em>verbose</em> is true, then the console monitor will
+be enabled, showing progress through the fit and showing the parameter
+standard error at the end of the fit, otherwise it is completely
+silent.</p>
+<p>Returns an <em>OptimizeResult</em> object containing “x” and “dx”.  The
+dream fitter also includes the “state” object, allowing for more
+detailed uncertainty analysis.  Optimizer information such as the
+stopping condition and the number of function evaluations are not
+yet included.</p>
+<p>To run in parallel (with multiprocessing and dream):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.mapper</span> <span class="kn">import</span> <span class="n">MPMapper</span>
+<span class="n">mapper</span> <span class="o">=</span> <span class="n">MPMapper</span><span class="o">.</span><span class="n">start_mapper</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cpu</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c1">#cpu=0 for all CPUs</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;dream&quot;</span><span class="p">,</span> <span class="n">mapper</span><span class="o">=</span><span class="n">mapper</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitters.load_history">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">load_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#load_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.load_history" title="Link to this definition">¶</a></dt>
+<dd><p>Load fitter details from a history file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitters.parse_tolerance">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">parse_tolerance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#parse_tolerance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.parse_tolerance" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitters.register">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.register" title="Link to this definition">¶</a></dt>
+<dd><p>Register a new fitter with bumps, if it is not already there.</p>
+<p><em>active</em> is False if you don’t want it showing up in the GUI selector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.fitters.save_history">
+<span class="sig-prename descclassname"><span class="pre">bumps.fitters.</span></span><span class="sig-name descname"><span class="pre">save_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bumps/fitters.html#save_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.fitters.save_history" title="Link to this definition">¶</a></dt>
+<dd><p>Save fitter details to a history file as JSON.</p>
+<p>The content of the details are fitter specific.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">fitters - Wrappers for various optimization algorithms</a><ul>
+<li><a class="reference internal" href="#bumps.fitters.BFGSFit"><code class="docutils literal notranslate"><span class="pre">BFGSFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.BFGSFit.id"><code class="docutils literal notranslate"><span class="pre">BFGSFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.BFGSFit.name"><code class="docutils literal notranslate"><span class="pre">BFGSFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.BFGSFit.settings"><code class="docutils literal notranslate"><span class="pre">BFGSFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.BFGSFit.solve"><code class="docutils literal notranslate"><span class="pre">BFGSFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.CheckpointMonitor"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.CheckpointMonitor.checkpoint"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.checkpoint</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.CheckpointMonitor.config_history"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.config_history()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.CheckpointMonitor.show_improvement"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.show_improvement()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.CheckpointMonitor.show_progress"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.show_progress()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.ConsoleMonitor"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.ConsoleMonitor.config_history"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor.config_history()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.ConsoleMonitor.show_improvement"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor.show_improvement()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.ConsoleMonitor.show_progress"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor.show_progress()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.DEFit"><code class="docutils literal notranslate"><span class="pre">DEFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.DEFit.id"><code class="docutils literal notranslate"><span class="pre">DEFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DEFit.load"><code class="docutils literal notranslate"><span class="pre">DEFit.load()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DEFit.name"><code class="docutils literal notranslate"><span class="pre">DEFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DEFit.save"><code class="docutils literal notranslate"><span class="pre">DEFit.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DEFit.settings"><code class="docutils literal notranslate"><span class="pre">DEFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DEFit.solve"><code class="docutils literal notranslate"><span class="pre">DEFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit"><code class="docutils literal notranslate"><span class="pre">DreamFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.entropy"><code class="docutils literal notranslate"><span class="pre">DreamFit.entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.error_plot"><code class="docutils literal notranslate"><span class="pre">DreamFit.error_plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.id"><code class="docutils literal notranslate"><span class="pre">DreamFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.load"><code class="docutils literal notranslate"><span class="pre">DreamFit.load()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.name"><code class="docutils literal notranslate"><span class="pre">DreamFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.plot"><code class="docutils literal notranslate"><span class="pre">DreamFit.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.save"><code class="docutils literal notranslate"><span class="pre">DreamFit.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.settings"><code class="docutils literal notranslate"><span class="pre">DreamFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.show"><code class="docutils literal notranslate"><span class="pre">DreamFit.show()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.solve"><code class="docutils literal notranslate"><span class="pre">DreamFit.solve()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamFit.stderr"><code class="docutils literal notranslate"><span class="pre">DreamFit.stderr()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel"><code class="docutils literal notranslate"><span class="pre">DreamModel</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel.bounds"><code class="docutils literal notranslate"><span class="pre">DreamModel.bounds</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel.labels"><code class="docutils literal notranslate"><span class="pre">DreamModel.labels</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel.log_density"><code class="docutils literal notranslate"><span class="pre">DreamModel.log_density()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel.map"><code class="docutils literal notranslate"><span class="pre">DreamModel.map()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel.nllf"><code class="docutils literal notranslate"><span class="pre">DreamModel.nllf()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.DreamModel.plot"><code class="docutils literal notranslate"><span class="pre">DreamModel.plot()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.FitBase"><code class="docutils literal notranslate"><span class="pre">FitBase</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.FitBase.solve"><code class="docutils literal notranslate"><span class="pre">FitBase.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver"><code class="docutils literal notranslate"><span class="pre">FitDriver</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.chisq"><code class="docutils literal notranslate"><span class="pre">FitDriver.chisq()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.clip"><code class="docutils literal notranslate"><span class="pre">FitDriver.clip()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.cov"><code class="docutils literal notranslate"><span class="pre">FitDriver.cov()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.entropy"><code class="docutils literal notranslate"><span class="pre">FitDriver.entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.fit"><code class="docutils literal notranslate"><span class="pre">FitDriver.fit()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.load"><code class="docutils literal notranslate"><span class="pre">FitDriver.load()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.plot"><code class="docutils literal notranslate"><span class="pre">FitDriver.plot()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.save"><code class="docutils literal notranslate"><span class="pre">FitDriver.save()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.show"><code class="docutils literal notranslate"><span class="pre">FitDriver.show()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.show_cov"><code class="docutils literal notranslate"><span class="pre">FitDriver.show_cov()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.show_entropy"><code class="docutils literal notranslate"><span class="pre">FitDriver.show_entropy()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.show_err"><code class="docutils literal notranslate"><span class="pre">FitDriver.show_err()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.stderr"><code class="docutils literal notranslate"><span class="pre">FitDriver.stderr()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.FitDriver.stderr_from_cov"><code class="docutils literal notranslate"><span class="pre">FitDriver.stderr_from_cov()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.LevenbergMarquardtFit"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.LevenbergMarquardtFit.cov"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.cov()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.LevenbergMarquardtFit.id"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.LevenbergMarquardtFit.name"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.LevenbergMarquardtFit.settings"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.LevenbergMarquardtFit.solve"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.MPFit"><code class="docutils literal notranslate"><span class="pre">MPFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.MPFit.id"><code class="docutils literal notranslate"><span class="pre">MPFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.MPFit.name"><code class="docutils literal notranslate"><span class="pre">MPFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.MPFit.settings"><code class="docutils literal notranslate"><span class="pre">MPFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.MPFit.solve"><code class="docutils literal notranslate"><span class="pre">MPFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.MonitorRunner"><code class="docutils literal notranslate"><span class="pre">MonitorRunner</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.MultiStart"><code class="docutils literal notranslate"><span class="pre">MultiStart</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.MultiStart.name"><code class="docutils literal notranslate"><span class="pre">MultiStart.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.MultiStart.settings"><code class="docutils literal notranslate"><span class="pre">MultiStart.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.MultiStart.solve"><code class="docutils literal notranslate"><span class="pre">MultiStart.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.PSFit"><code class="docutils literal notranslate"><span class="pre">PSFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.PSFit.id"><code class="docutils literal notranslate"><span class="pre">PSFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.PSFit.name"><code class="docutils literal notranslate"><span class="pre">PSFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.PSFit.settings"><code class="docutils literal notranslate"><span class="pre">PSFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.PSFit.solve"><code class="docutils literal notranslate"><span class="pre">PSFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.PTFit"><code class="docutils literal notranslate"><span class="pre">PTFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.PTFit.id"><code class="docutils literal notranslate"><span class="pre">PTFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.PTFit.name"><code class="docutils literal notranslate"><span class="pre">PTFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.PTFit.settings"><code class="docutils literal notranslate"><span class="pre">PTFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.PTFit.solve"><code class="docutils literal notranslate"><span class="pre">PTFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.RLFit"><code class="docutils literal notranslate"><span class="pre">RLFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.RLFit.id"><code class="docutils literal notranslate"><span class="pre">RLFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.RLFit.name"><code class="docutils literal notranslate"><span class="pre">RLFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.RLFit.settings"><code class="docutils literal notranslate"><span class="pre">RLFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.RLFit.solve"><code class="docutils literal notranslate"><span class="pre">RLFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.Resampler"><code class="docutils literal notranslate"><span class="pre">Resampler</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.Resampler.solve"><code class="docutils literal notranslate"><span class="pre">Resampler.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.SimplexFit"><code class="docutils literal notranslate"><span class="pre">SimplexFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.SimplexFit.id"><code class="docutils literal notranslate"><span class="pre">SimplexFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.SimplexFit.name"><code class="docutils literal notranslate"><span class="pre">SimplexFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.SimplexFit.settings"><code class="docutils literal notranslate"><span class="pre">SimplexFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.SimplexFit.solve"><code class="docutils literal notranslate"><span class="pre">SimplexFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.SnobFit"><code class="docutils literal notranslate"><span class="pre">SnobFit</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.SnobFit.id"><code class="docutils literal notranslate"><span class="pre">SnobFit.id</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.SnobFit.name"><code class="docutils literal notranslate"><span class="pre">SnobFit.name</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.SnobFit.settings"><code class="docutils literal notranslate"><span class="pre">SnobFit.settings</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.SnobFit.solve"><code class="docutils literal notranslate"><span class="pre">SnobFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.StepMonitor"><code class="docutils literal notranslate"><span class="pre">StepMonitor</span></code></a><ul>
+<li><a class="reference internal" href="#bumps.fitters.StepMonitor.FIELDS"><code class="docutils literal notranslate"><span class="pre">StepMonitor.FIELDS</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.StepMonitor.config_history"><code class="docutils literal notranslate"><span class="pre">StepMonitor.config_history()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bumps.fitters.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.load_history"><code class="docutils literal notranslate"><span class="pre">load_history()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.parse_tolerance"><code class="docutils literal notranslate"><span class="pre">parse_tolerance()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.fitters.save_history"><code class="docutils literal notranslate"><span class="pre">save_history()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="fitservice.html"
+                          title="previous chapter">fitservice - Remote job plugin for fit jobs</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="formatnum.html"
+                          title="next chapter">formatnum - Format numbers and uncertainties</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/fitters.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formatnum.html" title="formatnum - Format numbers and uncertainties"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fitservice.html" title="fitservice - Remote job plugin for fit jobs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference: bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fitters - Wrappers for various optimization algorithms</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps package &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="bumps-package">
+<h1>bumps package<a class="headerlink" href="#bumps-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bumps.dream.html">bumps.dream package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.dream.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.acr.html">bumps.dream.acr module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.acr.html#bumps.dream.acr.ACR"><code class="docutils literal notranslate"><span class="pre">ACR()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.bounds.html">bumps.dream.bounds module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.Bounds"><code class="docutils literal notranslate"><span class="pre">Bounds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.ClipBounds"><code class="docutils literal notranslate"><span class="pre">ClipBounds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.FoldBounds"><code class="docutils literal notranslate"><span class="pre">FoldBounds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.IgnoreBounds"><code class="docutils literal notranslate"><span class="pre">IgnoreBounds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.RandomBounds"><code class="docutils literal notranslate"><span class="pre">RandomBounds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.ReflectBounds"><code class="docutils literal notranslate"><span class="pre">ReflectBounds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.bounds.html#bumps.dream.bounds.make_bounds_handler"><code class="docutils literal notranslate"><span class="pre">make_bounds_handler()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.compiled.html">bumps.dream.compiled module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.convergence.html">bumps.dream.convergence module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.convergence.html#convergence-diagnostics">Convergence diagnostics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.convergence.html#bumps.dream.convergence.burn_point"><code class="docutils literal notranslate"><span class="pre">burn_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.convergence.html#bumps.dream.convergence.ks_converged"><code class="docutils literal notranslate"><span class="pre">ks_converged()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.core.html">bumps.dream.core module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.core.html#bumps.dream.core.Dream"><code class="docutils literal notranslate"><span class="pre">Dream</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.corrplot.html">bumps.dream.corrplot module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.corrplot.html#bumps.dream.corrplot.Corr2d"><code class="docutils literal notranslate"><span class="pre">Corr2d</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.crossover.html">bumps.dream.crossover module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.crossover.html#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.crossover.html#compatibility-notes">Compatibility Notes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.crossover.html#bumps.dream.crossover.AdaptiveCrossover"><code class="docutils literal notranslate"><span class="pre">AdaptiveCrossover</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.crossover.html#bumps.dream.crossover.BaseAdaptiveCrossover"><code class="docutils literal notranslate"><span class="pre">BaseAdaptiveCrossover</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.crossover.html#bumps.dream.crossover.Crossover"><code class="docutils literal notranslate"><span class="pre">Crossover</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.crossover.html#bumps.dream.crossover.LogAdaptiveCrossover"><code class="docutils literal notranslate"><span class="pre">LogAdaptiveCrossover</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.diffev.html">bumps.dream.diffev module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.diffev.html#bumps.dream.diffev.de_step"><code class="docutils literal notranslate"><span class="pre">de_step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.digits.html">bumps.dream.digits module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#significant-digits">Significant digits</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#bumps.dream.digits.FastJackknife"><code class="docutils literal notranslate"><span class="pre">FastJackknife</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#bumps.dream.digits.credible_interval_sd"><code class="docutils literal notranslate"><span class="pre">credible_interval_sd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#bumps.dream.digits.fast_jack"><code class="docutils literal notranslate"><span class="pre">fast_jack()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#bumps.dream.digits.gum_sd"><code class="docutils literal notranslate"><span class="pre">gum_sd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#bumps.dream.digits.jack_sd"><code class="docutils literal notranslate"><span class="pre">jack_sd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.digits.html#bumps.dream.digits.n_dig"><code class="docutils literal notranslate"><span class="pre">n_dig()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.entropy.html">bumps.dream.entropy module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.entropy.html#bumps.dream.entropy.MVNEntropy"><code class="docutils literal notranslate"><span class="pre">MVNEntropy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.entropy.html#bumps.dream.entropy.cov_entropy"><code class="docutils literal notranslate"><span class="pre">cov_entropy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.entropy.html#bumps.dream.entropy.entropy"><code class="docutils literal notranslate"><span class="pre">entropy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.entropy.html#bumps.dream.entropy.gmm_entropy"><code class="docutils literal notranslate"><span class="pre">gmm_entropy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.entropy.html#bumps.dream.entropy.wnn_entropy"><code class="docutils literal notranslate"><span class="pre">wnn_entropy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.exppow.html">bumps.dream.exppow module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.exppow.html#bumps.dream.exppow.exppow_pars"><code class="docutils literal notranslate"><span class="pre">exppow_pars()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.formatnum.html">bumps.dream.formatnum module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.formatnum.html#bumps.dream.formatnum.format_uncertainty"><code class="docutils literal notranslate"><span class="pre">format_uncertainty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.formatnum.html#bumps.dream.formatnum.format_uncertainty_compact"><code class="docutils literal notranslate"><span class="pre">format_uncertainty_compact()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.formatnum.html#bumps.dream.formatnum.format_uncertainty_pm"><code class="docutils literal notranslate"><span class="pre">format_uncertainty_pm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.formatnum.html#bumps.dream.formatnum.format_value"><code class="docutils literal notranslate"><span class="pre">format_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.gelman.html">bumps.dream.gelman module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.gelman.html#bumps.dream.gelman.gelman"><code class="docutils literal notranslate"><span class="pre">gelman()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.geweke.html">bumps.dream.geweke module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.geweke.html#bumps.dream.geweke.geweke"><code class="docutils literal notranslate"><span class="pre">geweke()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.initpop.html">bumps.dream.initpop module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.initpop.html#bumps.dream.initpop.cov_init"><code class="docutils literal notranslate"><span class="pre">cov_init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.initpop.html#bumps.dream.initpop.lhs_init"><code class="docutils literal notranslate"><span class="pre">lhs_init()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.ksmirnov.html">bumps.dream.ksmirnov module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.ksmirnov.html#bumps.dream.ksmirnov.ksmirnov"><code class="docutils literal notranslate"><span class="pre">ksmirnov()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.mahal.html">bumps.dream.mahal module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.mahal.html#bumps.dream.mahal.mahalanobis"><code class="docutils literal notranslate"><span class="pre">mahalanobis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.matlab.html">bumps.dream.matlab module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#ipython-usage">IPython usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#command-line-usage">Command line usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#script-usage">Script usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#bumps.dream.matlab.dream"><code class="docutils literal notranslate"><span class="pre">dream()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#bumps.dream.matlab.setup"><code class="docutils literal notranslate"><span class="pre">setup()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.matlab.html#bumps.dream.matlab.struct"><code class="docutils literal notranslate"><span class="pre">struct</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.metropolis.html">bumps.dream.metropolis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.metropolis.html#bumps.dream.metropolis.metropolis"><code class="docutils literal notranslate"><span class="pre">metropolis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.metropolis.html#bumps.dream.metropolis.metropolis_dr"><code class="docutils literal notranslate"><span class="pre">metropolis_dr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.model.html">bumps.dream.model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#compatibility-with-matlab-dream">Compatibility with matlab DREAM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#bumps.dream.model.Density"><code class="docutils literal notranslate"><span class="pre">Density</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#bumps.dream.model.LogDensity"><code class="docutils literal notranslate"><span class="pre">LogDensity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#bumps.dream.model.MCMCModel"><code class="docutils literal notranslate"><span class="pre">MCMCModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#bumps.dream.model.MVNormal"><code class="docutils literal notranslate"><span class="pre">MVNormal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#bumps.dream.model.Mixture"><code class="docutils literal notranslate"><span class="pre">Mixture</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.model.html#bumps.dream.model.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.outliers.html">bumps.dream.outliers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.outliers.html#bumps.dream.outliers.identify_outliers"><code class="docutils literal notranslate"><span class="pre">identify_outliers()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.parcoord.html">bumps.dream.parcoord module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.parcoord.html#bumps.dream.parcoord.best_in_bin"><code class="docutils literal notranslate"><span class="pre">best_in_bin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.parcoord.html#bumps.dream.parcoord.parallel_coordinates"><code class="docutils literal notranslate"><span class="pre">parallel_coordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.parcoord.html#bumps.dream.parcoord.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.parcoord.html#bumps.dream.parcoord.scale"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.state.html">bumps.dream.state module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.state.html#bumps.dream.state.MCMCDraw"><code class="docutils literal notranslate"><span class="pre">MCMCDraw</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.state.html#bumps.dream.state.load_state"><code class="docutils literal notranslate"><span class="pre">load_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.state.html#bumps.dream.state.save_state"><code class="docutils literal notranslate"><span class="pre">save_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.stats.html">bumps.dream.stats module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.VarStats"><code class="docutils literal notranslate"><span class="pre">VarStats</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.credible_interval"><code class="docutils literal notranslate"><span class="pre">credible_interval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.format_vars"><code class="docutils literal notranslate"><span class="pre">format_vars()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.parse_var"><code class="docutils literal notranslate"><span class="pre">parse_var()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.shortest_credible_interval"><code class="docutils literal notranslate"><span class="pre">shortest_credible_interval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.stats"><code class="docutils literal notranslate"><span class="pre">stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.stats.html#bumps.dream.stats.var_stats"><code class="docutils literal notranslate"><span class="pre">var_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.tile.html">bumps.dream.tile module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.tile.html#bumps.dream.tile.max_tile_size"><code class="docutils literal notranslate"><span class="pre">max_tile_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.util.html">bumps.dream.util module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.util.html#bumps.dream.util.console"><code class="docutils literal notranslate"><span class="pre">console()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.util.html#bumps.dream.util.draw"><code class="docutils literal notranslate"><span class="pre">draw()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.varplot.html">bumps.dream.varplot module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.varplot.html#bumps.dream.varplot.plot_var"><code class="docutils literal notranslate"><span class="pre">plot_var()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.varplot.html#bumps.dream.varplot.plot_vars"><code class="docutils literal notranslate"><span class="pre">plot_vars()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.varplot.html#bumps.dream.varplot.var_plot_size"><code class="docutils literal notranslate"><span class="pre">var_plot_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.views.html">bumps.dream.views module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.views.html#bumps.dream.views.format_vars"><code class="docutils literal notranslate"><span class="pre">format_vars()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.views.html#bumps.dream.views.plot_all"><code class="docutils literal notranslate"><span class="pre">plot_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.views.html#bumps.dream.views.plot_corr"><code class="docutils literal notranslate"><span class="pre">plot_corr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.views.html#bumps.dream.views.plot_corrmatrix"><code class="docutils literal notranslate"><span class="pre">plot_corrmatrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.views.html#bumps.dream.views.plot_logp"><code class="docutils literal notranslate"><span class="pre">plot_logp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.views.html#bumps.dream.views.plot_trace"><code class="docutils literal notranslate"><span class="pre">plot_trace()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.walk.html">bumps.dream.walk module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.dream.walk.html#bumps.dream.walk.walk"><code class="docutils literal notranslate"><span class="pre">walk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.dream.html#module-bumps.dream">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.dream.html#notes-on-random-numbers">Notes on random numbers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.gui.html">bumps.gui package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.gui.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.resources.html">bumps.gui.resources package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.gui.resources.html#module-bumps.gui.resources">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.gui.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.about.html">bumps.gui.about module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.app_frame.html">bumps.gui.app_frame module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.app_panel.html">bumps.gui.app_panel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.console.html">bumps.gui.console module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.convergence_view.html">bumps.gui.convergence_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.data_view.html">bumps.gui.data_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.fit_dialog.html">bumps.gui.fit_dialog module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.fit_thread.html">bumps.gui.fit_thread module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.fit_view.html">bumps.gui.fit_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.gui_app.html">bumps.gui.gui_app module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.input_list.html">bumps.gui.input_list module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.log_view.html">bumps.gui.log_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.parameter_view.html">bumps.gui.parameter_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.plot_view.html">bumps.gui.plot_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.resfiles.html">bumps.gui.resfiles module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.gui.resfiles.html#package-data-files">Package data files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.gui.resfiles.html#bumps.gui.resfiles.Resources"><code class="docutils literal notranslate"><span class="pre">Resources</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.signal.html">bumps.gui.signal module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.summary_view.html">bumps.gui.summary_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.uncertainty_view.html">bumps.gui.uncertainty_view module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.util.html">bumps.gui.util module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.gui.utilities.html">bumps.gui.utilities module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.gui.html#module-bumps.gui">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.mystic.html">bumps.mystic package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mystic.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mystic.examples.html">bumps.mystic.examples package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.examples.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.examples.html#module-bumps.mystic.examples">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mystic.optimizer.html">bumps.mystic.optimizer package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.optimizer.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.optimizer.html#module-bumps.mystic.optimizer">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mystic.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mystic.condition.html">bumps.mystic.condition module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.And"><code class="docutils literal notranslate"><span class="pre">And</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Not"><code class="docutils literal notranslate"><span class="pre">Not</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Or"><code class="docutils literal notranslate"><span class="pre">Or</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.condition.html#bumps.mystic.condition.Xor"><code class="docutils literal notranslate"><span class="pre">Xor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mystic.solver.html">bumps.mystic.solver module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.solver.html#history-traces">History traces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.solver.html#bumps.mystic.solver.Minimizer"><code class="docutils literal notranslate"><span class="pre">Minimizer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.solver.html#bumps.mystic.solver.Strategy"><code class="docutils literal notranslate"><span class="pre">Strategy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.solver.html#bumps.mystic.solver.cpu_time"><code class="docutils literal notranslate"><span class="pre">cpu_time()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.solver.html#bumps.mystic.solver.default_mapper"><code class="docutils literal notranslate"><span class="pre">default_mapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mystic.stop.html">bumps.mystic.stop module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#predefined-conditions">Predefined Conditions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.CPU"><code class="docutils literal notranslate"><span class="pre">CPU</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Calls"><code class="docutils literal notranslate"><span class="pre">Calls</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Cf"><code class="docutils literal notranslate"><span class="pre">Cf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Cx"><code class="docutils literal notranslate"><span class="pre">Cx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Df"><code class="docutils literal notranslate"><span class="pre">Df</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Dx"><code class="docutils literal notranslate"><span class="pre">Dx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Grad"><code class="docutils literal notranslate"><span class="pre">Grad</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Rf"><code class="docutils literal notranslate"><span class="pre">Rf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Rx"><code class="docutils literal notranslate"><span class="pre">Rx</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Steps"><code class="docutils literal notranslate"><span class="pre">Steps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Time"><code class="docutils literal notranslate"><span class="pre">Time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.Worse"><code class="docutils literal notranslate"><span class="pre">Worse</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.norm_1"><code class="docutils literal notranslate"><span class="pre">norm_1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.norm_2"><code class="docutils literal notranslate"><span class="pre">norm_2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.norm_inf"><code class="docutils literal notranslate"><span class="pre">norm_inf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.norm_min"><code class="docutils literal notranslate"><span class="pre">norm_min()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.norm_p"><code class="docutils literal notranslate"><span class="pre">norm_p()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.parse_condition"><code class="docutils literal notranslate"><span class="pre">parse_condition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.r_best"><code class="docutils literal notranslate"><span class="pre">r_best</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.r_boundingbox"><code class="docutils literal notranslate"><span class="pre">r_boundingbox()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.r_centroid"><code class="docutils literal notranslate"><span class="pre">r_centroid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.stop.html#bumps.mystic.stop.r_hull"><code class="docutils literal notranslate"><span class="pre">r_hull</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mystic.util.html">bumps.mystic.util module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.util.html#bumps.mystic.util.choose_without_replacement"><code class="docutils literal notranslate"><span class="pre">choose_without_replacement()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.util.html#bumps.mystic.util.countunique"><code class="docutils literal notranslate"><span class="pre">countunique()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.util.html#bumps.mystic.util.runlength"><code class="docutils literal notranslate"><span class="pre">runlength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="bumps.mystic.util.html#bumps.mystic.util.zscore"><code class="docutils literal notranslate"><span class="pre">zscore()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mystic.html#module-bumps.mystic">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bumps.bounds.html">bumps.bounds module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded"><code class="docutils literal notranslate"><span class="pre">Bounded</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.get01"><code class="docutils literal notranslate"><span class="pre">Bounded.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.getfull"><code class="docutils literal notranslate"><span class="pre">Bounded.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.nllf"><code class="docutils literal notranslate"><span class="pre">Bounded.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.put01"><code class="docutils literal notranslate"><span class="pre">Bounded.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.putfull"><code class="docutils literal notranslate"><span class="pre">Bounded.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.random"><code class="docutils literal notranslate"><span class="pre">Bounded.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounded.residual"><code class="docutils literal notranslate"><span class="pre">Bounded.residual()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove"><code class="docutils literal notranslate"><span class="pre">BoundedAbove</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.get01"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.getfull"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.nllf"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.put01"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.putfull"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.random"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.residual"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.residual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedAbove.start_value"><code class="docutils literal notranslate"><span class="pre">BoundedAbove.start_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow"><code class="docutils literal notranslate"><span class="pre">BoundedBelow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.get01"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.getfull"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.nllf"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.put01"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.putfull"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.random"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.residual"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.residual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedBelow.start_value"><code class="docutils literal notranslate"><span class="pre">BoundedBelow.start_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal"><code class="docutils literal notranslate"><span class="pre">BoundedNormal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.get01"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.getfull"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.nllf"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.put01"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.putfull"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.random"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.residual"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.residual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.BoundedNormal.start_value"><code class="docutils literal notranslate"><span class="pre">BoundedNormal.start_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds"><code class="docutils literal notranslate"><span class="pre">Bounds</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.get01"><code class="docutils literal notranslate"><span class="pre">Bounds.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.getfull"><code class="docutils literal notranslate"><span class="pre">Bounds.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.limits"><code class="docutils literal notranslate"><span class="pre">Bounds.limits</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.nllf"><code class="docutils literal notranslate"><span class="pre">Bounds.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.put01"><code class="docutils literal notranslate"><span class="pre">Bounds.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.putfull"><code class="docutils literal notranslate"><span class="pre">Bounds.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.random"><code class="docutils literal notranslate"><span class="pre">Bounds.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.residual"><code class="docutils literal notranslate"><span class="pre">Bounds.residual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.start_value"><code class="docutils literal notranslate"><span class="pre">Bounds.start_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Bounds.to_dict"><code class="docutils literal notranslate"><span class="pre">Bounds.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution"><code class="docutils literal notranslate"><span class="pre">Distribution</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.get01"><code class="docutils literal notranslate"><span class="pre">Distribution.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.getfull"><code class="docutils literal notranslate"><span class="pre">Distribution.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.nllf"><code class="docutils literal notranslate"><span class="pre">Distribution.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.put01"><code class="docutils literal notranslate"><span class="pre">Distribution.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.putfull"><code class="docutils literal notranslate"><span class="pre">Distribution.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.random"><code class="docutils literal notranslate"><span class="pre">Distribution.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.residual"><code class="docutils literal notranslate"><span class="pre">Distribution.residual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Distribution.to_dict"><code class="docutils literal notranslate"><span class="pre">Distribution.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Normal"><code class="docutils literal notranslate"><span class="pre">Normal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Normal.nllf"><code class="docutils literal notranslate"><span class="pre">Normal.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Normal.residual"><code class="docutils literal notranslate"><span class="pre">Normal.residual()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded"><code class="docutils literal notranslate"><span class="pre">SoftBounded</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.get01"><code class="docutils literal notranslate"><span class="pre">SoftBounded.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.getfull"><code class="docutils literal notranslate"><span class="pre">SoftBounded.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.nllf"><code class="docutils literal notranslate"><span class="pre">SoftBounded.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.put01"><code class="docutils literal notranslate"><span class="pre">SoftBounded.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.putfull"><code class="docutils literal notranslate"><span class="pre">SoftBounded.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.random"><code class="docutils literal notranslate"><span class="pre">SoftBounded.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.SoftBounded.residual"><code class="docutils literal notranslate"><span class="pre">SoftBounded.residual()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded"><code class="docutils literal notranslate"><span class="pre">Unbounded</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.get01"><code class="docutils literal notranslate"><span class="pre">Unbounded.get01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.getfull"><code class="docutils literal notranslate"><span class="pre">Unbounded.getfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.nllf"><code class="docutils literal notranslate"><span class="pre">Unbounded.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.put01"><code class="docutils literal notranslate"><span class="pre">Unbounded.put01()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.putfull"><code class="docutils literal notranslate"><span class="pre">Unbounded.putfull()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.random"><code class="docutils literal notranslate"><span class="pre">Unbounded.random()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.Unbounded.residual"><code class="docutils literal notranslate"><span class="pre">Unbounded.residual()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.init_bounds"><code class="docutils literal notranslate"><span class="pre">init_bounds()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.nice_range"><code class="docutils literal notranslate"><span class="pre">nice_range()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.pm"><code class="docutils literal notranslate"><span class="pre">pm()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.pm_raw"><code class="docutils literal notranslate"><span class="pre">pm_raw()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.pmp"><code class="docutils literal notranslate"><span class="pre">pmp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bounds.html#bumps.bounds.pmp_raw"><code class="docutils literal notranslate"><span class="pre">pmp_raw()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.bspline.html">bumps.bspline module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bspline.html#bumps.bspline.bspline"><code class="docutils literal notranslate"><span class="pre">bspline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.bspline.html#bumps.bspline.pbs"><code class="docutils literal notranslate"><span class="pre">pbs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.cheby.html">bumps.cheby module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cheby.html#bumps.cheby.cheby_approx"><code class="docutils literal notranslate"><span class="pre">cheby_approx()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cheby.html#bumps.cheby.cheby_coeff"><code class="docutils literal notranslate"><span class="pre">cheby_coeff()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cheby.html#bumps.cheby.cheby_points"><code class="docutils literal notranslate"><span class="pre">cheby_points()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cheby.html#bumps.cheby.cheby_val"><code class="docutils literal notranslate"><span class="pre">cheby_val()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cheby.html#bumps.cheby.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.cli.html">bumps.cli module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.config_matplotlib"><code class="docutils literal notranslate"><span class="pre">config_matplotlib()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.install_plugin"><code class="docutils literal notranslate"><span class="pre">install_plugin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.load_best"><code class="docutils literal notranslate"><span class="pre">load_best()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.load_model"><code class="docutils literal notranslate"><span class="pre">load_model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.preview"><code class="docutils literal notranslate"><span class="pre">preview()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.resynth"><code class="docutils literal notranslate"><span class="pre">resynth()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.save_best"><code class="docutils literal notranslate"><span class="pre">save_best()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.cli.html#bumps.cli.set_mplconfig"><code class="docutils literal notranslate"><span class="pre">set_mplconfig()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.curve.html">bumps.curve module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.curve.html#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve"><code class="docutils literal notranslate"><span class="pre">Curve</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.nllf"><code class="docutils literal notranslate"><span class="pre">Curve.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.numpoints"><code class="docutils literal notranslate"><span class="pre">Curve.numpoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.parameters"><code class="docutils literal notranslate"><span class="pre">Curve.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.plot"><code class="docutils literal notranslate"><span class="pre">Curve.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.residuals"><code class="docutils literal notranslate"><span class="pre">Curve.residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.save"><code class="docutils literal notranslate"><span class="pre">Curve.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.simulate_data"><code class="docutils literal notranslate"><span class="pre">Curve.simulate_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.theory"><code class="docutils literal notranslate"><span class="pre">Curve.theory()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.Curve.update"><code class="docutils literal notranslate"><span class="pre">Curve.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.curve.html#bumps.curve.PoissonCurve"><code class="docutils literal notranslate"><span class="pre">PoissonCurve</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.PoissonCurve.nllf"><code class="docutils literal notranslate"><span class="pre">PoissonCurve.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.curve.html#bumps.curve.PoissonCurve.simulate_data"><code class="docutils literal notranslate"><span class="pre">PoissonCurve.simulate_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.curve.html#bumps.curve.plot_err"><code class="docutils literal notranslate"><span class="pre">plot_err()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.data.html">bumps.data module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.data.html#bumps.data.indfloat"><code class="docutils literal notranslate"><span class="pre">indfloat()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.data.html#bumps.data.parse_file"><code class="docutils literal notranslate"><span class="pre">parse_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.errplot.html">bumps.errplot module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.errplot.html#bumps.errplot.calc_errors"><code class="docutils literal notranslate"><span class="pre">calc_errors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.errplot.html#bumps.errplot.calc_errors_from_state"><code class="docutils literal notranslate"><span class="pre">calc_errors_from_state()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.errplot.html#bumps.errplot.reload_errors"><code class="docutils literal notranslate"><span class="pre">reload_errors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.errplot.html#bumps.errplot.show_errors"><code class="docutils literal notranslate"><span class="pre">show_errors()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.fitproblem.html">bumps.fitproblem module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.bounds"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.bounds()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.chisq"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.chisq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.chisq_str"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.chisq_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.constraints_nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.constraints_nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.cov"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.cov()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.getp"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.getp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.has_residuals"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.has_residuals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.labels"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_parameters"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_points"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_reset"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_reset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.model_update"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.model_update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.parameter_nllf"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.parameter_nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.parameter_residuals"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.parameter_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.plot"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.randomize"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.randomize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.residuals"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.restore_data"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.restore_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.resynth_data"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.resynth_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.save"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.setp"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.setp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.show"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.show()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.simulate_data"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.simulate_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.stderr"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.stderr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.summarize"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.summarize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.to_dict"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem.valid"><code class="docutils literal notranslate"><span class="pre">BaseFitProblem.valid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.FitProblem"><code class="docutils literal notranslate"><span class="pre">FitProblem()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness"><code class="docutils literal notranslate"><span class="pre">Fitness</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.nllf"><code class="docutils literal notranslate"><span class="pre">Fitness.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.numpoints"><code class="docutils literal notranslate"><span class="pre">Fitness.numpoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.parameters"><code class="docutils literal notranslate"><span class="pre">Fitness.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.plot"><code class="docutils literal notranslate"><span class="pre">Fitness.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.residuals"><code class="docutils literal notranslate"><span class="pre">Fitness.residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.restore_data"><code class="docutils literal notranslate"><span class="pre">Fitness.restore_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.resynth_data"><code class="docutils literal notranslate"><span class="pre">Fitness.resynth_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.save"><code class="docutils literal notranslate"><span class="pre">Fitness.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.to_dict"><code class="docutils literal notranslate"><span class="pre">Fitness.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.Fitness.update"><code class="docutils literal notranslate"><span class="pre">Fitness.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.constraints_nllf"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.constraints_nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.has_residuals"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.has_residuals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_nllf"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_parameters"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_points"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.model_update"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.model_update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.models"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.models</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.plot"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.residuals"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.restore_data"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.restore_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.resynth_data"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.resynth_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.save"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.set_active_model"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.set_active_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.show"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.show()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.simulate_data"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.simulate_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.MultiFitProblem.to_dict"><code class="docutils literal notranslate"><span class="pre">MultiFitProblem.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitproblem.html#bumps.fitproblem.load_problem"><code class="docutils literal notranslate"><span class="pre">load_problem()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.fitservice.html">bumps.fitservice module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitservice.html#bumps.fitservice.ServiceMonitor"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitservice.html#bumps.fitservice.ServiceMonitor.show_improvement"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor.show_improvement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitservice.html#bumps.fitservice.ServiceMonitor.show_progress"><code class="docutils literal notranslate"><span class="pre">ServiceMonitor.show_progress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitservice.html#bumps.fitservice.fitservice"><code class="docutils literal notranslate"><span class="pre">fitservice()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.fitters.html">bumps.fitters module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.BFGSFit"><code class="docutils literal notranslate"><span class="pre">BFGSFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.BFGSFit.id"><code class="docutils literal notranslate"><span class="pre">BFGSFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.BFGSFit.name"><code class="docutils literal notranslate"><span class="pre">BFGSFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.BFGSFit.settings"><code class="docutils literal notranslate"><span class="pre">BFGSFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.BFGSFit.solve"><code class="docutils literal notranslate"><span class="pre">BFGSFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.CheckpointMonitor"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.CheckpointMonitor.checkpoint"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.checkpoint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.CheckpointMonitor.show_improvement"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.show_improvement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.CheckpointMonitor.show_progress"><code class="docutils literal notranslate"><span class="pre">CheckpointMonitor.show_progress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.ConsoleMonitor"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.ConsoleMonitor.show_improvement"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor.show_improvement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.ConsoleMonitor.show_progress"><code class="docutils literal notranslate"><span class="pre">ConsoleMonitor.show_progress()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit"><code class="docutils literal notranslate"><span class="pre">DEFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit.id"><code class="docutils literal notranslate"><span class="pre">DEFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit.load"><code class="docutils literal notranslate"><span class="pre">DEFit.load()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit.name"><code class="docutils literal notranslate"><span class="pre">DEFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit.save"><code class="docutils literal notranslate"><span class="pre">DEFit.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit.settings"><code class="docutils literal notranslate"><span class="pre">DEFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DEFit.solve"><code class="docutils literal notranslate"><span class="pre">DEFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit"><code class="docutils literal notranslate"><span class="pre">DreamFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.entropy"><code class="docutils literal notranslate"><span class="pre">DreamFit.entropy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.error_plot"><code class="docutils literal notranslate"><span class="pre">DreamFit.error_plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.id"><code class="docutils literal notranslate"><span class="pre">DreamFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.load"><code class="docutils literal notranslate"><span class="pre">DreamFit.load()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.name"><code class="docutils literal notranslate"><span class="pre">DreamFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.plot"><code class="docutils literal notranslate"><span class="pre">DreamFit.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.save"><code class="docutils literal notranslate"><span class="pre">DreamFit.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.settings"><code class="docutils literal notranslate"><span class="pre">DreamFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.show"><code class="docutils literal notranslate"><span class="pre">DreamFit.show()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.solve"><code class="docutils literal notranslate"><span class="pre">DreamFit.solve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamFit.stderr"><code class="docutils literal notranslate"><span class="pre">DreamFit.stderr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamModel"><code class="docutils literal notranslate"><span class="pre">DreamModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamModel.log_density"><code class="docutils literal notranslate"><span class="pre">DreamModel.log_density()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamModel.map"><code class="docutils literal notranslate"><span class="pre">DreamModel.map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.DreamModel.nllf"><code class="docutils literal notranslate"><span class="pre">DreamModel.nllf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitBase"><code class="docutils literal notranslate"><span class="pre">FitBase</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitBase.solve"><code class="docutils literal notranslate"><span class="pre">FitBase.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver"><code class="docutils literal notranslate"><span class="pre">FitDriver</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.chisq"><code class="docutils literal notranslate"><span class="pre">FitDriver.chisq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.clip"><code class="docutils literal notranslate"><span class="pre">FitDriver.clip()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.cov"><code class="docutils literal notranslate"><span class="pre">FitDriver.cov()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.entropy"><code class="docutils literal notranslate"><span class="pre">FitDriver.entropy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.fit"><code class="docutils literal notranslate"><span class="pre">FitDriver.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.load"><code class="docutils literal notranslate"><span class="pre">FitDriver.load()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.plot"><code class="docutils literal notranslate"><span class="pre">FitDriver.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.save"><code class="docutils literal notranslate"><span class="pre">FitDriver.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.show"><code class="docutils literal notranslate"><span class="pre">FitDriver.show()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.show_cov"><code class="docutils literal notranslate"><span class="pre">FitDriver.show_cov()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.show_entropy"><code class="docutils literal notranslate"><span class="pre">FitDriver.show_entropy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.show_err"><code class="docutils literal notranslate"><span class="pre">FitDriver.show_err()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.stderr"><code class="docutils literal notranslate"><span class="pre">FitDriver.stderr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.FitDriver.stderr_from_cov"><code class="docutils literal notranslate"><span class="pre">FitDriver.stderr_from_cov()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit.cov"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.cov()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit.id"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit.name"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit.settings"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.LevenbergMarquardtFit.solve"><code class="docutils literal notranslate"><span class="pre">LevenbergMarquardtFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MPFit"><code class="docutils literal notranslate"><span class="pre">MPFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MPFit.id"><code class="docutils literal notranslate"><span class="pre">MPFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MPFit.name"><code class="docutils literal notranslate"><span class="pre">MPFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MPFit.settings"><code class="docutils literal notranslate"><span class="pre">MPFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MPFit.solve"><code class="docutils literal notranslate"><span class="pre">MPFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MonitorRunner"><code class="docutils literal notranslate"><span class="pre">MonitorRunner</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MultiStart"><code class="docutils literal notranslate"><span class="pre">MultiStart</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MultiStart.name"><code class="docutils literal notranslate"><span class="pre">MultiStart.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MultiStart.settings"><code class="docutils literal notranslate"><span class="pre">MultiStart.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.MultiStart.solve"><code class="docutils literal notranslate"><span class="pre">MultiStart.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PSFit"><code class="docutils literal notranslate"><span class="pre">PSFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PSFit.id"><code class="docutils literal notranslate"><span class="pre">PSFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PSFit.name"><code class="docutils literal notranslate"><span class="pre">PSFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PSFit.settings"><code class="docutils literal notranslate"><span class="pre">PSFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PSFit.solve"><code class="docutils literal notranslate"><span class="pre">PSFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PTFit"><code class="docutils literal notranslate"><span class="pre">PTFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PTFit.id"><code class="docutils literal notranslate"><span class="pre">PTFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PTFit.name"><code class="docutils literal notranslate"><span class="pre">PTFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PTFit.settings"><code class="docutils literal notranslate"><span class="pre">PTFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.PTFit.solve"><code class="docutils literal notranslate"><span class="pre">PTFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.RLFit"><code class="docutils literal notranslate"><span class="pre">RLFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.RLFit.id"><code class="docutils literal notranslate"><span class="pre">RLFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.RLFit.name"><code class="docutils literal notranslate"><span class="pre">RLFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.RLFit.settings"><code class="docutils literal notranslate"><span class="pre">RLFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.RLFit.solve"><code class="docutils literal notranslate"><span class="pre">RLFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.Resampler"><code class="docutils literal notranslate"><span class="pre">Resampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.Resampler.solve"><code class="docutils literal notranslate"><span class="pre">Resampler.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SimplexFit"><code class="docutils literal notranslate"><span class="pre">SimplexFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SimplexFit.id"><code class="docutils literal notranslate"><span class="pre">SimplexFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SimplexFit.name"><code class="docutils literal notranslate"><span class="pre">SimplexFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SimplexFit.settings"><code class="docutils literal notranslate"><span class="pre">SimplexFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SimplexFit.solve"><code class="docutils literal notranslate"><span class="pre">SimplexFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SnobFit"><code class="docutils literal notranslate"><span class="pre">SnobFit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SnobFit.id"><code class="docutils literal notranslate"><span class="pre">SnobFit.id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SnobFit.name"><code class="docutils literal notranslate"><span class="pre">SnobFit.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SnobFit.settings"><code class="docutils literal notranslate"><span class="pre">SnobFit.settings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.SnobFit.solve"><code class="docutils literal notranslate"><span class="pre">SnobFit.solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.StepMonitor"><code class="docutils literal notranslate"><span class="pre">StepMonitor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.StepMonitor.FIELDS"><code class="docutils literal notranslate"><span class="pre">StepMonitor.FIELDS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.StepMonitor.config_history"><code class="docutils literal notranslate"><span class="pre">StepMonitor.config_history()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.load_history"><code class="docutils literal notranslate"><span class="pre">load_history()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.parse_tolerance"><code class="docutils literal notranslate"><span class="pre">parse_tolerance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.fitters.html#bumps.fitters.save_history"><code class="docutils literal notranslate"><span class="pre">save_history()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.formatnum.html">bumps.formatnum module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.formatnum.html#bumps.formatnum.format_uncertainty"><code class="docutils literal notranslate"><span class="pre">format_uncertainty()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.formatnum.html#bumps.formatnum.format_uncertainty_compact"><code class="docutils literal notranslate"><span class="pre">format_uncertainty_compact()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.formatnum.html#bumps.formatnum.format_uncertainty_pm"><code class="docutils literal notranslate"><span class="pre">format_uncertainty_pm()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.formatnum.html#bumps.formatnum.format_value"><code class="docutils literal notranslate"><span class="pre">format_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.history.html">bumps.history module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.history.html#bumps.history.History"><code class="docutils literal notranslate"><span class="pre">History</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.accumulate"><code class="docutils literal notranslate"><span class="pre">History.accumulate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.clear"><code class="docutils literal notranslate"><span class="pre">History.clear()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.provides"><code class="docutils literal notranslate"><span class="pre">History.provides()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.requires"><code class="docutils literal notranslate"><span class="pre">History.requires()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.restore"><code class="docutils literal notranslate"><span class="pre">History.restore()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.snapshot"><code class="docutils literal notranslate"><span class="pre">History.snapshot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.History.update"><code class="docutils literal notranslate"><span class="pre">History.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.history.html#bumps.history.Trace"><code class="docutils literal notranslate"><span class="pre">Trace</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.Trace.accumulate"><code class="docutils literal notranslate"><span class="pre">Trace.accumulate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.Trace.put"><code class="docutils literal notranslate"><span class="pre">Trace.put()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.Trace.requires"><code class="docutils literal notranslate"><span class="pre">Trace.requires()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.Trace.restore"><code class="docutils literal notranslate"><span class="pre">Trace.restore()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.history.html#bumps.history.Trace.snapshot"><code class="docutils literal notranslate"><span class="pre">Trace.snapshot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.initpop.html">bumps.initpop module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.initpop.html#bumps.initpop.cov_init"><code class="docutils literal notranslate"><span class="pre">cov_init()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.initpop.html#bumps.initpop.eps_init"><code class="docutils literal notranslate"><span class="pre">eps_init()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.initpop.html#bumps.initpop.generate"><code class="docutils literal notranslate"><span class="pre">generate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.initpop.html#bumps.initpop.lhs_init"><code class="docutils literal notranslate"><span class="pre">lhs_init()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.initpop.html#bumps.initpop.random_init"><code class="docutils literal notranslate"><span class="pre">random_init()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.lsqerror.html">bumps.lsqerror module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.chol_cov"><code class="docutils literal notranslate"><span class="pre">chol_cov()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.chol_stderr"><code class="docutils literal notranslate"><span class="pre">chol_stderr()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.comb"><code class="docutils literal notranslate"><span class="pre">comb()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.corr"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.demo_hessian"><code class="docutils literal notranslate"><span class="pre">demo_hessian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.demo_jacobian"><code class="docutils literal notranslate"><span class="pre">demo_jacobian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.demo_stderr_hilbert"><code class="docutils literal notranslate"><span class="pre">demo_stderr_hilbert()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.demo_stderr_perturbed"><code class="docutils literal notranslate"><span class="pre">demo_stderr_perturbed()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.gradient"><code class="docutils literal notranslate"><span class="pre">gradient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.hessian"><code class="docutils literal notranslate"><span class="pre">hessian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.hessian_cov"><code class="docutils literal notranslate"><span class="pre">hessian_cov()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.hilbert"><code class="docutils literal notranslate"><span class="pre">hilbert()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.hilbertinv"><code class="docutils literal notranslate"><span class="pre">hilbertinv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.jacobian"><code class="docutils literal notranslate"><span class="pre">jacobian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.jacobian_cov"><code class="docutils literal notranslate"><span class="pre">jacobian_cov()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.max_correlation"><code class="docutils literal notranslate"><span class="pre">max_correlation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.perturbed_hessian"><code class="docutils literal notranslate"><span class="pre">perturbed_hessian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.lsqerror.html#bumps.lsqerror.stderr"><code class="docutils literal notranslate"><span class="pre">stderr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.mapper.html">bumps.mapper module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.AMQPMapper"><code class="docutils literal notranslate"><span class="pre">AMQPMapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.AMQPMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">AMQPMapper.start_mapper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.AMQPMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">AMQPMapper.start_worker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.AMQPMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">AMQPMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPIMapper"><code class="docutils literal notranslate"><span class="pre">MPIMapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPIMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">MPIMapper.start_mapper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPIMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">MPIMapper.start_worker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPIMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">MPIMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper"><code class="docutils literal notranslate"><span class="pre">MPMapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.manager"><code class="docutils literal notranslate"><span class="pre">MPMapper.manager</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.namespace"><code class="docutils literal notranslate"><span class="pre">MPMapper.namespace</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.pool"><code class="docutils literal notranslate"><span class="pre">MPMapper.pool</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.problem_id"><code class="docutils literal notranslate"><span class="pre">MPMapper.problem_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">MPMapper.start_mapper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">MPMapper.start_worker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.MPMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">MPMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.SerialMapper"><code class="docutils literal notranslate"><span class="pre">SerialMapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.SerialMapper.start_mapper"><code class="docutils literal notranslate"><span class="pre">SerialMapper.start_mapper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.SerialMapper.start_worker"><code class="docutils literal notranslate"><span class="pre">SerialMapper.start_worker()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.SerialMapper.stop_mapper"><code class="docutils literal notranslate"><span class="pre">SerialMapper.stop_mapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.can_pickle"><code class="docutils literal notranslate"><span class="pre">can_pickle()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.nice"><code class="docutils literal notranslate"><span class="pre">nice()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mapper.html#bumps.mapper.setpriority"><code class="docutils literal notranslate"><span class="pre">setpriority()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.monitor.html">bumps.monitor module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.Logger"><code class="docutils literal notranslate"><span class="pre">Logger</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.Logger.config_history"><code class="docutils literal notranslate"><span class="pre">Logger.config_history()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.Monitor"><code class="docutils literal notranslate"><span class="pre">Monitor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.Monitor.config_history"><code class="docutils literal notranslate"><span class="pre">Monitor.config_history()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.TimedUpdate"><code class="docutils literal notranslate"><span class="pre">TimedUpdate</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.TimedUpdate.config_history"><code class="docutils literal notranslate"><span class="pre">TimedUpdate.config_history()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.TimedUpdate.show_improvement"><code class="docutils literal notranslate"><span class="pre">TimedUpdate.show_improvement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.monitor.html#bumps.monitor.TimedUpdate.show_progress"><code class="docutils literal notranslate"><span class="pre">TimedUpdate.show_progress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.mono.html">bumps.mono module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mono.html#bumps.mono.count_inflections"><code class="docutils literal notranslate"><span class="pre">count_inflections()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mono.html#bumps.mono.hermite"><code class="docutils literal notranslate"><span class="pre">hermite()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mono.html#bumps.mono.monospline"><code class="docutils literal notranslate"><span class="pre">monospline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mono.html#bumps.mono.plot_inflections"><code class="docutils literal notranslate"><span class="pre">plot_inflections()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.mpfit.html">bumps.mpfit module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.machar"><code class="docutils literal notranslate"><span class="pre">machar</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit"><code class="docutils literal notranslate"><span class="pre">mpfit</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.calc_covar"><code class="docutils literal notranslate"><span class="pre">mpfit.calc_covar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.call"><code class="docutils literal notranslate"><span class="pre">mpfit.call()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.defiter"><code class="docutils literal notranslate"><span class="pre">mpfit.defiter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.enorm"><code class="docutils literal notranslate"><span class="pre">mpfit.enorm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.fdjac2"><code class="docutils literal notranslate"><span class="pre">mpfit.fdjac2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.lmpar"><code class="docutils literal notranslate"><span class="pre">mpfit.lmpar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.parinfo"><code class="docutils literal notranslate"><span class="pre">mpfit.parinfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.qrfac"><code class="docutils literal notranslate"><span class="pre">mpfit.qrfac()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.qrsolv"><code class="docutils literal notranslate"><span class="pre">mpfit.qrsolv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.mpfit.html#bumps.mpfit.mpfit.tie"><code class="docutils literal notranslate"><span class="pre">mpfit.tie()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.names.html">bumps.names module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.options.html">bumps.options module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts"><code class="docutils literal notranslate"><span class="pre">BumpsOpts</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.FLAGS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.FLAGS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.IMPLICIT_VALUES"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.IMPLICIT_VALUES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.MINARGS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.MINARGS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.PLOTTERS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.PLOTTERS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.TRANSPORTS"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.TRANSPORTS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.USAGE"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.USAGE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.VALUES"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.VALUES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.alpha"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.checkpoint"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.checkpoint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.entropy"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.entropy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.fit"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.fit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.fit_config"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.fit_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.meshsteps"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.meshsteps</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.noise"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.noise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.notify"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.notify</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.parallel"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.parallel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.pars"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.pars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.plot"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.plot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.queue"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.queue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.resume"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.resume</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.resynth"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.resynth</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.seed"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.starts"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.starts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.store"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.store</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.time"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.transport"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.transport</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.trim"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.trim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.BumpsOpts.view"><code class="docutils literal notranslate"><span class="pre">BumpsOpts.view</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.ChoiceList"><code class="docutils literal notranslate"><span class="pre">ChoiceList</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.FIT_CONFIG"><code class="docutils literal notranslate"><span class="pre">FIT_CONFIG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.FitConfig"><code class="docutils literal notranslate"><span class="pre">FitConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.FitConfig.selected_fitter"><code class="docutils literal notranslate"><span class="pre">FitConfig.selected_fitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.FitConfig.selected_name"><code class="docutils literal notranslate"><span class="pre">FitConfig.selected_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.FitConfig.selected_values"><code class="docutils literal notranslate"><span class="pre">FitConfig.selected_values</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.FitConfig.set_from_cli"><code class="docutils literal notranslate"><span class="pre">FitConfig.set_from_cli()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.ParseOpts"><code class="docutils literal notranslate"><span class="pre">ParseOpts</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.ParseOpts.FLAGS"><code class="docutils literal notranslate"><span class="pre">ParseOpts.FLAGS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.ParseOpts.IMPLICIT_VALUES"><code class="docutils literal notranslate"><span class="pre">ParseOpts.IMPLICIT_VALUES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.ParseOpts.MINARGS"><code class="docutils literal notranslate"><span class="pre">ParseOpts.MINARGS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.ParseOpts.USAGE"><code class="docutils literal notranslate"><span class="pre">ParseOpts.USAGE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.options.html#bumps.options.ParseOpts.VALUES"><code class="docutils literal notranslate"><span class="pre">ParseOpts.VALUES</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.getopts"><code class="docutils literal notranslate"><span class="pre">getopts()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.parse_int"><code class="docutils literal notranslate"><span class="pre">parse_int()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.options.html#bumps.options.yesno"><code class="docutils literal notranslate"><span class="pre">yesno()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.parameter.html">bumps.parameter module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Alias"><code class="docutils literal notranslate"><span class="pre">Alias</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Alias.parameters"><code class="docutils literal notranslate"><span class="pre">Alias.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Alias.to_dict"><code class="docutils literal notranslate"><span class="pre">Alias.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Alias.update"><code class="docutils literal notranslate"><span class="pre">Alias.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter"><code class="docutils literal notranslate"><span class="pre">BaseParameter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.arccos"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arccos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.arccosh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arccosh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.arcsin"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arcsin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.arcsinh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arcsinh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.arctan"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arctan()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.arctanh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.arctanh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.bounds"><code class="docutils literal notranslate"><span class="pre">BaseParameter.bounds</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.ceil"><code class="docutils literal notranslate"><span class="pre">BaseParameter.ceil()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.cos"><code class="docutils literal notranslate"><span class="pre">BaseParameter.cos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.cosh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.cosh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.degrees"><code class="docutils literal notranslate"><span class="pre">BaseParameter.degrees()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.dev"><code class="docutils literal notranslate"><span class="pre">BaseParameter.dev()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.discrete"><code class="docutils literal notranslate"><span class="pre">BaseParameter.discrete</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.exp"><code class="docutils literal notranslate"><span class="pre">BaseParameter.exp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.expm1"><code class="docutils literal notranslate"><span class="pre">BaseParameter.expm1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.fittable"><code class="docutils literal notranslate"><span class="pre">BaseParameter.fittable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.fixed"><code class="docutils literal notranslate"><span class="pre">BaseParameter.fixed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.floor"><code class="docutils literal notranslate"><span class="pre">BaseParameter.floor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.format"><code class="docutils literal notranslate"><span class="pre">BaseParameter.format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.log"><code class="docutils literal notranslate"><span class="pre">BaseParameter.log()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.log10"><code class="docutils literal notranslate"><span class="pre">BaseParameter.log10()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.log1p"><code class="docutils literal notranslate"><span class="pre">BaseParameter.log1p()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.name"><code class="docutils literal notranslate"><span class="pre">BaseParameter.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.nllf"><code class="docutils literal notranslate"><span class="pre">BaseParameter.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.parameters"><code class="docutils literal notranslate"><span class="pre">BaseParameter.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.pdf"><code class="docutils literal notranslate"><span class="pre">BaseParameter.pdf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.pm"><code class="docutils literal notranslate"><span class="pre">BaseParameter.pm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.pmp"><code class="docutils literal notranslate"><span class="pre">BaseParameter.pmp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.radians"><code class="docutils literal notranslate"><span class="pre">BaseParameter.radians()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.range"><code class="docutils literal notranslate"><span class="pre">BaseParameter.range()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.residual"><code class="docutils literal notranslate"><span class="pre">BaseParameter.residual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.sin"><code class="docutils literal notranslate"><span class="pre">BaseParameter.sin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.sinh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.sinh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.soft_range"><code class="docutils literal notranslate"><span class="pre">BaseParameter.soft_range()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.sqrt"><code class="docutils literal notranslate"><span class="pre">BaseParameter.sqrt()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.tan"><code class="docutils literal notranslate"><span class="pre">BaseParameter.tan()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.tanh"><code class="docutils literal notranslate"><span class="pre">BaseParameter.tanh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.to_dict"><code class="docutils literal notranslate"><span class="pre">BaseParameter.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.trunc"><code class="docutils literal notranslate"><span class="pre">BaseParameter.trunc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.valid"><code class="docutils literal notranslate"><span class="pre">BaseParameter.valid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.BaseParameter.value"><code class="docutils literal notranslate"><span class="pre">BaseParameter.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Constant.fittable"><code class="docutils literal notranslate"><span class="pre">Constant.fittable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Constant.fixed"><code class="docutils literal notranslate"><span class="pre">Constant.fixed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Constant.value"><code class="docutils literal notranslate"><span class="pre">Constant.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.FreeVariables"><code class="docutils literal notranslate"><span class="pre">FreeVariables</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.FreeVariables.get_model"><code class="docutils literal notranslate"><span class="pre">FreeVariables.get_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.FreeVariables.parameters"><code class="docutils literal notranslate"><span class="pre">FreeVariables.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.FreeVariables.set_model"><code class="docutils literal notranslate"><span class="pre">FreeVariables.set_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.FreeVariables.to_dict"><code class="docutils literal notranslate"><span class="pre">FreeVariables.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function"><code class="docutils literal notranslate"><span class="pre">Function</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function.args"><code class="docutils literal notranslate"><span class="pre">Function.args</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function.kw"><code class="docutils literal notranslate"><span class="pre">Function.kw</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function.op"><code class="docutils literal notranslate"><span class="pre">Function.op</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function.parameters"><code class="docutils literal notranslate"><span class="pre">Function.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function.to_dict"><code class="docutils literal notranslate"><span class="pre">Function.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Function.value"><code class="docutils literal notranslate"><span class="pre">Function.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.IntegerParameter"><code class="docutils literal notranslate"><span class="pre">IntegerParameter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.IntegerParameter.discrete"><code class="docutils literal notranslate"><span class="pre">IntegerParameter.discrete</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.IntegerParameter.value"><code class="docutils literal notranslate"><span class="pre">IntegerParameter.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Operator.dvalue"><code class="docutils literal notranslate"><span class="pre">Operator.dvalue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Operator.parameters"><code class="docutils literal notranslate"><span class="pre">Operator.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Operator.to_dict"><code class="docutils literal notranslate"><span class="pre">Operator.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Operator.value"><code class="docutils literal notranslate"><span class="pre">Operator.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter"><code class="docutils literal notranslate"><span class="pre">Parameter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter.clip_set"><code class="docutils literal notranslate"><span class="pre">Parameter.clip_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter.default"><code class="docutils literal notranslate"><span class="pre">Parameter.default()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter.feasible"><code class="docutils literal notranslate"><span class="pre">Parameter.feasible()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter.fittable"><code class="docutils literal notranslate"><span class="pre">Parameter.fittable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter.randomize"><code class="docutils literal notranslate"><span class="pre">Parameter.randomize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Parameter.set"><code class="docutils literal notranslate"><span class="pre">Parameter.set()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet"><code class="docutils literal notranslate"><span class="pre">ParameterSet</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.get_model"><code class="docutils literal notranslate"><span class="pre">ParameterSet.get_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.pm"><code class="docutils literal notranslate"><span class="pre">ParameterSet.pm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.pmp"><code class="docutils literal notranslate"><span class="pre">ParameterSet.pmp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.range"><code class="docutils literal notranslate"><span class="pre">ParameterSet.range()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.set_model"><code class="docutils literal notranslate"><span class="pre">ParameterSet.set_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.to_dict"><code class="docutils literal notranslate"><span class="pre">ParameterSet.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.ParameterSet.values"><code class="docutils literal notranslate"><span class="pre">ParameterSet.values</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Reference"><code class="docutils literal notranslate"><span class="pre">Reference</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Reference.to_dict"><code class="docutils literal notranslate"><span class="pre">Reference.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.Reference.value"><code class="docutils literal notranslate"><span class="pre">Reference.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.acosd"><code class="docutils literal notranslate"><span class="pre">acosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.arccosd"><code class="docutils literal notranslate"><span class="pre">arccosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.arcsind"><code class="docutils literal notranslate"><span class="pre">arcsind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.arctan2d"><code class="docutils literal notranslate"><span class="pre">arctan2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.arctand"><code class="docutils literal notranslate"><span class="pre">arctand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.asind"><code class="docutils literal notranslate"><span class="pre">asind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.atan2d"><code class="docutils literal notranslate"><span class="pre">atan2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.atand"><code class="docutils literal notranslate"><span class="pre">atand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.boxed_function"><code class="docutils literal notranslate"><span class="pre">boxed_function()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.cosd"><code class="docutils literal notranslate"><span class="pre">cosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.current"><code class="docutils literal notranslate"><span class="pre">current()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.fittable"><code class="docutils literal notranslate"><span class="pre">fittable()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.flatten"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.format"><code class="docutils literal notranslate"><span class="pre">format()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.function"><code class="docutils literal notranslate"><span class="pre">function()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.randomize"><code class="docutils literal notranslate"><span class="pre">randomize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.substitute"><code class="docutils literal notranslate"><span class="pre">substitute()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.summarize"><code class="docutils literal notranslate"><span class="pre">summarize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.test_operator"><code class="docutils literal notranslate"><span class="pre">test_operator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.to_dict"><code class="docutils literal notranslate"><span class="pre">to_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.unique"><code class="docutils literal notranslate"><span class="pre">unique()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.parameter.html#bumps.parameter.varying"><code class="docutils literal notranslate"><span class="pre">varying()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.partemp.html">bumps.partemp module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.partemp.html#bumps.partemp.parallel_tempering"><code class="docutils literal notranslate"><span class="pre">parallel_tempering()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.pdfwrapper.html">bumps.pdfwrapper module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem"><code class="docutils literal notranslate"><span class="pre">DirectProblem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.bounds"><code class="docutils literal notranslate"><span class="pre">DirectProblem.bounds()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.chisq"><code class="docutils literal notranslate"><span class="pre">DirectProblem.chisq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.chisq_str"><code class="docutils literal notranslate"><span class="pre">DirectProblem.chisq_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.getp"><code class="docutils literal notranslate"><span class="pre">DirectProblem.getp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.has_residuals"><code class="docutils literal notranslate"><span class="pre">DirectProblem.has_residuals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.labels"><code class="docutils literal notranslate"><span class="pre">DirectProblem.labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.model_parameters"><code class="docutils literal notranslate"><span class="pre">DirectProblem.model_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.model_reset"><code class="docutils literal notranslate"><span class="pre">DirectProblem.model_reset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.model_update"><code class="docutils literal notranslate"><span class="pre">DirectProblem.model_update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.nllf"><code class="docutils literal notranslate"><span class="pre">DirectProblem.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.plot"><code class="docutils literal notranslate"><span class="pre">DirectProblem.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.randomize"><code class="docutils literal notranslate"><span class="pre">DirectProblem.randomize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.setp"><code class="docutils literal notranslate"><span class="pre">DirectProblem.setp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.show"><code class="docutils literal notranslate"><span class="pre">DirectProblem.show()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.DirectProblem.summarize"><code class="docutils literal notranslate"><span class="pre">DirectProblem.summarize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF"><code class="docutils literal notranslate"><span class="pre">PDF</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.chisq"><code class="docutils literal notranslate"><span class="pre">PDF.chisq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.chisq_str"><code class="docutils literal notranslate"><span class="pre">PDF.chisq_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.has_residuals"><code class="docutils literal notranslate"><span class="pre">PDF.has_residuals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.nllf"><code class="docutils literal notranslate"><span class="pre">PDF.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.numpoints"><code class="docutils literal notranslate"><span class="pre">PDF.numpoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.parameters"><code class="docutils literal notranslate"><span class="pre">PDF.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.PDF.plot"><code class="docutils literal notranslate"><span class="pre">PDF.plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF"><code class="docutils literal notranslate"><span class="pre">VectorPDF</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.chisq"><code class="docutils literal notranslate"><span class="pre">VectorPDF.chisq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.chisq_str"><code class="docutils literal notranslate"><span class="pre">VectorPDF.chisq_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.has_residuals"><code class="docutils literal notranslate"><span class="pre">VectorPDF.has_residuals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.nllf"><code class="docutils literal notranslate"><span class="pre">VectorPDF.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.numpoints"><code class="docutils literal notranslate"><span class="pre">VectorPDF.numpoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.parameters"><code class="docutils literal notranslate"><span class="pre">VectorPDF.parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.plot"><code class="docutils literal notranslate"><span class="pre">VectorPDF.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pdfwrapper.html#bumps.pdfwrapper.VectorPDF.residuals"><code class="docutils literal notranslate"><span class="pre">VectorPDF.residuals()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.plotutil.html">bumps.plotutil module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plotutil.html#bumps.plotutil.auto_shift"><code class="docutils literal notranslate"><span class="pre">auto_shift()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plotutil.html#bumps.plotutil.coordinated_colors"><code class="docutils literal notranslate"><span class="pre">coordinated_colors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plotutil.html#bumps.plotutil.dhsv"><code class="docutils literal notranslate"><span class="pre">dhsv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plotutil.html#bumps.plotutil.form_quantiles"><code class="docutils literal notranslate"><span class="pre">form_quantiles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plotutil.html#bumps.plotutil.next_color"><code class="docutils literal notranslate"><span class="pre">next_color()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plotutil.html#bumps.plotutil.plot_quantiles"><code class="docutils literal notranslate"><span class="pre">plot_quantiles()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.plugin.html">bumps.plugin module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plugin.html#bumps.plugin.calc_errors"><code class="docutils literal notranslate"><span class="pre">calc_errors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plugin.html#bumps.plugin.data_view"><code class="docutils literal notranslate"><span class="pre">data_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plugin.html#bumps.plugin.load_model"><code class="docutils literal notranslate"><span class="pre">load_model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plugin.html#bumps.plugin.model_view"><code class="docutils literal notranslate"><span class="pre">model_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plugin.html#bumps.plugin.new_model"><code class="docutils literal notranslate"><span class="pre">new_model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.plugin.html#bumps.plugin.show_errors"><code class="docutils literal notranslate"><span class="pre">show_errors()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.pmath.html">bumps.pmath module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.acos"><code class="docutils literal notranslate"><span class="pre">acos()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.acosd"><code class="docutils literal notranslate"><span class="pre">acosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.acosh"><code class="docutils literal notranslate"><span class="pre">acosh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.asin"><code class="docutils literal notranslate"><span class="pre">asin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.asind"><code class="docutils literal notranslate"><span class="pre">asind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.asinh"><code class="docutils literal notranslate"><span class="pre">asinh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.atan"><code class="docutils literal notranslate"><span class="pre">atan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.atan2"><code class="docutils literal notranslate"><span class="pre">atan2()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.atan2d"><code class="docutils literal notranslate"><span class="pre">atan2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.atand"><code class="docutils literal notranslate"><span class="pre">atand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.atanh"><code class="docutils literal notranslate"><span class="pre">atanh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.cos"><code class="docutils literal notranslate"><span class="pre">cos()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.cosd"><code class="docutils literal notranslate"><span class="pre">cosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.cosh"><code class="docutils literal notranslate"><span class="pre">cosh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.degrees"><code class="docutils literal notranslate"><span class="pre">degrees()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.exp"><code class="docutils literal notranslate"><span class="pre">exp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.log"><code class="docutils literal notranslate"><span class="pre">log()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.log10"><code class="docutils literal notranslate"><span class="pre">log10()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.prod"><code class="docutils literal notranslate"><span class="pre">prod()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.radians"><code class="docutils literal notranslate"><span class="pre">radians()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.sin"><code class="docutils literal notranslate"><span class="pre">sin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.sinh"><code class="docutils literal notranslate"><span class="pre">sinh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.sqrt"><code class="docutils literal notranslate"><span class="pre">sqrt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.sum"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.tan"><code class="docutils literal notranslate"><span class="pre">tan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pmath.html#bumps.pmath.tanh"><code class="docutils literal notranslate"><span class="pre">tanh()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.pymcfit.html">bumps.pymcfit module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem"><code class="docutils literal notranslate"><span class="pre">PyMCProblem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.bounds"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.bounds()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.chisq"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.chisq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.chisq_str"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.chisq_str()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.getp"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.getp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.labels"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.labels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.model_reset"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.model_reset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.nllf"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.nllf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.plot"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.randomize"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.randomize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.setp"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.setp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.show"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.show()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pymcfit.html#bumps.pymcfit.PyMCProblem.summarize"><code class="docutils literal notranslate"><span class="pre">PyMCProblem.summarize()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.pytwalk.html">bumps.pytwalk module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk"><code class="docutils literal notranslate"><span class="pre">pytwalk</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.Ana"><code class="docutils literal notranslate"><span class="pre">pytwalk.Ana()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.GBlowU"><code class="docutils literal notranslate"><span class="pre">pytwalk.GBlowU()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.GHopU"><code class="docutils literal notranslate"><span class="pre">pytwalk.GHopU()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.Hist"><code class="docutils literal notranslate"><span class="pre">pytwalk.Hist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.IAT"><code class="docutils literal notranslate"><span class="pre">pytwalk.IAT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.Run"><code class="docutils literal notranslate"><span class="pre">pytwalk.Run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.RunRWMH"><code class="docutils literal notranslate"><span class="pre">pytwalk.RunRWMH()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.Save"><code class="docutils literal notranslate"><span class="pre">pytwalk.Save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.SimBlow"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimBlow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.SimHop"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimHop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.SimTraverse"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimTraverse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.SimWalk"><code class="docutils literal notranslate"><span class="pre">pytwalk.SimWalk()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.Simbeta"><code class="docutils literal notranslate"><span class="pre">pytwalk.Simbeta()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.TS"><code class="docutils literal notranslate"><span class="pre">pytwalk.TS()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.pytwalk.html#bumps.pytwalk.pytwalk.onemove"><code class="docutils literal notranslate"><span class="pre">pytwalk.onemove()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.quasinewton.html">bumps.quasinewton module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.quasinewton.html#bumps.quasinewton.quasinewton"><code class="docutils literal notranslate"><span class="pre">quasinewton()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.random_lines.html">bumps.random_lines module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.random_lines.html#bumps.random_lines.particle_swarm"><code class="docutils literal notranslate"><span class="pre">particle_swarm()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.random_lines.html#bumps.random_lines.random_lines"><code class="docutils literal notranslate"><span class="pre">random_lines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.simplex.html">bumps.simplex module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.simplex.html#bumps.simplex.simplex"><code class="docutils literal notranslate"><span class="pre">simplex()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.util.html">bumps.util module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.util.html#bumps.util.kbhit"><code class="docutils literal notranslate"><span class="pre">kbhit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.util.html#bumps.util.profile"><code class="docutils literal notranslate"><span class="pre">profile()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.util.html#bumps.util.push_seed"><code class="docutils literal notranslate"><span class="pre">push_seed</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.util.html#bumps.util.pushdir"><code class="docutils literal notranslate"><span class="pre">pushdir</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.util.html#bumps.util.redirect_console"><code class="docutils literal notranslate"><span class="pre">redirect_console</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.vfs.html">bumps.vfs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bumps.wsolve.html">bumps.wsolve module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bumps.wsolve.html#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel"><code class="docutils literal notranslate"><span class="pre">LinearModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.DoF"><code class="docutils literal notranslate"><span class="pre">LinearModel.DoF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.ci"><code class="docutils literal notranslate"><span class="pre">LinearModel.ci()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.cov"><code class="docutils literal notranslate"><span class="pre">LinearModel.cov</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.p"><code class="docutils literal notranslate"><span class="pre">LinearModel.p</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.pi"><code class="docutils literal notranslate"><span class="pre">LinearModel.pi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.rnorm"><code class="docutils literal notranslate"><span class="pre">LinearModel.rnorm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.std"><code class="docutils literal notranslate"><span class="pre">LinearModel.std</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.var"><code class="docutils literal notranslate"><span class="pre">LinearModel.var</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.LinearModel.x"><code class="docutils literal notranslate"><span class="pre">LinearModel.x</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel"><code class="docutils literal notranslate"><span class="pre">PolynomialModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.DoF"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.DoF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.ci"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.ci()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.coeff"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.coeff</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.cov"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.cov</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.degree"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.degree</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.der"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.der()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.origin"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.origin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.p"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.p</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.pi"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.pi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.plot"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.plot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.rnorm"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.rnorm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.std"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.std</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.PolynomialModel.var"><code class="docutils literal notranslate"><span class="pre">PolynomialModel.var</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.wpolyfit"><code class="docutils literal notranslate"><span class="pre">wpolyfit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="bumps.wsolve.html#bumps.wsolve.wsolve"><code class="docutils literal notranslate"><span class="pre">wsolve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-bumps">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-bumps" title="Link to this heading">¶</a></h2>
+<p>Bumps: curve fitter with uncertainty estimation</p>
+<p>This package provides tools for modeling parametric systems in a Bayesian
+context, with routines for finding the maximum likelihood and the
+posterior probability density function.</p>
+<p>A graphical interface allows direct manipulation of the model parameters.</p>
+<p>See <a class="reference external" href="https://bumps.readthedocs.io">https://bumps.readthedocs.io</a> for online manuals.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.data_files">
+<span class="sig-prename descclassname"><span class="pre">bumps.</span></span><span class="sig-name descname"><span class="pre">data_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps.html#data_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.data_files" title="Link to this definition">¶</a></dt>
+<dd><p>Return the data files associated with the package for setup_py2exe.py.</p>
+<p>The format is a list of (directory, [files…]) pairs which can be
+used directly in the py2exe setup script as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setup</span><span class="p">(</span><span class="o">...</span><span class="p">,</span>
+      <span class="n">data_files</span><span class="o">=</span><span class="n">data_files</span><span class="p">(),</span>
+      <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.package_data">
+<span class="sig-prename descclassname"><span class="pre">bumps.</span></span><span class="sig-name descname"><span class="pre">package_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps.html#package_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.package_data" title="Link to this definition">¶</a></dt>
+<dd><p>Return the data files associated with the package for setup.py.</p>
+<p>The format is a dictionary of {‘fully.qualified.module’, [files…]}
+used directly in the setup script as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setup</span><span class="p">(</span><span class="o">...</span><span class="p">,</span>
+      <span class="n">package_data</span><span class="o">=</span><span class="n">package_data</span><span class="p">(),</span>
+      <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-bumps">Module contents</a><ul>
+<li><a class="reference internal" href="#bumps.data_files"><code class="docutils literal notranslate"><span class="pre">data_files()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.package_data"><code class="docutils literal notranslate"><span class="pre">package_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+bumps.dream.acr module
+======================
+
+.. automodule:: bumps.dream.acr
+   :members:
+   :undoc-members:
+   :show-inheritance:

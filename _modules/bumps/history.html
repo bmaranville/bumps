@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.history &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.history</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.history</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is in the public domain</span>
+<span class="c1"># Author: Paul Kienzle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Log of progress through a computation.</span>
+
+<span class="sd">Each cycle through a computation, a process can update its history,</span>
+<span class="sd">adding information about the number of function evaluations, the</span>
+<span class="sd">total time taken, the set of points evaluated and their values, the</span>
+<span class="sd">current best value and so on.  The process can use this history</span>
+<span class="sd">when computing the next set of points to evaluate and when checking</span>
+<span class="sd">if the termination conditions are met.  Any values that may be</span>
+<span class="sd">useful outside the computation, e.g., for logging or for updating</span>
+<span class="sd">the user, should be recorded.  In the ideal case, the history</span>
+<span class="sd">is all that is needed to restart the process in case of a system</span>
+<span class="sd">crash.</span>
+
+<span class="sd">History consists of a set of traces.  The content of the traces</span>
+<span class="sd">themselves is provided by the computation, but various stake holders</span>
+<span class="sd">can use them.  For example, the user may wish to log the set of points</span>
+<span class="sd">that have been evaluated and their values using the system logger</span>
+<span class="sd">and an optimizer may require a certain amount of history to calculate</span>
+<span class="sd">the next set of values.</span>
+
+<span class="sd">New traces are defined using :meth:`History.provides`.  For example,</span>
+<span class="sd">the following adds traces for &#39;value&#39; and &#39;point&#39; to the history, and</span>
+<span class="sd">requires the value on the two previous cycles in order to do its work:</span>
+
+<span class="sd">    &gt;&gt;&gt; from bumps.history import History</span>
+<span class="sd">    &gt;&gt;&gt; h = History(value=2, point=0) # keep two values and zero points</span>
+
+<span class="sd">Initially the history is empty:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(len(h.value))</span>
+<span class="sd">    0</span>
+
+<span class="sd">After three updates we see that only two values are kept.</span>
+
+<span class="sd">    &gt;&gt;&gt; h.update(value=2.6, point=[1,1,1])</span>
+<span class="sd">    &gt;&gt;&gt; h.update(value=1, point=[1,0.5,1])</span>
+<span class="sd">    &gt;&gt;&gt; h.update(value=0.5, point=[1,0.5,0.9])</span>
+<span class="sd">    &gt;&gt;&gt; print(h.value)</span>
+<span class="sd">    Trace value: 0.5, 1</span>
+<span class="sd">    &gt;&gt;&gt; print(len(h.value))</span>
+<span class="sd">    2</span>
+
+<span class="sd">Since the required length of &#39;point&#39; is zero no values are kept:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(h.point[0])</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    IndexError: point has not accumulated enough history</span>
+
+<span class="sd">A history consumer can override this, and require a certain length of a trace.</span>
+<span class="sd">Then future values will be preserved:</span>
+
+<span class="sd">    &gt;&gt;&gt; h.requires(point=1)</span>
+<span class="sd">    &gt;&gt;&gt; h.update(value=0.25, point=[1,0.5,0.92])</span>
+<span class="sd">    &gt;&gt;&gt; print(h.point[0])</span>
+<span class="sd">    [1, 0.5, 0.92]</span>
+
+<span class="sd">Traces are independent of each other. A new trace can be added to the history</span>
+<span class="sd">and updated separately from the existing traces. This can be handy if there</span>
+<span class="sd">are separate sources of history though it may be difficult to keep the in sync.</span>
+<span class="sd">The following adds a &#39;step&#39; to the existing history, initialized to 15, without</span>
+<span class="sd">changing &#39;value&#39; or &#39;point&#39;:</span>
+
+<span class="sd">    &gt;&gt;&gt; h.provides(step=2) # keep two steps</span>
+<span class="sd">    &gt;&gt;&gt; h.update(step=15) # initialize step to 15</span>
+<span class="sd">    &gt;&gt;&gt; print(h.step)</span>
+<span class="sd">    Trace step: 15</span>
+
+<span class="sd">Traces may be used as accumulators, with the delta added to the existing value</span>
+<span class="sd">before being stored in the trace. For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; h.accumulate(step=1)</span>
+<span class="sd">    &gt;&gt;&gt; print(h.step)</span>
+<span class="sd">    Trace step: 16, 15</span>
+
+<span class="sd">Within bumps, history is used by monitors, with bumps.fitters.MonitorRunner</span>
+<span class="sd">managing updates to history and feeding them to the fit progress monitors.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Design questions:</span>
+<span class="c1"># 1. Can optimizer function evaluators add traces?  Can they use traces?</span>
+<span class="c1"># 2. Do we want to support a skip option on traces, so that only every nth</span>
+<span class="c1">#    item is preserved?  This is probably too hard.</span>
+
+
+<div class="viewcode-block" id="History">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History">[docs]</a>
+<span class="k">class</span> <span class="nc">History</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collection of traces.</span>
+
+<span class="sd">    Provided traces can be specified as key word arguments, name=length.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provides</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+<div class="viewcode-block" id="History.provides">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.provides">[docs]</a>
+    <span class="k">def</span> <span class="nf">provides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify additional provided fields.</span>
+
+<span class="sd">        Raises AttributeError if trace is already provided or if the trace</span>
+<span class="sd">        name matches the name of one of the history methods.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Make sure the additional trait is not already provided.</span>
+            <span class="c1"># This test will also catch methods such as provides/requires</span>
+            <span class="c1"># and static properties such as bounds that are set from outside.</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;History already provides &quot;</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_trace</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">mon</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="History.requires">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.requires">[docs]</a>
+    <span class="k">def</span> <span class="nf">requires</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify required fields, and their history length.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mon</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="n">mon</span><span class="o">.</span><span class="n">requires</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;history does not provide &quot;</span> <span class="o">+</span> <span class="n">k</span>
+                                     <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">use one of &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trace_names</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="History.accumulate">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.accumulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extend the given traces with the provided values.  The traced</span>
+<span class="sd">        value will be the old value plus the new value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; is not being traced&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="History.update">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extend the given traces with the provided values.  The traced</span>
+<span class="sd">        values are independent.  Use accumulate if you want to add the</span>
+<span class="sd">        new value to the previous value in the trace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; is not being traced&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="History.clear">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.clear">[docs]</a>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clear history, removing all traces</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_new_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new trace.  We use a factory method here so that</span>
+<span class="sd">        the History subclass can control the kind of trace created.</span>
+<span class="sd">        The returned trace must be a subclass of history.Trace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Trace</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="n">keep</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_traces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">trace</span>
+                <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">Trace</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">_trace_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">traces</span> <span class="o">=</span> <span class="p">[</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">traces</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">traces</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">(),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">cmp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">)</span>
+
+<div class="viewcode-block" id="History.snapshot">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.snapshot">[docs]</a>
+    <span class="k">def</span> <span class="nf">snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a dictionary of traces { &#39;name&#39;:  [v[n], v[n-1], ..., v[0]] }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">trace</span><span class="o">.</span><span class="n">snapshot</span><span class="p">())</span> <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="History.restore">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.History.restore">[docs]</a>
+    <span class="k">def</span> <span class="nf">restore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restore history to the state returned by a call to snapshot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Trace">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.Trace">[docs]</a>
+<span class="k">class</span> <span class="nc">Trace</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Value trace.</span>
+
+<span class="sd">    This is a stack-like object with items inserted at the beginning, and</span>
+<span class="sd">    removed from the end once the maximum length *keep* is reached.</span>
+
+<span class="sd">    len(trace) returns the number of items in the trace</span>
+<span class="sd">    trace[i] returns the ith previous element in the history</span>
+<span class="sd">    trace.requires(n) says how much history to keep</span>
+<span class="sd">    trace.put(value) stores value</span>
+<span class="sd">    trace.accumulate(value) adds value to the previous value before storing</span>
+<span class="sd">    state = trace.snapeshot() returns the values as a stack, most recent last</span>
+<span class="sd">    trace.restore(state) restores a snapshot</span>
+
+<span class="sd">    Note that snapshot/restore uses lists to represent numpy arrays, which</span>
+<span class="sd">    may cause problems if the trace is capturing lists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Implementation note:</span>
+    <span class="c1"># Traces are stored in reverse order because append is faster than insert.</span>
+    <span class="c1"># This detail is hidden from the caller since __getitem__ returns the</span>
+    <span class="c1"># appropriate value.</span>
+    <span class="c1"># TODO: convert to circular buffer unless keeping the full trace</span>
+    <span class="c1"># TODO: use numpy arrays for history</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;trace&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep</span> <span class="o">=</span> <span class="n">keep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+<div class="viewcode-block" id="Trace.requires">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.Trace.requires">[docs]</a>
+    <span class="k">def</span> <span class="nf">requires</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the trace length to be at least n.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Note: never shorten the trace since another algorithm, condition,</span>
+        <span class="c1"># or monitor may require the longer trace.</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keep</span> <span class="o">=</span> <span class="n">n</span></div>
+
+
+<div class="viewcode-block" id="Trace.accumulate">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.Trace.accumulate">[docs]</a>
+    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># Value is 0 + value =&gt; 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Trace.put">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.Trace.put">[docs]</a>
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an item to the trace, shifting off from the beginning</span>
+<span class="sd">        when the trace is full.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+                             <span class="o">+</span> <span class="s2">&quot; can only be accessed from the beginning&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="o">-</span><span class="n">key</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; has not accumulated enough history&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;cannot write directly to a trace; use put instead&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Trace &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">)]))</span>
+
+<div class="viewcode-block" id="Trace.snapshot">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.Trace.snapshot">[docs]</a>
+    <span class="k">def</span> <span class="nf">snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Capture state of the trace.</span>
+
+<span class="sd">        Numpy arrays are converted to lists so that the trace can be easily</span>
+<span class="sd">        converted to json.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span><span class="p">[:]</span></div>
+
+
+<div class="viewcode-block" id="Trace.restore">
+<a class="viewcode-back" href="../../bumps.history.html#bumps.history.Trace.restore">[docs]</a>
+    <span class="k">def</span> <span class="nf">restore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restore a trace from a captured snapshot.</span>
+
+<span class="sd">        Lists are converted to numpy arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">keep</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_storage</span> <span class="o">=</span> <span class="n">state</span><span class="p">[:]</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.history</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

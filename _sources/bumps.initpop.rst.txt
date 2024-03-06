@@ -1,0 +1,7 @@
+bumps.initpop module
+====================
+
+.. automodule:: bumps.initpop
+   :members:
+   :undoc-members:
+   :show-inheritance:

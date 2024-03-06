@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.partemp module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.partemp module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.partemp">
+<span id="bumps-partemp-module"></span><h1>bumps.partemp module<a class="headerlink" href="#module-bumps.partemp" title="Link to this heading">¶</a></h1>
+<p>Parallel tempering for continuous function optimization and uncertainty analysis.</p>
+<p>The program performs Markov chain Monte Carlo exploration of a probability
+density function using a combination of random and differential evolution
+updates.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.partemp.parallel_tempering">
+<span class="sig-prename descclassname"><span class="pre">bumps.partemp.</span></span><span class="sig-name descname"><span class="pre">parallel_tempering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nllf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CR=0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor=&lt;function</span> <span class="pre">every_ten&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logfile=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/partemp.html#parallel_tempering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.partemp.parallel_tempering" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a MCMC walk using multiple temperatures in parallel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<dl class="simple">
+<dt><em>nllf</em><span class="classifier">function(vector) -&gt; float</span></dt><dd><p>Negative log likelihood function to be minimized.  <span class="math notranslate nohighlight">\(\chi^2/2\)</span> is a
+good choice for curve fitting with no prior restraints on the possible
+input parameters.</p>
+</dd>
+<dt><em>p</em><span class="classifier">vector</span></dt><dd><p>Initial value</p>
+</dd>
+<dt><em>bounds</em><span class="classifier">vector, vector</span></dt><dd><p>Box constraints on the parameter values.  No support for indefinite
+or semi-definite programming at present</p>
+</dd>
+<dt><em>T</em><span class="classifier">vector | 0 &lt; T[0] &lt; T[1] &lt; …</span></dt><dd><p>Temperature vector.  Something like logspace(-1,1,10) will give
+you 10 logarithmically spaced temperatures between 0.1 and 10.  The
+maximum temperature T[-1] determines the size of the barriers that
+can be easily jumped.  Note that the number of temperature values
+limits the amount of parallelism available in the algorithm, so it
+may gather statistics more quickly, though it will not necessarily
+converge any faster.</p>
+</dd>
+<dt><em>steps</em> = 1000<span class="classifier">int</span></dt><dd><p>Length of the accumulation vector.  The returned history will store
+this many values for each temperature.  These values can be used in
+a weighted histogram to determine parameter uncertainty.</p>
+</dd>
+<dt><em>burn</em> = 1000<span class="classifier">int | [0,inf)</span></dt><dd><p>Number of iterations to perform in addition to steps.  Only the
+last <em>steps</em> points will be preserved for each temperature.  Since
+the
+value should be in the same order as <em>steps</em> to be sure that the
+full history is acquired.</p>
+</dd>
+<dt><em>CR</em> = 0.9<span class="classifier">float | [0,1]</span></dt><dd><p>Cross-over ratio.  This is the differential evolution crossover
+ratio to use when computing step size and direction.  Use a small
+value to step through the dimensions one at a time, or a large value
+to step through all at once.</p>
+</dd>
+<dt><em>monitor</em> = every_ten<span class="classifier">function(int step, vector x, float fx) -&gt; None</span></dt><dd><p>Function to called at every iteration with the step number the
+best point and the best value.</p>
+</dd>
+<dt><em>logfile</em> = None<span class="classifier">string</span></dt><dd><p>Name of the file which will log the history of every accepted step.
+Note that this includes all of the burn steps, so it can get very
+large.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<dl class="simple">
+<dt><em>history</em><span class="classifier">History</span></dt><dd><p>Structure containing <em>best</em>, <em>best_point</em> and <em>buffer</em>.  <em>best</em> is
+the best nllf value seen and <em>best_point</em> is the parameter vector
+which yielded <em>best</em>.  The list <em>buffer</em> contains lists of tuples
+(step, temperature, nllf, x) for each temperature.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.partemp module</a><ul>
+<li><a class="reference internal" href="#bumps.partemp.parallel_tempering"><code class="docutils literal notranslate"><span class="pre">parallel_tempering()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.partemp.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.partemp module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

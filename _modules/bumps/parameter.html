@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.parameter &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <script src="../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.parameter</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.parameter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This program is public domain</span>
+<span class="c1"># Author: Paul Kienzle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Fitting parameter objects.</span>
+
+<span class="sd">Parameters are a big part of the interface between the model and the fitting</span>
+<span class="sd">engine.  By saving and retrieving values and ranges from the parameter, the</span>
+<span class="sd">fitting engine does not need to be aware of the structure of the model.</span>
+
+<span class="sd">Users can also perform calculations with parameters, tying together different</span>
+<span class="sd">parts of the model, or different models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#__all__ = [ &#39;Parameter&#39;]</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">isinf</span><span class="p">,</span> <span class="n">isfinite</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">bounds</span> <span class="k">as</span> <span class="n">mbounds</span>
+
+<span class="c1"># TODO: avoid evaluation of subexpressions if parameters do not change.</span>
+<span class="c1"># This is especially important if the subexpression invokes an expensive</span>
+<span class="c1"># calculation via a parameterized function.  This will require a restructuring</span>
+<span class="c1"># of the parameter claas.  The park-1.3 solution is viable: given a parameter</span>
+<span class="c1"># set, figure out which order the expressions need to be evaluated by</span>
+<span class="c1"># building up a dependency graph.  With a little care, we can check which</span>
+<span class="c1"># parameters have actually changed since the last calculation update, and</span>
+<span class="c1"># restrict the dependency graph to just them.</span>
+<span class="c1"># TODO: support full aliasing, so that floating point model attributes can</span>
+<span class="c1"># be aliased to a parameter.  The same technique as subexpressions applies:</span>
+<span class="c1"># when the parameter is changed, the model will be updated and will need</span>
+<span class="c1"># to be re-evaluated.</span>
+
+<span class="c1"># TODO: maybe move this to util?</span>
+<div class="viewcode-block" id="to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.to_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;to_dict&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">to_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="k">return</span> <span class="n">p</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="c1"># TODO: what about inf, nan and object arrays?</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="kc">False</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="c1"># TODO: consider including functions and arbitrary values</span>
+        <span class="kn">import</span> <span class="nn">base64</span>
+        <span class="kn">import</span> <span class="nn">dill</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">encodebytes</span><span class="p">(</span><span class="n">dill</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">p</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dill&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="s1">&#39;encoding&#39;</span><span class="p">:</span> <span class="n">encoding</span><span class="p">}</span>
+        <span class="c1">## To recovert the function</span>
+        <span class="c1"># if allow_unsafe_code:</span>
+        <span class="c1">#     encoding = item[&#39;encoding&#39;]</span>
+        <span class="c1">#     p = dill.loads(base64.decodebytes(encoding).encode(&#39;ascii&#39;))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#print(f&quot;converting type {type(p)} to str&quot;)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BaseParameter">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter">[docs]</a>
+<span class="k">class</span> <span class="nc">BaseParameter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Root of the parameter class, defining arithmetic on parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Parameters are fixed unless told otherwise</span>
+    <span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">fittable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">discrete</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">Unbounded</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># value is an attribute of the derived class</span>
+
+    <span class="c1"># Parameters may be dependent on other parameters, and the</span>
+    <span class="c1"># fit engine will need to access them.</span>
+<div class="viewcode-block" id="BaseParameter.parameters">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.pmp">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.pmp">[docs]</a>
+    <span class="k">def</span> <span class="nf">pmp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow the parameter to vary as value +/- percent.</span>
+
+<span class="sd">        pmp(*percent*) -&gt; [value*(1-percent/100), value*(1+percent/100)]</span>
+
+<span class="sd">        pmp(*plus*, *minus*) -&gt; [value*(1+minus/100), value*(1+plus/100)]</span>
+
+<span class="sd">        In the *plus/minus* form, one of the numbers should be plus and the</span>
+<span class="sd">        other minus, but it doesn&#39;t matter which.</span>
+
+<span class="sd">        If *limits* are provided, bound the end points of the range to lie</span>
+<span class="sd">        within the limits.</span>
+
+<span class="sd">        The resulting range is converted to &quot;nice&quot; numbers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">pmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">Bounded</span><span class="p">(</span><span class="o">*</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.pm">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.pm">[docs]</a>
+    <span class="k">def</span> <span class="nf">pm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow the parameter to vary as value +/- delta.</span>
+
+<span class="sd">        pm(*delta*) -&gt; [value-delta, value+delta]</span>
+
+<span class="sd">        pm(*plus*, *minus*) -&gt; [value+minus, value+plus]</span>
+
+<span class="sd">        In the *plus/minus* form, one of the numbers should be plus and the</span>
+<span class="sd">        other minus, but it doesn&#39;t matter which.</span>
+
+<span class="sd">        If *limits* are provided, bound the end points of the range to lie</span>
+<span class="sd">        within the limits.</span>
+
+<span class="sd">        The resulting range is converted to &quot;nice&quot; numbers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">pm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">Bounded</span><span class="p">(</span><span class="o">*</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.dev">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.dev">[docs]</a>
+    <span class="k">def</span> <span class="nf">dev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow the parameter to vary according to a normal distribution, with</span>
+<span class="sd">        deviations from the mean added to the overall cost function for the</span>
+<span class="sd">        model.</span>
+
+<span class="sd">        If *mean* is None, then it defaults to the current parameter value.</span>
+
+<span class="sd">        If *limits* are provide, then use a truncated normal distribution.</span>
+
+<span class="sd">        Note: *sigma* and *mu* have been replaced by *std* and *mean*, but</span>
+<span class="sd">        are left in for backward compatibility.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">mu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># CRUFT: remove sigma and mu parameters</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">DeprecationWarning</span><span class="p">(</span><span class="s2">&quot;use std,mean instead of mu,sigma in Parameter.dev&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">std</span> <span class="o">=</span> <span class="n">sigma</span>
+            <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="k">if</span> <span class="n">mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>  <span class="c1"># Note: value is an attribute of the derived class</span>
+        <span class="k">if</span> <span class="n">limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">Normal</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">BoundedNormal</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">limits</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.pdf">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.pdf">[docs]</a>
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow the parameter to vary according to any continuous scipy.stats</span>
+<span class="sd">        distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">Distribution</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.range">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.range">[docs]</a>
+    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow the parameter to vary within the given range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">init_bounds</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.soft_range">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.soft_range">[docs]</a>
+    <span class="k">def</span> <span class="nf">soft_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow the parameter to vary within the given range, or with Gaussian</span>
+<span class="sd">        probability, stray from the range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">SoftBounded</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit bounds&quot;&quot;&quot;</span>
+        <span class="c1"># print &quot;getting bounds for&quot;,self,self._bounds</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span>
+
+    <span class="nd">@bounds</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="c1"># print &quot;setting bounds for&quot;,self</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fittable</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span> <span class="o">=</span> <span class="n">b</span>
+
+    <span class="c1"># Functional form of parameter value access</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="c1"># Parameter algebra: express relationships between parameters</span>
+    <span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;GT&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;GE&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;LE&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;LT&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># def __eq__(self, other):</span>
+    <span class="c1">#     return ConstraintEQ(self, other)</span>
+
+    <span class="c1"># def __ne__(self, other):</span>
+    <span class="c1">#     return ConstraintNE(self, other)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;truediv&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s2">&quot;pow&quot;</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;truediv&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pow&quot;</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_abs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="fm">__pos__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+    <span class="fm">__rtruediv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
+
+<div class="viewcode-block" id="BaseParameter.nllf">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.nllf">[docs]</a>
+    <span class="k">def</span> <span class="nf">nllf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return -log(P) for the current parameter value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">nllf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.residual">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.residual">[docs]</a>
+    <span class="k">def</span> <span class="nf">residual</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the z score equivalent for the current parameter value.</span>
+
+<span class="sd">        That is, the given the value of the parameter in the underlying</span>
+<span class="sd">        distribution, find the equivalent value in the standard normal.</span>
+<span class="sd">        For a gaussian, this is the z score, in which you subtract the</span>
+<span class="sd">        mean and divide by the standard deviation to get the number of</span>
+<span class="sd">        sigmas away from the mean.  For other distributions, you need to</span>
+<span class="sd">        compute the cdf of value in the parameter distribution and invert</span>
+<span class="sd">        it using the ppf from the standard normal distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.valid">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.valid">[docs]</a>
+    <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return true if the parameter is within the valid range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nllf</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="BaseParameter.format">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.format">[docs]</a>
+    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the parameter, value and range as a string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">=</span><span class="si">%g</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;?&#39;</span>
+        <span class="k">return</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Parameter(</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="BaseParameter.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.BaseParameter.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a dict represention of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># When reconstructing a model from json we will need to tie parameters</span>
+        <span class="c1"># together that were tied before. This can be done by managing a</span>
+        <span class="c1"># cache of allocated parameters indexed by id, and pulling from that</span>
+        <span class="c1"># cache on recontruction if the id already exists, otherwise create</span>
+        <span class="c1"># a new entry. Conveniently, this will handle free variable references</span>
+        <span class="c1"># in parameter sets as well. Note that the entire parameter description</span>
+        <span class="c1"># will be repeated each time it occurs, but there should be few</span>
+        <span class="c1"># enough of these that it isn&#39;t a problem.</span>
+        <span class="c1"># TODO: use id that is stable from session to session.</span>
+        <span class="c1"># TODO: have mechanism for clearing cache between save/load.</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="c1"># Warning: this will be different every session</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">fixed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed</span><span class="p">,</span>
+            <span class="n">fittable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fittable</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bounds</span><span class="p">),</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Constant">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Constant">[docs]</a>
+<span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">BaseParameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An unmodifiable value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fittable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span></div>
+
+
+    <span class="c1"># to_dict() can inherit from BaseParameter</span>
+
+
+<div class="viewcode-block" id="Parameter">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Parameter">[docs]</a>
+<span class="k">class</span> <span class="nc">Parameter</span><span class="p">(</span><span class="n">BaseParameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A parameter is a symbolic value.</span>
+
+<span class="sd">    It can be fixed or it can vary within bounds.</span>
+
+<span class="sd">    p = Parameter(3).pmp(10)    # 3 +/- 10%</span>
+<span class="sd">    p = Parameter(3).pmp(-5,10) # 3 in [2.85,3.3] rounded to 2 digits</span>
+<span class="sd">    p = Parameter(3).pm(2)      # 3 +/- 2</span>
+<span class="sd">    p = Parameter(3).pm(-1,2)   # 3 in [2,5]</span>
+<span class="sd">    p = Parameter(3).range(0,5) # 3 in [0,5]</span>
+
+<span class="sd">    It has hard limits on the possible values, and a range that should live</span>
+<span class="sd">    within those hard limits.  The value should lie within the range for</span>
+<span class="sd">    it to be valid.  Some algorithms may drive the value outside the range</span>
+<span class="sd">    in order to satisfy soft It has a value which should lie within the range.</span>
+
+<span class="sd">    Other properties can decorate the parameter, such as tip for tool tip</span>
+<span class="sd">    and units for units.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fittable</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Parameter.default">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Parameter.default">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new parameter with the *value* and *kw* attributes, or return</span>
+<span class="sd">        the existing parameter if *value* is already a parameter.</span>
+
+<span class="sd">        The attributes are the same as those for Parameter, or whatever</span>
+<span class="sd">        subclass *cls* of Parameter is being created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Need to constrain the parameter to fit within fixed limits and</span>
+        <span class="c1"># to receive a name if a name has not already been provided.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Parameter.set">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Parameter.set">[docs]</a>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for the parameter, ignoring the bounds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="Parameter.clip_set">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Parameter.clip_set">[docs]</a>
+    <span class="k">def</span> <span class="nf">clip_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a new value for the parameter, clipping it to the bounds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">),</span> <span class="n">high</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="c1"># UI nicities:</span>
+        <span class="c1"># 1. check if we are started with value=range or bounds=range; if we</span>
+        <span class="c1"># are given bounds, then assume this is a fitted parameter, otherwise</span>
+        <span class="c1"># the parameter defaults to fixed; if value is not set, use the</span>
+        <span class="c1"># midpoint of the range.</span>
+        <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">DeprecationWarning</span><span class="p">(</span><span class="s2">&quot;parameters can no longer be initialized with a fit range&quot;</span><span class="p">))</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fixed</span> <span class="o">=</span> <span class="p">(</span><span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">init_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">start_value</span><span class="p">()</span>
+
+        <span class="c1"># Store whatever values the user needs to associate with the parameter</span>
+        <span class="c1"># Models should set units and tool tips so the user interface has</span>
+        <span class="c1"># something to work with.</span>
+        <span class="n">limits</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;limits&#39;</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Initialize bounds, with limits clipped to the hard limits for the</span>
+        <span class="c1"># parameter</span>
+        <span class="k">def</span> <span class="nf">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="n">b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span> <span class="o">=</span> <span class="p">(</span><span class="n">clip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">limits</span><span class="p">),</span>
+                              <span class="n">clip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">limits</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="n">fixed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+<div class="viewcode-block" id="Parameter.randomize">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Parameter.randomize">[docs]</a>
+    <span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a random value for the parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">rng</span> <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">mbounds</span><span class="o">.</span><span class="n">RNG</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Parameter.feasible">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Parameter.feasible">[docs]</a>
+    <span class="k">def</span> <span class="nf">feasible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Value is within the limits defined by the model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+</div>
+
+
+    <span class="c1"># to_dict() can inherit from BaseParameter</span>
+
+
+<div class="viewcode-block" id="Reference">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Reference">[docs]</a>
+<span class="k">class</span> <span class="nc">Reference</span><span class="p">(</span><span class="n">Parameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an adaptor so that a model attribute can be treated as if it</span>
+<span class="sd">    were a parameter.  This allows only direct access, wherein the</span>
+<span class="sd">    storage for the parameter value is provided by the underlying model.</span>
+
+<span class="sd">    Indirect access, wherein the storage is provided by the parameter, cannot</span>
+<span class="sd">    be supported since the parameter has no way to detect that the model</span>
+<span class="sd">    is asking for the value of the attribute.  This means that model</span>
+<span class="sd">    attributes cannot be assigned to parameter expressions without some</span>
+<span class="sd">    trigger to update the values of the attributes in the model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">attr</span><span class="p">]))</span>
+        <span class="n">Parameter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">)</span>
+
+    <span class="nd">@value</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Reference.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Reference.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;attr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span>
+        <span class="c1"># TODO: another impossibility---an arbitrary python object</span>
+        <span class="c1"># Clearly we need a (safe??) json pickler to handle the full</span>
+        <span class="c1"># complexity of an arbitrary model.</span>
+        <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;obj&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ParameterSet">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet">[docs]</a>
+<span class="k">class</span> <span class="nc">ParameterSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A parameter that depends on the model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a parameter set, with one parameter for each model name.</span>
+
+<span class="sd">        *names* is the list of model names.</span>
+
+<span class="sd">        *reference* is the underlying :class:`parameter.Parameter` that will</span>
+<span class="sd">        be set when the model is selected.</span>
+
+<span class="sd">        *parameters* will be created, with one parameter per model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="n">reference</span>
+        <span class="c1"># TODO: explain better why parameters are using np.array</span>
+        <span class="c1"># Force numpy semantics on slice operations by using an array</span>
+        <span class="c1"># of objects rather than a list of objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">copy</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+        <span class="c1"># print self.reference, self.parameters</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="c1"># Reference is no longer directly fittable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">fittable</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ParameterSet.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ParameterSet&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+            <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="p">),</span>
+            <span class="c1"># Note: parameters are stored in a numpy array</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span>
+        <span class="p">}</span></div>
+
+
+    <span class="c1"># Make the parameter set act like a list</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the underlying parameter for the model index.  Index can</span>
+<span class="sd">        either be an integer or a model name.  It can also be a slice,</span>
+<span class="sd">        in which case a new parameter set is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Try looking up the free variable by model name rather than model</span>
+        <span class="c1"># index. If this fails, assume index is a model index.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the underlying parameter for the model index.  Index can</span>
+<span class="sd">        either be an integer or a model name.  It can also be a slice,</span>
+<span class="sd">        in which case all underlying parameters are set, either to the</span>
+<span class="sd">        same value if *v* is a single parameter, otherwise *v* must have</span>
+<span class="sd">        the same length as the slice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParameterSet.set_model">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet.set_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the underlying model parameter to the value of the nth model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="ParameterSet.get_model">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet.get_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the reference and underlying model parameter for the nth model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">index</span><span class="p">])</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">]</span>
+
+    <span class="nd">@values</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span>
+
+<div class="viewcode-block" id="ParameterSet.range">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet.range">[docs]</a>
+    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Like :meth:`Parameter.range`, but applied to all models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParameterSet.pm">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet.pm">[docs]</a>
+    <span class="k">def</span> <span class="nf">pm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Like :meth:`Parameter.pm`, but applied to all models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">pm</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParameterSet.pmp">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.ParameterSet.pmp">[docs]</a>
+    <span class="k">def</span> <span class="nf">pmp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Like :meth:`Parameter.pmp`, but applied to all models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">pmp</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FreeVariables">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.FreeVariables">[docs]</a>
+<span class="k">class</span> <span class="nc">FreeVariables</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A collection of parameter sets for a group of models.</span>
+
+<span class="sd">    *names* is the set of model names.</span>
+
+<span class="sd">    The parameters themselves are specified as key=value pairs, with key</span>
+<span class="sd">    being the attribute name which is used to retrieve the parameter set</span>
+<span class="sd">    and value being a :class:`Parameter` containing the parameter that is</span>
+<span class="sd">    shared between the models.</span>
+
+<span class="sd">    In order to evaluate the log likelihood of all models simultaneously,</span>
+<span class="sd">    the fitting program will need to call set_model with the model index</span>
+<span class="sd">    for each model in turn in order to substitute the values from the free</span>
+<span class="sd">    variables into the model.  This allows us to share a common sample</span>
+<span class="sd">    across multiple data sets, with each dataset having its own values for</span>
+<span class="sd">    some of the sample parameters.  The alternative is to copy the entire</span>
+<span class="sd">    sample structure, sharing references to common parameters and creating</span>
+<span class="sd">    new parameters for each model for the free parameters.  Setting up</span>
+<span class="sd">    these copies was inconvenient.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;FreeVariables needs name=[model1, model2, ...]&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">names</span>
+
+        <span class="c1"># Create slots to hold the free variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parametersets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">ParameterSet</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">))</span>
+                                   <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="c1"># Shouldn&#39;t need explicit __getstate__/__setstate__ but mpi4py pickle</span>
+    <span class="c1"># chokes without it.</span>
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the parameter set for the given free parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parametersets</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;FreeVariables has no attribute </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FreeVariables.parameters">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.FreeVariables.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the set of free variables for all the models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parametersets</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="FreeVariables.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.FreeVariables.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+            <span class="s1">&#39;parameters&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parametersets</span><span class="p">)</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="FreeVariables.set_model">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.FreeVariables.set_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the reference parameters for model *i*.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parametersets</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FreeVariables.get_model">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.FreeVariables.get_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the parameters for model *i* as {reference: substitution}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parametersets</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+</div>
+
+
+<span class="c1"># Current implementation computes values on the fly, so you only</span>
+<span class="c1"># need to plug the values into the parameters and the parameters</span>
+<span class="c1"># are automatically updated.</span>
+<span class="c1">#</span>
+<span class="c1"># This will not work well for wrapped models.  In those cases you</span>
+<span class="c1"># want to do a number of optimizations, such as only updating the</span>
+<span class="c1">#</span>
+
+<span class="c1"># ==== Comparison operators ===</span>
+<span class="n">COMPARISONS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;GT&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;GE&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;=&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;LE&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;=&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;LT&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;EQ&#39;</span><span class="p">,</span> <span class="s1">&#39;==&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;NE&#39;</span><span class="p">,</span> <span class="s1">&#39;!=&#39;</span><span class="p">)</span>
+<span class="p">]</span>
+
+<div class="viewcode-block" id="Constraint">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Constraint">[docs]</a>
+<span class="k">class</span> <span class="nc">Constraint</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">op_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">operator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op_name</span> <span class="o">=</span> <span class="n">op_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">op_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op_str</span> <span class="o">=</span> <span class="n">op_str</span>
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">__nonzero__</span> <span class="o">=</span> <span class="fm">__bool__</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span></div>
+
+
+<span class="c1"># ==== Arithmetic operators ===</span>
+<span class="n">ALLOWED_OPERATORS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">,</span><span class="s2">&quot;sub&quot;</span><span class="p">,</span><span class="s2">&quot;mul&quot;</span><span class="p">,</span><span class="s2">&quot;truediv&quot;</span><span class="p">,</span><span class="s2">&quot;floordiv&quot;</span><span class="p">,</span><span class="s2">&quot;pow&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Operator">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Operator">[docs]</a>
+<span class="k">class</span> <span class="nc">Operator</span><span class="p">(</span><span class="n">BaseParameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameter operator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">op_str</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">operator</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">op_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ALLOWED_OPERATORS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operator name </span><span class="si">%s</span><span class="s2"> is not in allowed operators: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">op_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ALLOWED_OPERATORS</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op_name</span> <span class="o">=</span> <span class="n">op_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">op_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op_str</span> <span class="o">=</span> <span class="n">op_str</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">BaseParameter</span><span class="p">):</span> <span class="n">pars</span> <span class="o">+=</span> <span class="n">a</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">BaseParameter</span><span class="p">):</span> <span class="n">pars</span> <span class="o">+=</span> <span class="n">b</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="n">pars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<div class="viewcode-block" id="Operator.parameters">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Operator.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span></div>
+
+<div class="viewcode-block" id="Operator.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Operator.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;Operator&quot;</span><span class="p">,</span>
+            <span class="n">op_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">op_name</span><span class="p">,</span>
+            <span class="n">op_str</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">op_str</span><span class="p">,</span>
+            <span class="n">left</span><span class="o">=</span><span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">),</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">))</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">op_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="substitute">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.substitute">[docs]</a>
+<span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return structure a with values substituted for all parameters.</span>
+
+<span class="sd">    The function traverses lists, tuples and dicts recursively.  Things</span>
+<span class="sd">    which are not parameters are returned directly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">substitute</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">substitute</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">substitute</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">substitute</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">a</span></div>
+
+
+
+<div class="viewcode-block" id="Function">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Function">[docs]</a>
+<span class="k">class</span> <span class="nc">Function</span><span class="p">(</span><span class="n">BaseParameter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Delayed function evaluator.</span>
+
+<span class="sd">    f.value evaluates the function with the values of the</span>
+<span class="sd">    parameter arguments at the time f.value is referenced rather</span>
+<span class="sd">    than when the function was invoked.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;op&#39;</span><span class="p">,</span> <span class="s1">&#39;args&#39;</span><span class="p">,</span> <span class="s1">&#39;kw&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span> <span class="o">=</span> <span class="n">op</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_parameters</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_find_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Figure out which arguments to the function are parameters</span>
+        <span class="c1">#deps = [p for p in self.args if isinstance(p,BaseParameter)]</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">)]</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">))</span>
+        <span class="n">deps</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">((</span><span class="n">args</span><span class="p">,</span> <span class="n">kw</span><span class="p">))</span>
+        <span class="c1"># Find out which other parameters these parameters depend on.</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+<div class="viewcode-block" id="Function.parameters">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Function.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Expand args and kw, replacing instances of parameters</span>
+        <span class="c1"># with their values</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="o">*</span><span class="n">substitute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">),</span> <span class="o">**</span><span class="n">substitute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">))</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Function.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Function.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Function&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="c1"># TODO: function not stored properly in json</span>
+            <span class="s2">&quot;op&quot;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">),</span>
+            <span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">),</span>
+            <span class="s2">&quot;kw&quot;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_parameters</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+            <span class="n">kw</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="n">kw</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">name</span></div>
+
+        <span class="c1">#return &quot;%s:%g&quot; % (name, self.value)</span>
+
+
+<div class="viewcode-block" id="function">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.function">[docs]</a>
+<span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a function into a delayed evaluator.</span>
+
+<span class="sd">    The value of the function is computed from the values of the parameters</span>
+<span class="sd">    at the time that the function value is requested rather than when the</span>
+<span class="sd">    function is created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note: @functools.wraps(op) does not work with numpy ufuncs</span>
+    <span class="c1"># Note: @decorator does not work with builtins like abs</span>
+    <span class="k">def</span> <span class="nf">function_generator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Function</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="n">function_generator</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="n">function_generator</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="vm">__doc__</span>
+    <span class="k">return</span> <span class="n">function_generator</span></div>
+
+<span class="n">_abs</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="nb">abs</span><span class="p">)</span>
+
+<span class="c1"># Numpy trick: math functions from numpy delegate to the math function of</span>
+<span class="c1"># the class if that function exists as a class attribute.</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">exp</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">expm1</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">expm1</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">log10</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">log1p</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log1p</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">sqrt</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">)</span>
+
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">degrees</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">radians</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span>
+
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">sin</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">cos</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">tan</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">arcsin</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">arccos</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">acos</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">arctan</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan</span><span class="p">)</span>
+
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">sinh</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sinh</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">cosh</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosh</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">tanh</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">tanh</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">arcsinh</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">asinh</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">arccosh</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">acosh</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">arctanh</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atanh</span><span class="p">)</span>
+
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">ceil</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">floor</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span>
+<span class="n">BaseParameter</span><span class="o">.</span><span class="n">trunc</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">trunc</span><span class="p">)</span>
+
+<div class="viewcode-block" id="boxed_function">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.boxed_function">[docs]</a>
+<span class="k">def</span> <span class="nf">boxed_function</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="n">box</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">box</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapped</span></div>
+
+
+<span class="c1"># arctan2 is special since either argument can be a parameter</span>
+<span class="n">arctan2</span> <span class="o">=</span> <span class="n">boxed_function</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">)</span>
+
+<span class="c1"># Trig functions defined in degrees rather than radians</span>
+<div class="viewcode-block" id="cosd">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.cosd">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">cosd</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the cosine of x (measured in in degrees).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="sind">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.sind">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">sind</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the sine of x (measured in in degrees).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="tand">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.tand">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">tand</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the tangent of x (measured in in degrees).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="acosd">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.acosd">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">acosd</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the arc cosine (measured in in degrees) of x.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">acos</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+<span class="n">arccosd</span> <span class="o">=</span> <span class="n">acosd</span>
+
+<div class="viewcode-block" id="asind">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.asind">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">asind</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the arc sine (measured in in degrees) of x.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+<span class="n">arcsind</span> <span class="o">=</span> <span class="n">asind</span>
+
+<div class="viewcode-block" id="atand">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.atand">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">atand</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the arc tangent (measured in in degrees) of x.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+<span class="n">arctand</span> <span class="o">=</span> <span class="n">atand</span>
+
+<div class="viewcode-block" id="atan2d">
+<a class="viewcode-back" href="../../bumps.pmath.html#bumps.parameter.atan2d">[docs]</a>
+<span class="nd">@boxed_function</span>
+<span class="k">def</span> <span class="nf">atan2d</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the arc tangent (measured in in degrees) of y/x.</span>
+<span class="sd">    Unlike atan(y/x), the signs of both x and y are considered.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">))</span></div>
+
+<span class="n">arctan2d</span> <span class="o">=</span> <span class="n">atan2d</span>
+
+
+
+<div class="viewcode-block" id="flatten">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.flatten">[docs]</a>
+<span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">flatten</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">s</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;parameter flattening cannot order sets&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="n">flatten</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">b</span><span class="p">]),</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">[])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;don&#39;t understand type </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">s</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="format">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.format">[docs]</a>
+<span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freevars</span><span class="o">=</span><span class="p">{},</span> <span class="n">field</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format parameter set for printing.</span>
+
+<span class="sd">    Note that this only says how the parameters are arranged, not how they</span>
+<span class="sd">    relate to each other.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">freevars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">!=</span> <span class="p">{}:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">freevars</span><span class="o">=</span><span class="n">freevars</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">k</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span> <span class="o">+</span> <span class="s2">&quot; = &quot;</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;_index&#39;</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">format</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;_index&#39;</span><span class="p">],</span> <span class="n">indent</span><span class="p">,</span> <span class="n">freevars</span><span class="o">=</span><span class="n">freevars</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">indent</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">freevars</span><span class="o">=</span><span class="n">freevars</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">k</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span> <span class="o">+</span> <span class="s1">&#39; = &#39;</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">!=</span> <span class="n">field</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; = &quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">p</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">fixed</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot; in [</span><span class="si">%g</span><span class="s2">,</span><span class="si">%g</span><span class="s2">]&quot;</span> <span class="o">%</span>  <span class="nb">tuple</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">BaseParameter</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> = </span><span class="si">%g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;None&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="summarize">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.summarize">[docs]</a>
+<span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="nb">sorted</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a stylized list of parameter names and values with range bars</span>
+<span class="sd">    suitable for printing.</span>
+
+<span class="sd">    If sorted, then print the parameters sorted alphabetically by name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">sorted</span><span class="p">:</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">cmp</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">cmp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isfinite</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="n">bar</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;*invalid* &quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">get01</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="mf">9.999999999</span><span class="p">)</span>
+            <span class="n">bar</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span>
+            <span class="k">if</span> <span class="n">position</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">bar</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&lt;&#39;</span>
+            <span class="k">elif</span> <span class="n">position</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
+                <span class="n">bar</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&gt;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bar</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%40s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%10g</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span>
+                      <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bar</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="unique">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.unique">[docs]</a>
+<span class="k">def</span> <span class="nf">unique</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the unique set of parameters</span>
+
+<span class="sd">    The ordering is stable.  The same parameters/dependencies will always</span>
+<span class="sd">    return the same ordering, with the first occurrence first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Walk structures such as dicts and lists</span>
+    <span class="n">pars</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="c1"># print &quot;====== flattened&quot;</span>
+    <span class="c1"># print &quot;\n&quot;.join(&quot;%s:%s&quot;%(id(p),p) for p in pars)</span>
+    <span class="c1"># Also walk parameter expressions</span>
+    <span class="n">pars</span> <span class="o">=</span> <span class="n">pars</span> <span class="o">+</span> <span class="n">flatten</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">])</span>
+    <span class="c1"># print &quot;====== extended&quot;</span>
+    <span class="c1"># print &quot;\n&quot;.join(&quot;%s:%s&quot;%(id(p),p) for p in pars)</span>
+
+    <span class="c1"># TODO: implement n log n rather than n^2 uniqueness algorithm</span>
+    <span class="c1"># problem is that the sorting has to be unique across a pickle.</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span> <span class="ow">is</span> <span class="n">q</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">result</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="c1"># print &quot;====== unique&quot;</span>
+    <span class="c1"># print &quot;\n&quot;.join(&quot;%s:%s&quot;%(id(p),p) for p in result)</span>
+    <span class="c1"># Return the complete set of parameters</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="fittable">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.fittable">[docs]</a>
+<span class="k">def</span> <span class="nf">fittable</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the list of fittable parameters in no paraticular order.</span>
+
+<span class="sd">    Note that some fittable parameters may be fixed during the fit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">fittable</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="varying">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.varying">[docs]</a>
+<span class="k">def</span> <span class="nf">varying</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the list of fitted parameters in the model.</span>
+
+<span class="sd">    This is the set of parameters that will vary during the fit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">fixed</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="randomize">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.randomize">[docs]</a>
+<span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set random values to the parameters in the parameter set, with</span>
+<span class="sd">    values chosen according to the bounds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="current">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.current">[docs]</a>
+<span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span></div>
+
+
+<span class="c1"># ========= trash ===================</span>
+
+
+<div class="viewcode-block" id="IntegerParameter">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.IntegerParameter">[docs]</a>
+<span class="k">class</span> <span class="nc">IntegerParameter</span><span class="p">(</span><span class="n">Parameter</span><span class="p">):</span>
+    <span class="n">discrete</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+    <span class="k">def</span> <span class="nf">_set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_value</span><span class="p">,</span> <span class="n">_set_value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Alias">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Alias">[docs]</a>
+<span class="k">class</span> <span class="nc">Alias</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameter alias.</span>
+
+<span class="sd">    Rather than modifying a model to contain a parameter slot,</span>
+<span class="sd">    allow the parameter to exist outside the model. The resulting</span>
+<span class="sd">    parameter will have the full parameter semantics, including</span>
+<span class="sd">    the ability to replace a fixed value with a parameter expression.</span>
+
+<span class="sd">    **Deprecated** :class:`Reference` does this better.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">attr</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Alias.update">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Alias.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Alias.parameters">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Alias.parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Alias.to_dict">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.Alias.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">),</span>
+            <span class="c1"># TODO: can&#39;t json pickle arbitrary objects</span>
+            <span class="s1">&#39;obj&#39;</span><span class="p">:</span> <span class="n">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="p">),</span>
+            <span class="s1">&#39;attr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+<div class="viewcode-block" id="test_operator">
+<a class="viewcode-back" href="../../bumps.parameter.html#bumps.parameter.test_operator">[docs]</a>
+<span class="k">def</span> <span class="nf">test_operator</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+    <span class="n">a_b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">assert</span> <span class="n">a_b</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mf">5.</span>
+    <span class="k">assert</span> <span class="n">a_b</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;(a + b)&#39;</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.parameter</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

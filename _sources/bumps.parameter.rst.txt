@@ -1,0 +1,7 @@
+bumps.parameter module
+======================
+
+.. automodule:: bumps.parameter
+   :members:
+   :undoc-members:
+   :show-inheritance:

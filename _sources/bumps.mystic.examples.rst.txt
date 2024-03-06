@@ -1,0 +1,22 @@
+bumps.mystic.examples package
+=============================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.mystic.examples.circle
+   bumps.mystic.examples.corana
+   bumps.mystic.examples.decay
+   bumps.mystic.examples.model
+   bumps.mystic.examples.simple
+
+Module contents
+---------------
+
+.. automodule:: bumps.mystic.examples
+   :members:
+   :undoc-members:
+   :show-inheritance:

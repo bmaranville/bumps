@@ -1,0 +1,7 @@
+bumps.gui.console module
+========================
+
+.. automodule:: bumps.gui.console
+   :members:
+   :undoc-members:
+   :show-inheritance:

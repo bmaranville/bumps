@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Using Bumps &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Representation" href="data.html" />
+    <link rel="prev" title="User’s Guide" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="Data Representation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="User’s Guide"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Using Bumps</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="using-bumps">
+<span id="intro-guide"></span><h1>Using Bumps<a class="headerlink" href="#using-bumps" title="Link to this heading">¶</a></h1>
+<p>The first step in using Bumps is to define a fit file.  This is python
+code defining the function, the fitting parameters and any data that is
+being fitted.</p>
+<p>A fit file usually starts with an import statement:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bumps.names</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>This imports names from <a class="reference internal" href="../bumps.names.html#module-bumps.names" title="bumps.names"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bumps.names</span></code></a> and makes the available to the
+model definition.</p>
+<p>Next the fit file should load the data with something like <em>np.loadtxt</em>
+which loads columnar ASCII data into an array.  This data feeds into a
+<a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.Fitness" title="bumps.fitproblem.Fitness"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fitness</span></code></a> function for a particular
+model that gives the  probability of seeing the data for a given set of
+model parameters.  These model functions can be quite complex, involving
+not only the calculation of the theory function, but also simulating
+instrumental resolution and background signal.</p>
+<p>The fitness function will have <a class="reference internal" href="../bumps.parameter.html#bumps.parameter.Parameter" title="bumps.parameter.Parameter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>
+objects defining the fittable parameters.  Usually the model is initialized
+without any fitted parameters, allowing the user to set a
+<a class="reference internal" href="../api/parameter.html#bumps.parameter.Parameter.range" title="bumps.parameter.Parameter.range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">range</span></code></a> on each parameter that
+needs to be fitted.  Although it is a little tedious to set up, keeping the
+fitted ranges separate from the model definition works better in the fitting
+process, which usually involves multiple iterations with different
+configurations. It is convenient to be able to turn on and off fitting for
+individual parameter with a simple comment character (‘#’) at the start of
+the line.</p>
+<p>Every fit file ends with a <a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.FitProblem" title="bumps.fitproblem.FitProblem"><code class="xref py py-func docutils literal notranslate"><span class="pre">FitProblem</span></code></a>
+definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">FitProblem</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In fact, this is the only requirement of the fit file.  The Bumps engine
+loads the fit file, retieves the <em>problem</em> symbol and feeds it to one of the
+<a class="reference internal" href="../bumps.fitters.html#module-bumps.fitters" title="bumps.fitters"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fitters</span></code></a>.  Some fit files do not even use <em>FitProblem</em> to
+define <em>problem</em>, or use <em>Parameter</em> objects for the fitted parameters, so
+long as <em>problem</em> implements the
+<a class="reference internal" href="../bumps.fitproblem.html#bumps.fitproblem.BaseFitProblem" title="bumps.fitproblem.BaseFitProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseFitProblem</span></code></a> interface, which
+provides <em>getp</em> to get the existing parameter vector, <em>setp</em> to set a new
+parameter vector, <em>bounds</em> to return the parameter bounds, and <em>nllf</em> to
+to compute the negative log likelihood function.  The remaining methods are
+optional.</p>
+<p>Note that the pattern of importing all names from a file using
+<em>from bumps.names import *</em>, while convenient for simple scripts, can
+make the code more difficult to understand later, and can lead to
+unexpected results when moving code around to other files.  The alternative
+pattern to use is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bumps.names</span> <span class="k">as</span> <span class="nn">bmp</span>
+<span class="o">...</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">bmp</span><span class="o">.</span><span class="n">FitProblem</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This documents to the reader unfamiliar with your code (such as you, dear
+reader, when looking at your model files two years from now) exactly where
+the name comes from.</p>
+<p>The <a class="reference internal" href="../tutorial/index.html#tutorial-index"><span class="std std-ref">Tutorial</span></a> walks through the process for several different
+data sets.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">User’s Guide</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="data.html"
+                          title="next chapter">Data Representation</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="Data Representation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="User’s Guide"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >User’s Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Using Bumps</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

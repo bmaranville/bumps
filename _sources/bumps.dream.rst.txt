@@ -1,0 +1,46 @@
+bumps.dream package
+===================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   bumps.dream.acr
+   bumps.dream.bounds
+   bumps.dream.compiled
+   bumps.dream.convergence
+   bumps.dream.core
+   bumps.dream.corrplot
+   bumps.dream.crossover
+   bumps.dream.diffev
+   bumps.dream.digits
+   bumps.dream.entropy
+   bumps.dream.exppow
+   bumps.dream.formatnum
+   bumps.dream.gelman
+   bumps.dream.geweke
+   bumps.dream.initpop
+   bumps.dream.ksmirnov
+   bumps.dream.mahal
+   bumps.dream.matlab
+   bumps.dream.metropolis
+   bumps.dream.model
+   bumps.dream.outliers
+   bumps.dream.parcoord
+   bumps.dream.state
+   bumps.dream.stats
+   bumps.dream.tile
+   bumps.dream.util
+   bumps.dream.varplot
+   bumps.dream.views
+   bumps.dream.walk
+
+Module contents
+---------------
+
+.. automodule:: bumps.dream
+   :members:
+   :undoc-members:
+   :show-inheritance:

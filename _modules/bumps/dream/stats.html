@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.stats &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.stats</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.stats</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Statistics helper functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;VarStats&quot;</span><span class="p">,</span> <span class="s2">&quot;var_stats&quot;</span><span class="p">,</span> <span class="s2">&quot;format_vars&quot;</span><span class="p">,</span> <span class="s2">&quot;parse_var&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;stats&quot;</span><span class="p">,</span> <span class="s2">&quot;credible_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;shortest_credible_interval&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.formatnum</span> <span class="kn">import</span> <span class="n">format_uncertainty</span>
+
+
+<div class="viewcode-block" id="VarStats">
+<a class="viewcode-back" href="../../../dream/stats.html#bumps.dream.stats.VarStats">[docs]</a>
+<span class="k">class</span> <span class="nc">VarStats</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">kw</span></div>
+
+
+
+<div class="viewcode-block" id="var_stats">
+<a class="viewcode-back" href="../../../dream/stats.html#bumps.dream.stats.var_stats">[docs]</a>
+<span class="k">def</span> <span class="nf">var_stats</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">vars</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_var_stats_one</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span></div>
+
+
+
+<span class="n">ONE_SIGMA</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="mf">0.15865525393145705</span>
+
+
+<span class="k">def</span> <span class="nf">_var_stats_one</span><span class="p">(</span><span class="n">draw</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+    <span class="n">weights</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">draw</span><span class="o">.</span><span class="n">points</span><span class="p">[:,</span> <span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="n">integer</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">integers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">draw</span><span class="o">.</span><span class="n">integers</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">integer</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">best_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">logp</span><span class="p">)</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">best_idx</span><span class="p">]</span>
+
+    <span class="c1"># Choose the interval for the histogram</span>
+    <span class="c1">#credible_interval = shortest_credible_interval</span>
+    <span class="n">p95</span><span class="p">,</span> <span class="n">p68</span><span class="p">,</span> <span class="n">p0</span> <span class="o">=</span> <span class="n">credible_interval</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">values</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+                                     <span class="n">ci</span><span class="o">=</span><span class="p">[</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">ONE_SIGMA</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+    <span class="c1">## reporting uncertainty on credible intervals?</span>
+    <span class="c1">## might be nice to pair sd on credible intervals</span>
+    <span class="c1">## with the actual CIs, rather than use a separate param</span>
+    <span class="c1">#from .digits import credible_inderval_sd</span>
+    <span class="c1">#p95sd = credible_interval_sd(values, 0.95)</span>
+    <span class="c1">#p68sd = credible_interval_sd(values, ONE_SIGMA)</span>
+
+    <span class="c1">#open(&#39;/tmp/out&#39;,&#39;a&#39;).write(</span>
+    <span class="c1">#     &quot;in vstats: p68=%s, p95=%s, p0=%s, value range=%s\n&quot;</span>
+    <span class="c1">#     % (p68,p95,p0,(min(values),max(values))))</span>
+    <span class="c1">#if p0[0] != p0[1]: raise RuntimeError(&quot;wrong median %s&quot;%(str(p0),))</span>
+
+    <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">stats</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">values</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="n">vstats</span> <span class="o">=</span> <span class="n">VarStats</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">draw</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">var</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="n">p95</span><span class="o">=</span><span class="n">p95</span><span class="p">,</span> <span class="n">p95_range</span><span class="o">=</span><span class="p">(</span><span class="n">p95</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p95</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">integer</span><span class="o">*</span><span class="mf">0.9999999999</span><span class="p">),</span>
+                      <span class="n">p68</span><span class="o">=</span><span class="n">p68</span><span class="p">,</span> <span class="n">p68_range</span><span class="o">=</span><span class="p">(</span><span class="n">p68</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p68</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">integer</span><span class="o">*</span><span class="mf">0.9999999999</span><span class="p">),</span>
+                      <span class="c1"># p95sd=p95sd, p68sd=p68sd,</span>
+                      <span class="n">median</span><span class="o">=</span><span class="n">p0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="n">std</span><span class="p">,</span> <span class="n">best</span><span class="o">=</span><span class="n">best</span><span class="p">,</span>
+                      <span class="n">integer</span><span class="o">=</span><span class="n">integer</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vstats</span>
+
+
+<span class="k">def</span> <span class="nf">format_num</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">place</span><span class="p">):</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">place</span>
+    <span class="n">digits_after_decimal</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">place</span><span class="p">)</span> <span class="k">if</span> <span class="n">place</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%.*f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">digits_after_decimal</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">precision</span><span class="p">)</span><span class="o">*</span><span class="n">precision</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="format_vars">
+<a class="viewcode-back" href="../../../dream/views.html#bumps.dream.stats.format_vars">[docs]</a>
+<span class="k">def</span> <span class="nf">format_vars</span><span class="p">(</span><span class="n">all_vstats</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parameter</span><span class="o">=</span><span class="s2">&quot;Parameter&quot;</span><span class="p">,</span>
+             <span class="n">mean</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">median</span><span class="o">=</span><span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="n">best</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+             <span class="n">interval68</span><span class="o">=</span><span class="s2">&quot;68</span><span class="si">% i</span><span class="s2">nterval&quot;</span><span class="p">,</span>
+             <span class="n">interval95</span><span class="o">=</span><span class="s2">&quot;95</span><span class="si">% i</span><span class="s2">nterval&quot;</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;   </span><span class="si">%(parameter)20s</span><span class="s2"> </span><span class="si">%(mean)10s</span><span class="s2"> </span><span class="si">%(median)7s</span><span class="s2"> </span><span class="si">%(best)7s</span><span class="s2"> &quot;</span>
+         <span class="s2">&quot;[</span><span class="si">%(interval68)15s</span><span class="s2">] [</span><span class="si">%(interval95)15s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">v</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_vstats</span><span class="p">:</span>
+        <span class="c1"># Make sure numbers are formatted with the appropriate precision</span>
+        <span class="n">place</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">-</span><span class="mi">2</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                 <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span><span class="o">-</span><span class="mi">3</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span>
+                 <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">format_uncertainty</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">std</span><span class="p">),</span>
+                       <span class="n">median</span><span class="o">=</span><span class="n">format_num</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">median</span><span class="p">,</span> <span class="n">place</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                       <span class="n">best</span><span class="o">=</span><span class="n">format_num</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">best</span><span class="p">,</span> <span class="n">place</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                       <span class="n">lo68</span><span class="o">=</span><span class="n">format_num</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">p68</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">place</span><span class="p">),</span>
+                       <span class="n">hi68</span><span class="o">=</span><span class="n">format_num</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">p68</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">place</span><span class="p">),</span>
+                       <span class="n">loci</span><span class="o">=</span><span class="n">format_num</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">place</span><span class="p">),</span>
+                       <span class="n">hici</span><span class="o">=</span><span class="n">format_num</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">p95</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">place</span><span class="p">),</span>
+                       <span class="n">parameter</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                       <span class="n">index</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(index)2d</span><span class="s2"> </span><span class="si">%(parameter)20s</span><span class="s2"> </span><span class="si">%(mean)10s</span><span class="s2"> </span><span class="si">%(median)7s</span><span class="s2"> </span><span class="si">%(best)7s</span><span class="s2"> &quot;</span>
+                 <span class="s2">&quot;[</span><span class="si">%(lo68)7s</span><span class="s2"> </span><span class="si">%(hi68)7s</span><span class="s2">] [</span><span class="si">%(loci)7s</span><span class="s2"> </span><span class="si">%(hici)7s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">summary</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">save_vars</span><span class="p">(</span><span class="n">all_vstats</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_vstats</span><span class="p">),</span>
+            <span class="n">fid</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">numpy_json</span><span class="p">,</span>
+            <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">numpy_json</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    JSON encoder for numpy data.</span>
+
+<span class="sd">    To automatically convert numpy data to lists when writing a datastream</span>
+<span class="sd">    use json.dumps(object, default=numpy_json).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span>
+
+<span class="n">VAR_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">   ^\ *</span>
+<span class="s2">   (?P&lt;parnum&gt;[0-9]+)\ +</span>
+<span class="s2">   (?P&lt;parname&gt;.+?)\ +</span>
+<span class="s2">   (?P&lt;mean&gt;[0-9.-]+?)</span>
+<span class="s2">   \((?P&lt;err&gt;[0-9]+)\)</span>
+<span class="s2">   (e(?P&lt;exp&gt;[+-]?[0-9]+))?\ +</span>
+<span class="s2">   (?P&lt;median&gt;[0-9.eE+-]+?)\ +</span>
+<span class="s2">   (?P&lt;best&gt;[0-9.eE+-]+?)\ +</span>
+<span class="s2">   \[\ *(?P&lt;lo68&gt;[0-9.eE+-]+?)\ +</span>
+<span class="s2">   (?P&lt;hi68&gt;[0-9.eE+-]+?)\]\ +</span>
+<span class="s2">   \[\ *(?P&lt;lo95&gt;[0-9.eE+-]+?)\ +</span>
+<span class="s2">   (?P&lt;hi95&gt;[0-9.eE+-]+?)\]</span>
+<span class="s2">   \ *$</span>
+<span class="s2">   &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">VERBOSE</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="parse_var">
+<a class="viewcode-back" href="../../../dream/stats.html#bumps.dream.stats.parse_var">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_var</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse a line returned by format_vars back into the statistics for the</span>
+<span class="sd">    variable on that line.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">VAR_PATTERN</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;exp&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;exp&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">VarStats</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;parnum&#39;</span><span class="p">)),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;parname&#39;</span><span class="p">),</span>
+                        <span class="n">mean</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="n">exp</span><span class="p">,</span>
+                        <span class="n">median</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;median&#39;</span><span class="p">)),</span>
+                        <span class="n">best</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;best&#39;</span><span class="p">)),</span>
+                        <span class="n">p68</span><span class="o">=</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;lo68&#39;</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;hi68&#39;</span><span class="p">))),</span>
+                        <span class="n">p95</span><span class="o">=</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;lo95&#39;</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;hi95&#39;</span><span class="p">))),</span>
+                       <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="stats">
+<a class="viewcode-back" href="../../../dream/stats.html#bumps.dream.stats.stats">[docs]</a>
+<span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find mean and standard deviation of a set of weighted samples.</span>
+
+<span class="sd">    Note that the median is not strictly correct (we choose an endpoint</span>
+<span class="sd">    of the sample for the case where the median falls between two values</span>
+<span class="sd">    in the sample), but this is good enough when the sample size is large.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">weights</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="c1"># TODO: this is biased by selection of mean; need an unbiased formula</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">weights</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mean</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span></div>
+
+
+
+<div class="viewcode-block" id="credible_interval">
+<a class="viewcode-back" href="../../../dream/stats.html#bumps.dream.stats.credible_interval">[docs]</a>
+<span class="k">def</span> <span class="nf">credible_interval</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the credible interval covering the portion *ci* of the data.</span>
+
+<span class="sd">    *x* are samples from the posterior distribution.</span>
+
+<span class="sd">    *ci* is a set of intervals in [0,1].  For a $1-\sigma$ interval use</span>
+<span class="sd">    *ci=erf(1/sqrt(2))*, or 0.68. About 1e5 samples are needed for 2 digits</span>
+<span class="sd">    of  precision on a $1-\sigma$ credible interval.  For a 95% interval,</span>
+<span class="sd">    about 1e6 samples are needed for 2 digits of precision.  At least 1000</span>
+<span class="sd">    points are needed for an unbiased result, otherwise the resulting interval</span>
+<span class="sd">    will be shorter than expected (tested on a variety of distributions</span>
+<span class="sd">    including exponential, cauchy, gaussian, beta and gamma).</span>
+
+<span class="sd">    *weights* is a vector of weights for each x, or None for unweighted.</span>
+<span class="sd">    One could weight points according to temperature in a parallel tempering</span>
+<span class="sd">    dataset.</span>
+
+<span class="sd">    Returns an array *[[x1_low, x1_high], [l2_low, x2_high], ...]* where</span>
+<span class="sd">    *[xi_low, xi_high]* are the starting and ending values for credible</span>
+<span class="sd">    interval *i*.</span>
+
+<span class="sd">    This function is faster if the inputs are already sorted.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">ci</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="o">-</span><span class="n">ci</span><span class="p">,</span> <span class="o">+</span><span class="n">ci</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="o">/</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="mf">0.5</span><span class="o">/</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="c1">#cdf = np.linspace(1, n, n)/(n+1)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">weights</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="c1"># convert weights to cdf</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">cdf</span> <span class="o">/=</span> <span class="n">cdf</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">cdf</span> <span class="o">-=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">cdf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1">#cdf *= n/(cdf[-1]*(n+1))</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">ci</span><span class="o">.</span><span class="n">shape</span> <span class="k">else</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="shortest_credible_interval">
+<a class="viewcode-back" href="../../../dream/stats.html#bumps.dream.stats.shortest_credible_interval">[docs]</a>
+<span class="k">def</span> <span class="nf">shortest_credible_interval</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ci</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the credible interval covering the portion *ci* of the data.</span>
+
+<span class="sd">    *x* are samples from the posterior distribution.</span>
+<span class="sd">    *ci* is the interval size in (0,1], and defaults to 0.95.</span>
+<span class="sd">    For a 1-sigma interval use *ci=erf(1/sqrt(2))*.</span>
+<span class="sd">    *weights* is a vector of weights for each x, or None for unweighted.</span>
+
+<span class="sd">    Returns the minimum and maximum values of the interval.</span>
+<span class="sd">    If *ci* is a vector, return a vector of intervals.</span>
+
+<span class="sd">    This function is faster if the inputs are already sorted.</span>
+
+<span class="sd">    About 1e6 samples are needed for 2 digits of precision on a 95%</span>
+<span class="sd">    credible interval, or 1e5 for 2 digits on a 1-sigma credible interval.</span>
+
+<span class="sd">    To remove bias towards toward smaller intervals, the midpoints between</span>
+<span class="sd">    the surrounding intervals are used as the end points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># Simple solution: ci*N is the number of points in the interval, so</span>
+        <span class="c1"># find the width of every interval of that size and return the smallest.</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">ci</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_unweighted_hpd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">_unweighted_hpd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ci_k</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci_k</span> <span class="ow">in</span> <span class="n">ci</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">weights</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="c1"># Work from the empirical cdf, finding the corresponding right</span>
+        <span class="c1"># interval for each possible left interval and choosing that with</span>
+        <span class="c1"># the shortest distance.</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">cdf</span> <span class="o">/=</span> <span class="n">cdf</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1">#jcdf -= 0.5*cdf[0]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">ci</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_weighted_hpd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">_weighted_hpd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">ci_k</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci_k</span> <span class="ow">in</span> <span class="n">ci</span><span class="p">]</span></div>
+
+
+<span class="k">def</span> <span class="nf">_unweighted_hpd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ci</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find shortest credible interval ci in sorted, unweighted x</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ci</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">size</span><span class="p">:]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="n">size</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+        <span class="c1">#left, right = x[idx], x[idx+size]</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">index</span><span class="o">+</span><span class="n">size</span> <span class="o">==</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="n">size</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="n">size</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span>
+
+<span class="k">def</span> <span class="nf">_weighted_hpd</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">ci</span><span class="p">):</span>  <span class="c1"># extra one-half interval</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find shortest credible interval ci in sorted, weighted x</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cdf</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">ci</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">z</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">p_left</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">[:</span><span class="n">size</span><span class="p">]</span>
+    <span class="n">z_left</span> <span class="o">=</span> <span class="n">z</span><span class="p">[:</span><span class="n">size</span><span class="p">]</span>
+    <span class="c1"># avoid spurious floating point bugs, e.g., where .1+0.9 &gt; 1.0</span>
+    <span class="n">i_right</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cdf</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">p_left</span> <span class="o">+</span> <span class="n">ci</span><span class="p">)</span>
+    <span class="n">z_right</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">i_right</span><span class="p">]</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">z_right</span> <span class="o">-</span> <span class="n">z_left</span><span class="p">)</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">z_left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">z_left</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">z_left</span><span class="p">[</span><span class="n">index</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">z_right</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">index</span><span class="o">+</span><span class="mi">1</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_right</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">z_right</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="n">z_right</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.stats</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

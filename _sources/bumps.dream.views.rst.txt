@@ -1,0 +1,7 @@
+bumps.dream.views module
+========================
+
+.. automodule:: bumps.dream.views
+   :members:
+   :undoc-members:
+   :show-inheritance:

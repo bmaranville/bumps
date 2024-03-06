@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bumps.dream.bounds &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" accesskey="U">bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.bounds</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for bumps.dream.bounds</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Bounds handling.</span>
+
+<span class="sd">Use bounds(low, high, style) to create a bounds handling object.  This</span>
+<span class="sd">function operates on a point x, transforming it so that all dimensions</span>
+<span class="sd">are within the bounds.  Options are available, including reflecting,</span>
+<span class="sd">wrapping, clipping or randomizing the point, or ignoring the bounds.</span>
+
+<span class="sd">The returned bounds object should have an apply(x) method which</span>
+<span class="sd">transforms the point *x*.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;make_bounds_handler&quot;</span><span class="p">,</span> <span class="s2">&quot;Bounds&quot;</span><span class="p">,</span> <span class="s2">&quot;ReflectBounds&quot;</span><span class="p">,</span> <span class="s2">&quot;ClipBounds&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;FoldBounds&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomBounds&quot;</span><span class="p">,</span> <span class="s2">&quot;IgnoreBounds&quot;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">isinf</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">.compiled</span> <span class="kn">import</span> <span class="n">dll</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">njit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span>
+
+<div class="viewcode-block" id="make_bounds_handler">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.make_bounds_handler">[docs]</a>
+<span class="k">def</span> <span class="nf">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;reflect&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a bounds object which can update the bounds.</span>
+
+<span class="sd">    Bounds handling *style* name is one of::</span>
+
+<span class="sd">        reflect:   reflect off the boundary</span>
+<span class="sd">        clip:      stop at the boundary</span>
+<span class="sd">        fold:      wrap values to the other side of the boundary</span>
+<span class="sd">        randomize: move to a random point in the bounds</span>
+<span class="sd">        none:      ignore the bounds</span>
+
+<span class="sd">    With semi-infinite intervals folding and randomizing aren&#39;t well</span>
+<span class="sd">    defined, and reflection is used instead.</span>
+
+<span class="sd">    With finite intervals the the reflected or folded point may still be</span>
+<span class="sd">    outside the bounds (which can happen if the step size is too large),</span>
+<span class="sd">    and a random uniform value is used instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">IgnoreBounds</span><span class="p">()</span>
+
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">bounds</span>
+
+    <span class="c1"># Do boundary handling -- what to do when points fall outside bound</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="n">style</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;reflect&#39;</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">ReflectBounds</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;clip&#39;</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">ClipBounds</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;fold&#39;</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">FoldBounds</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;randomize&#39;</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">RandomBounds</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;none&#39;</span> <span class="ow">or</span> <span class="n">style</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">IgnoreBounds</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bounds style </span><span class="si">%s</span><span class="s2"> is not valid&quot;</span> <span class="o">%</span> <span class="n">style</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">f</span></div>
+
+
+
+<div class="viewcode-block" id="Bounds">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.Bounds">[docs]</a>
+<span class="k">class</span> <span class="nc">Bounds</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for all times of bounds objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_interface</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># type: Callable[[int, int, Any, Any, Any], None]</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># type: np.ndarray</span>
+    <span class="n">high</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># type: np.ndarray</span>
+
+<div class="viewcode-block" id="Bounds.apply">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.Bounds.apply">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Force pop (population) values within bounds&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Force parameter values within bounds for each member of the population</span>
+<span class="sd">        (population is expected to be a 2d array of shape (M, N) where</span>
+<span class="sd">         - M is the size of the population</span>
+<span class="sd">         - N is then number of parameters</span>
+<span class="sd">        Returns population for convenience.  E.g., y = bounds(x+0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_interface</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c_interface</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">population</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">),</span> <span class="n">population</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">ctypes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">population</span></div>
+
+
+
+<div class="viewcode-block" id="ReflectBounds">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.ReflectBounds">[docs]</a>
+<span class="k">class</span> <span class="nc">ReflectBounds</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reflect parameter values into bounded region</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_interface</span> <span class="o">=</span> <span class="n">dll</span><span class="o">.</span><span class="n">bounds_reflect</span> <span class="k">if</span> <span class="n">dll</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="ReflectBounds.apply">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.ReflectBounds.apply">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update pop so all values lie within bounds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">pop</span><span class="p">:</span>
+            <span class="c1"># Reflect points which are out of bounds</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="c1"># Randomize points which are still out of bounds</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">-</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ClipBounds">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.ClipBounds">[docs]</a>
+<span class="k">class</span> <span class="nc">ClipBounds</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clip values to bounded region</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_interface</span> <span class="o">=</span> <span class="n">dll</span><span class="o">.</span><span class="n">bounds_clip</span> <span class="k">if</span> <span class="n">dll</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="ClipBounds.apply">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.ClipBounds.apply">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">pop</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FoldBounds">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.FoldBounds">[docs]</a>
+<span class="k">class</span> <span class="nc">FoldBounds</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrap values into the bounded region</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_interface</span> <span class="o">=</span> <span class="n">dll</span><span class="o">.</span><span class="n">bounds_fold</span> <span class="k">if</span> <span class="n">dll</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="FoldBounds.apply">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.FoldBounds.apply">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">pop</span><span class="p">:</span>
+            <span class="c1"># Deal with semi-infinite cases using reflection</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">isinf</span><span class="p">(</span><span class="n">maxn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">isinf</span><span class="p">(</span><span class="n">minn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="c1"># Wrap points which are out of bounds</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+            <span class="c1"># Randomize points which are still out of bounds</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">-</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RandomBounds">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.RandomBounds">[docs]</a>
+<span class="k">class</span> <span class="nc">RandomBounds</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Randomize values into the bounded region</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_interface</span> <span class="o">=</span> <span class="n">dll</span><span class="o">.</span><span class="n">bounds_random</span> <span class="k">if</span> <span class="n">dll</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="RandomBounds.apply">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.RandomBounds.apply">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">pop</span><span class="p">:</span>
+            <span class="c1"># Deal with semi-infinite cases using reflection</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">isinf</span><span class="p">(</span><span class="n">maxn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">isinf</span><span class="p">(</span><span class="n">minn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="c1"># The remainder are selected uniformly from the bounded region</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">minn</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">maxn</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">util</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">maxn</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">-</span><span class="n">minn</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IgnoreBounds">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.IgnoreBounds">[docs]</a>
+<span class="k">class</span> <span class="nc">IgnoreBounds</span><span class="p">(</span><span class="n">Bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Leave values outside the bounded region</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_interface</span> <span class="o">=</span> <span class="n">dll</span><span class="o">.</span><span class="n">bounds_ignore</span> <span class="k">if</span> <span class="n">dll</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="IgnoreBounds.apply">
+<a class="viewcode-back" href="../../../dream/bounds.html#bumps.dream.bounds.IgnoreBounds.apply">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">minn</span><span class="p">,</span> <span class="n">maxn</span><span class="p">,</span> <span class="n">pop</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;bounds handlers test&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span>
+
+    <span class="n">bounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">]))</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">([[</span><span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">]],</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;reflect&#39;</span><span class="p">,</span> <span class="s1">&#39;clip&#39;</span><span class="p">,</span> <span class="s1">&#39;fold&#39;</span><span class="p">,</span> <span class="s1">&#39;randomize&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">([[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">]],</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;reflect&#39;</span><span class="p">,</span> <span class="s1">&#39;clip&#39;</span><span class="p">,</span> <span class="s1">&#39;fold&#39;</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">w</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">-</span> <span class="n">w</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;reflect&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span>
+                <span class="o">-</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;clip&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span>
+                <span class="o">-</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">norm</span><span class="p">(</span><span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;fold&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span>
+                <span class="o">-</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;randomize&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="mi">5</span> <span class="o">&lt;=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">32</span> <span class="ow">and</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">12</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">([[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;reflect&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="mi">5</span> <span class="o">&lt;=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">10</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">([[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;d&#39;</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">make_bounds_handler</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="s1">&#39;fold&#39;</span><span class="p">)(</span><span class="n">v</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="mi">5</span> <span class="o">&lt;=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">10</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">test</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../bumps.html" >bumps</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.dream.bounds</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

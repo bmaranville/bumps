@@ -1,0 +1,7 @@
+bumps.monitor module
+====================
+
+.. automodule:: bumps.monitor
+   :members:
+   :undoc-members:
+   :show-inheritance:

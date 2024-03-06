@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.vfs module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.vfs module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.vfs">
+<span id="bumps-vfs-module"></span><h1>bumps.vfs module<a class="headerlink" href="#module-bumps.vfs" title="Link to this heading">¶</a></h1>
+<p>Redirect calls to open, etc. to a virtual file system.</p>
+<p>Use this to mount a zip file as a file system, and then all subsequent calls
+to chdir, open, etc. will reference files in the zip file instead of the disk.</p>
+<p>This will only work for packages which do all their I/O in python, and not
+those which use direct calls to the C library, so for example, it will not
+work with h5py. XML parsing from a zip file is also unlikely to work since
+expat uses the C library directly for parsing.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Do this before importing any other modules!  It sets up hooks for</span>
+<span class="c1"># redirecting filesystem access even if the module imports the symbol</span>
+<span class="c1"># directly as &quot;from os import getcwd&quot;.</span>
+<span class="kn">import</span> <span class="nn">vfs</span>
+<span class="n">vfs</span><span class="o">.</span><span class="n">vfs_init</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="k">with</span> <span class="n">vfs</span><span class="o">.</span><span class="n">ZipFS</span><span class="p">(</span><span class="s1">&#39;data.zip&#39;</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="s1">&#39;file1.dat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Filesystems available:</p>
+<ul class="simple">
+<li><p><cite>RealFS</cite> - uses the builtin python functions to access the O/S.</p></li>
+<li><p><cite>ZipFS</cite> - opens a zip file as the filesystem root.</p></li>
+</ul>
+<p>Calls redirected:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">__builtin__</span><span class="o">.</span><span class="n">open</span> <span class="p">(</span><span class="n">python</span> <span class="mi">2</span> <span class="n">only</span><span class="p">)</span>
+<span class="n">builtins</span><span class="o">.</span><span class="n">open</span> <span class="p">(</span><span class="n">python</span> <span class="mi">2</span> <span class="ow">and</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">io</span><span class="o">.</span><span class="n">open</span> <span class="p">(</span><span class="n">python</span> <span class="mi">2</span> <span class="ow">and</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">os</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">posix</span><span class="p">:</span>
+    <span class="n">chdir</span><span class="p">,</span> <span class="n">getcwd</span><span class="p">,</span> <span class="n">listdir</span>
+<span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">ntpath</span><span class="p">,</span> <span class="n">posixpath</span><span class="p">:</span>
+    <span class="n">exists</span><span class="p">,</span> <span class="n">isfile</span><span class="p">,</span> <span class="n">isir</span><span class="p">,</span> <span class="n">abspath</span><span class="p">,</span> <span class="n">realpath</span>
+</pre></div>
+</div>
+<p>You can also use the file systems directly without using the <cite>vfs_init</cite>
+hook or the with statement.  Just call <cite>fs.chdir</cite>, etc. on the file system
+object.</p>
+<p><em>file</em> in python 2.x is a type as well as constructor, so a simple redirect
+to a replacement constructor will not work. Don’t try to support it since
+it is gone in python 3.</p>
+<p>Works with numpy.loadtxt and pandas parsers.</p>
+<p>For pandas, either need to specify <em>engine=”python”</em> or pass an open call
+to the reader; if you just pass a filename, then it will try opening it
+with the libc open function and fail.  Could potentially monkeypatch
+pandas to pre-open the file.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.vfs.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.vfs module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

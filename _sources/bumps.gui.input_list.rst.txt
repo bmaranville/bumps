@@ -1,0 +1,7 @@
+bumps.gui.input\_list module
+============================
+
+.. automodule:: bumps.gui.input_list
+   :members:
+   :undoc-members:
+   :show-inheritance:

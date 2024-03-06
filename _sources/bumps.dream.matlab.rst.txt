@@ -1,0 +1,7 @@
+bumps.dream.matlab module
+=========================
+
+.. automodule:: bumps.dream.matlab
+   :members:
+   :undoc-members:
+   :show-inheritance:

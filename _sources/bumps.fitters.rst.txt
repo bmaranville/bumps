@@ -1,0 +1,7 @@
+bumps.fitters module
+====================
+
+.. automodule:: bumps.fitters
+   :members:
+   :undoc-members:
+   :show-inheritance:

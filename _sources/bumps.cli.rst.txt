@@ -1,0 +1,7 @@
+bumps.cli module
+================
+
+.. automodule:: bumps.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:

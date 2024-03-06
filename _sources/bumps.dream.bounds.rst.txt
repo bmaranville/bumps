@@ -1,0 +1,7 @@
+bumps.dream.bounds module
+=========================
+
+.. automodule:: bumps.dream.bounds
+   :members:
+   :undoc-members:
+   :show-inheritance:

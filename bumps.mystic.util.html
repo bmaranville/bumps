@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>bumps.mystic.util module &#8212; Bumps 0.9.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=601dbdee" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script src="_static/documentation_options.js?v=9dc39874"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.util module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-bumps.mystic.util">
+<span id="bumps-mystic-util-module"></span><h1>bumps.mystic.util module<a class="headerlink" href="#module-bumps.mystic.util" title="Link to this heading">¶</a></h1>
+<p>Utility functions</p>
+<p>choose_without_replacement(m,n,repeats=None)</p>
+<blockquote>
+<div><p>sample from a set without replacement</p>
+</div></blockquote>
+<p>runlength(v)</p>
+<blockquote>
+<div><p>return the values and lengths of runs in a vector</p>
+</div></blockquote>
+<p>countunique(A)</p>
+<blockquote>
+<div><p>return the element and frequency of each unique value in an array</p>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.util.choose_without_replacement">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.util.</span></span><span class="sig-name descname"><span class="pre">choose_without_replacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/util.html#choose_without_replacement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.util.choose_without_replacement" title="Link to this definition">¶</a></dt>
+<dd><p>Choose n nonnegative integers less than m without replacement</p>
+<p>Returns an array of shape n, or (n,repeats).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.util.countunique">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.util.</span></span><span class="sig-name descname"><span class="pre">countunique</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/util.html#countunique"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.util.countunique" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the unique elements in an array and their frequency.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.util.runlength">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.util.</span></span><span class="sig-name descname"><span class="pre">runlength</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/util.html#runlength"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.util.runlength" title="Link to this definition">¶</a></dt>
+<dd><p>Return the run lengths for repeated values in a vector v.</p>
+<p>See also countunique.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="bumps.mystic.util.zscore">
+<span class="sig-prename descclassname"><span class="pre">bumps.mystic.util.</span></span><span class="sig-name descname"><span class="pre">zscore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bumps/mystic/util.html#zscore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#bumps.mystic.util.zscore" title="Link to this definition">¶</a></dt>
+<dd><p>Convert an array of data to zscores.</p>
+<p>Use <em>axis</em> to limit the calculation of mean and standard deviation to
+a particular axis.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">bumps.mystic.util module</a><ul>
+<li><a class="reference internal" href="#bumps.mystic.util.choose_without_replacement"><code class="docutils literal notranslate"><span class="pre">choose_without_replacement()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.util.countunique"><code class="docutils literal notranslate"><span class="pre">countunique()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.util.runlength"><code class="docutils literal notranslate"><span class="pre">runlength()</span></code></a></li>
+<li><a class="reference internal" href="#bumps.mystic.util.zscore"><code class="docutils literal notranslate"><span class="pre">zscore()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bumps.mystic.util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Bumps 0.9.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bumps.mystic.util module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>
