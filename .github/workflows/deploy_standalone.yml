@@ -1,0 +1,93 @@
+name: Build pyodide static site
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # Build job
+  build:
+    # <Not provided for brevity>
+    # At a minimum this job should upload artifacts using actions/upload-pages-artifact
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        python-version: ["3.11"]
+
+    steps:
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        miniforge-variant: Mambaforge
+        activate-environment: pyodide
+        use-mamba: true
+    - name: Setup pyodide environment
+      run: |
+        mamba install -y emsdk pyodide-build
+        mamba list
+        echo $PATH
+        PYODIDE_EMSCRIPTEN_VERSION=$(pyodide config get emscripten_version)
+        emsdk install ${PYODIDE_EMSCRIPTEN_VERSION}
+        emsdk activate ${PYODIDE_EMSCRIPTEN_VERSION}
+        source "$CONDA_PREFIX/lib/python${{ matrix.python-version }}/site-packages/emsdk/emsdk_env.sh"
+    - name: Clone git repos
+      run: |
+        git clone -b webview --single-branch https://github.com/bumps/bumps
+    - name: Build bumps
+      run: |
+        cd bumps
+        python setup.py bdist_wheel
+        echo "BUMPS_DIST=$(realpath dist)" >> $GITHUB_ENV
+        echo "BUMPS_WHEEL_FILE=$(ls dist)" >> $GITHUB_ENV
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: initialize bumps client
+      run: |
+        npm i
+        npm link
+      working-directory: bumps/bumps/webview/client
+    - name: build client
+      id: build_client
+      working-directory: bumps/bumps/webview/client
+      run: |
+        rm -rf dist_standalone
+        npm run build_standalone
+        echo "deploy_path=$(realpath dist_standalone)" >> $GITHUB_OUTPUT
+        mkdir -p dist_standalone/assets/wheels
+        cp $BUMPS_DIST/$BUMPS_WHEEL_FILE dist_standalone/assets/wheels/
+      env:
+         CI: ""
+    
+    - name: Upload pages artifact client artifact
+      uses: actions/upload-pages-artifact@v3.0.1
+      with:
+        path: ${{ steps.build_client.outputs.deploy_path }}
+
+  # Deploy job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
