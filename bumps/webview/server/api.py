@@ -14,6 +14,7 @@ from copy import deepcopy
 import os
 import sys
 import uuid
+import dill
 
 from bumps.fitters import DreamFit, LevenbergMarquardtFit, SimplexFit, DEFit, MPFit, BFGSFit, FitDriver, fit, nllf_scale, format_uncertainty
 from bumps.mapper import MPMapper
@@ -352,6 +353,7 @@ async def start_fit_thread(fitter_id: str="", options=None, terminate_on_finish=
         state.fit_abort_event.clear()
         state.fit_complete_event.clear()
         state.fit_uncertainty_final.clear()
+        state.fit_stored_problem = fitProblem
 
         fit_thread = FitThread(
             abort_event=state.fit_abort_event,
@@ -398,12 +400,19 @@ async def _fit_progress_handler(event: Dict):
         if message == 'complete':
             state.shared.active_fit = {}
     elif message == 'convergence_update':
-        state.fitting.population = event["pop"]
+        state.fitting.population = np.asarray(event["pop"])
         state.shared.updated_convergence = now_string()
     elif message == 'progress':
         await emit("fit_progress", to_json_compatible_dict(event))
     elif message == 'uncertainty_update' or message == 'uncertainty_final':
-        state.fitting.uncertainty_state = cast(bumps.dream.state.MCMCDraw, event["uncertainty_state"])
+        uncertainty_state_raw = event.get("uncertainty_state")
+        print("uncertainty_update:", message, event.keys(), uncertainty_state_raw)
+        if uncertainty_state_raw is None:
+            return
+        uncertainty_state_bytes = bytes(uncertainty_state_raw)
+        print("uncertainty_update:", event.keys(), uncertainty_state_bytes)
+        uncertainty_state = dill.loads(uncertainty_state_bytes)
+        state.fitting.uncertainty_state = cast(bumps.dream.state.MCMCDraw, uncertainty_state)
         state.shared.updated_uncertainty = now_string()
         state.autosave()
         if message == 'uncertainty_final':
@@ -422,11 +431,12 @@ async def _fit_complete_handler(event):
                 await log("fit thread failed to complete")
     state.fit_thread = None
     state.shared.active_fit = {}
+    problem: bumps.fitproblem.FitProblem = state.fit_stored_problem
+    state.fit_stored_problem = None
     if message == "error":
         await log(event["traceback"], title=f"fit failed with error: {event.get('error_string')}")
         logger.warning(f"fit failed with error: {event.get('error_string')}")
     else:
-        problem: bumps.fitproblem.FitProblem = event["problem"]
         chisq = nice(2*event["value"]/problem.dof)
         problem.setp(event["point"])
         problem.model_update()
@@ -435,7 +445,7 @@ async def _fit_complete_handler(event):
         await log(event["info"], title=f"done with chisq {chisq}")
         logger.info(f"fit done with chisq {chisq}")
 
-    if fit_thread.fitclass.id == 'dream':
+    if fit_thread == "dream" or getattr(getattr(fit_thread, "fitclass", None), "id", None) == 'dream':
         # print("waiting for uncertainty to complete...")
         await asyncio.to_thread(state.fit_uncertainty_final.wait)
 
@@ -834,7 +844,7 @@ def to_json_compatible_dict(obj) -> JSON_TYPE:
     elif isinstance(obj, dict):
         return type(obj)((to_json_compatible_dict(k), to_json_compatible_dict(v))
                         for k, v in obj.items())
-    elif isinstance(obj, np.ndarray) and obj.dtype.kind in ['f', 'i']:
+    elif isinstance(obj, np.ndarray) and obj.dtype.kind in ['f', 'i', 'u']:
         return obj.tolist()
     elif isinstance(obj, np.ndarray) and obj.dtype.kind == 'O':
         return to_json_compatible_dict(obj.tolist())
@@ -844,6 +854,13 @@ def to_json_compatible_dict(obj) -> JSON_TYPE:
         return str(obj) if np.isinf(obj) else float(obj)
     elif isinstance(obj, UNDEFINED_TYPE):
         return None
+    elif isinstance(obj, memoryview):
+        np_array = np.asarray(obj)
+        return to_json_compatible_dict(np_array)
+    elif isinstance(obj, bytes):
+        np_array = np.frombuffer(obj, dtype=np.uint8)
+        print('bytes to np_array: ', np_array.dtype, np_array.dtype.kind, np_array[:100])
+        return to_json_compatible_dict(np_array)
     else:
         raise ValueError("obj %s is not serializable" % str(obj))
 

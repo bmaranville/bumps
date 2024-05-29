@@ -222,6 +222,7 @@ class State:
     fit_complete_event: Event
     fit_uncertainty_final: Event
     fit_enabled: Event
+    fit_stored_problem: Optional['bumps.fitproblem.FitProblem'] = None
     calling_loop: Optional[asyncio.AbstractEventLoop] = None
 
     # State to be stored:
@@ -249,8 +250,9 @@ class State:
         if not read_only:
             self.shared.session_output_file = dict(filename=session_file_name, pathlist=session_pathlist)
         if session_file_name is not None:
-            if Path(session_file_name).exists():
-                self.read_session_file(session_file_name)
+            full_path = Path(*session_pathlist) / session_file_name
+            if full_path.exists():
+                self.read_session_file(full_path)
             else:
                 self.save()
     

@@ -2,10 +2,12 @@ import { wrap, proxy } from 'comlink';
 import type { Endpoint, Remote } from 'comlink';
 // import './standalone_worker';
 import type { Server } from './standalone_worker';
+import type { Server as FitServer } from './standalone_fit_worker';
 
 export function io() {
   const worker = new Worker(new URL("./standalone_worker.ts", import.meta.url), {type: 'module'});
-  const socket = new AsyncSocket(worker);
+  const fit_worker = new Worker(new URL("./standalone_fit_worker.ts", import.meta.url), {type: 'module'});
+  const socket = new AsyncSocket(worker, fit_worker);
   return socket;
 };
 
@@ -15,15 +17,18 @@ export class AsyncSocket {
   proxy_lookups: Map<EventCallback, typeof proxy<EventCallback>>;
   handlers: { [signal: string]: EventCallback[] }
   ServerPromise: Promise<Remote<Server>>
+  FitServerPromise: Promise<Remote<FitServer>>
   worker: Worker
   id: string = "WebWorker"
 
-  constructor(worker: Worker) {
+  constructor(worker: Worker, fit_worker: Worker) {
     this.handlers = {};
     this.proxy_lookups = new Map();
     this.worker = worker;
     const ServerClass = wrap<Server>(worker);
     this.ServerPromise = new ServerClass();
+    const FitServerClass = wrap<FitServer>(worker);
+    this.FitServerPromise = new FitServerClass();
   }
   connect() {}
   on(signal: string, handler: EventCallback) {

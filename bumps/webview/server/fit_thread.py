@@ -5,6 +5,7 @@ from threading import Event
 import traceback
 
 from blinker import Signal
+import dill
 
 import numpy as np
 from bumps import monitor
@@ -149,8 +150,8 @@ class DreamMonitor(monitor.Monitor):
                 self.update_counter = update_counter
                 evt = dict(
                     message=self.message,
-                    time = self.time,
-                    uncertainty_state=deepcopy(self.uncertainty_state),
+                    time=self.time,
+                    uncertainty_state=dill.dumps(self.uncertainty_state),
                 )
                 EVT_FIT_PROGRESS.send(evt)
 
@@ -164,7 +165,7 @@ class DreamMonitor(monitor.Monitor):
             evt = dict(
                 message="uncertainty_final",
                 time=self.time,
-                uncertainty_state=deepcopy(self.uncertainty_state),
+                uncertainty_state=dill.dumps(self.uncertainty_state),
             )
             EVT_FIT_PROGRESS.send(evt)
 
@@ -250,7 +251,7 @@ class FitThread(Thread):
                 driver.show()
                 captured_output = fid.getvalue()
 
-            evt = dict(message="complete", problem=self.problem,
+            evt = dict(message="complete",
                     point=x, value=fx, info=captured_output)
             EVT_FIT_COMPLETE.send(evt)
             self.result = evt
