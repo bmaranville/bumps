@@ -1,0 +1,20 @@
+{
+    "type": "module",
+    "scripts": {
+        "dev": "npm run build -- --sourcemap=inline --watch",
+        "build_esbuild": "esbuild js/widget.ts --minify --format=esm --bundle --outdir=src/widget/static",
+        "build": "vite build",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@anywidget/types": "^0.2.0",
+        "bootstrap": "^5.3.3",
+        "esbuild": "^0.24.0",
+        "typescript": "^5.6.3",
+        "vite": "^5.4.11",
+        "vue": "^3.5.12"
+    },
+    "dependencies": {
+        "@vitejs/plugin-vue": "^5.2.0"
+    }
+}
