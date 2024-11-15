@@ -30,6 +30,8 @@ import SessionMenu from './components/SessionMenu.vue';
 
 const props = defineProps<{
   panels: {title: string, component: any }[],
+  socket: AsyncSocket,
+  single_panel?: string,
   name?: string
 }>();
 
@@ -42,28 +44,18 @@ const LAYOUTS = ["left-right", "top-bottom", "full"];
 const menuToggle = ref<HTMLButtonElement>();
 const nativefs = ref(false);
 
-// Create a SocketIO connection, to be passed to child components
-// so that they can do their own communications with the host.
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-
-const sio_base_path = urlParams.get('base_path') ?? window.location.pathname;
-const sio_server = urlParams.get('server') ?? '';
-const single_panel = urlParams.get('single_panel');
-if (single_panel !== null) {
+if (props.single_panel) {
   active_layout.value = 'full';
-  const panel_index = props.panels.findIndex(({title}) => (title.toLowerCase() == single_panel.toLowerCase()));
+  const panel_index = props.panels.findIndex(({title}) => (title.toLowerCase() == props?.single_panel?.toLowerCase()));
   if (panel_index > -1) {
     active_panel.value[0] = panel_index;
   }
   else {
-    console.error(`Panel ${single_panel} not found`);
+    console.error(`Panel ${props.single_panel} not found`);
   }
 }
 
-const socket = io(sio_server, {
-   path: `${sio_base_path}socket.io`,
-}) as AsyncSocket;
+const socket = props.socket;
 socket_ref.value = socket;
 
 const can_mount_local = (
