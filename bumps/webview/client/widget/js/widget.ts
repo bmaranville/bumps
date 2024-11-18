@@ -75,6 +75,7 @@ class SocketAdapter {
 /* Specifies attributes defined with traitlets in ../src/widget/__init__.py */
 interface WidgetModel {
 	value: number;
+	panel: string;
 	/* Add your own */
 }
 
@@ -93,8 +94,12 @@ function original_render({ model, e, experimental }: RenderProps<WidgetModel>) {
 }
 
 function render({model, el, experimental}: RenderProps<WidgetModel>) {
+  const model_panel = model.get("panel");
   const socket = new SocketAdapter(model, experimental.invoke);
-  const app = createApp(App, {panels, socket, single_panel: null}).mount(el);
+  el.classList.add("bumps-widget");
+  // if none is passed in, show the whole app
+  const panel = (model_panel.toLowerCase() === 'none') ? null : model_panel;
+  const app = createApp(App, {panels, socket, single_panel: panel }).mount(el);
 }
 
 export default { render };

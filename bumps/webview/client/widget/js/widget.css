@@ -21,3 +21,7 @@
 .widget button:hover {
 	transform: scale(1.05);
 }
+
+.bumps-widget {
+	height: 450px;
+}

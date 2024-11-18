@@ -1,4 +1,5 @@
 import asyncio
+import enum
 import importlib.metadata
 import pathlib
 from concurrent.futures import ThreadPoolExecutor
@@ -13,11 +14,28 @@ except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 
 
+class Panels(enum.StrEnum):
+    FullApp="None"
+    Data="Data"
+    Summary="Summary"
+    Log="Log"
+    History="History"
+    Convergence="Convergence"
+    Model="Model"
+    Parameters="Parameters"
+    Correlations="Correlations"
+    Trace="Trace"
+    ModelUncertainty="Model Uncertainty"
+    Uncertainty="Uncertainty"
+    Custom="Custom"
+    CustomUncertainty="Custom Uncertainty"
+
+
 class Widget(anywidget.AnyWidget):
     _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
     _css = pathlib.Path(__file__).parent / "static" / "style.css"
     _server = None
-    value = traitlets.Int(0).tag(sync=True)
+    panel = traitlets.UseEnum(Panels, default_value=Panels.FullApp).tag(sync=True)
 
     def __init__(self, server=None, **kwargs):
         super().__init__(**kwargs)
