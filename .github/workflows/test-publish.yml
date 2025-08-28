@@ -101,7 +101,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         # all additional supported python versions
-        include: ${{ fromJson(needs.generate-additional-versions.outputs.result) }}
+        include: [{"py":"3.12"},{"py":"3.13"}]
       fail-fast: false
 
     steps:
