@@ -71,6 +71,8 @@ jobs:
             const assert = require("assert");
             const minver = process.env.MIN_PYTHON.split(".").map((s) => +s);
             const maxver = process.env.MAX_PYTHON.split(".").map((s) => +s);
+            console.log({minver, maxver});
+            console.log("process.env:", process.env);
             assert(minver[0] === maxver[0], "Python major versions must match");
             const additional_versions = [];
             const min_minor = minver[1];
@@ -81,6 +83,7 @@ jobs:
               additional_versions.push({ py: `${minver[0]}.${minor}` });
               minor++;
             }
+            console.log({additional_versions});
             core.setOutput("include", JSON.stringify(additional_versions));
 
 # Test the wheel on different platforms, test webview, and check docs build
