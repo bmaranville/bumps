@@ -141,7 +141,7 @@ jobs:
         run: uv run python check_fitters.py
 
       - name: Check that the docs build (linux only)
-        if: ${{ matrix.py == env.MIN_PYTHON && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.py == null && matrix.os == 'ubuntu-latest' }}
         run: |
           source .venv/bin/activate
           make -j 4 -C doc SPHINXOPTS="-W --keep-going -n" html
