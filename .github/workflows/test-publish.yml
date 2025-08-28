@@ -30,7 +30,6 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const toml = require('toml');
             const assert = require('assert');
 
             try {
