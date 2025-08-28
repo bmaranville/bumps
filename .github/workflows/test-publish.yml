@@ -41,17 +41,15 @@ jobs:
               const requiresPython = requiresMatch[1];
               const minVerMatch = requiresPython.match(/>=(\d+)\.(\d+)/);
               if (!minVerMatch) {
-                throw new Error("No minimum version specified with '>='")
+                throw new Error("No minimum 'python-requires' version specified in pyproject.toml with '>='")
               }
               const maxVerMatch = requiresPython.match(/<=(\d+)\.(\d+)/);
               if (!maxVerMatch) {
-                throw new Error("No maximum version specified with '<='");
+                throw new Error("No maximum 'python-requires' version specified in pyproject.toml with '<='");
               }
               if (minVerMatch[1] !== maxVerMatch[1]) {
-                throw new Error(`major version of min (${minVerMatch[1]}) and max (${maxVerMatch[1]}) don't agree`);
+                throw new Error(`major version of 'requires-python' min (${minVerMatch[0]}) and max (${maxVerMatch[0]}) don't agree`);
               }
-              core.setOutput("min_python", minVerMatch[0]);
-              core.setOutput("max_python", maxVerMatch[0]);
               const minMajor = parseInt(minVerMatch[1], 10);
               const minMinor = parseInt(minVerMatch[2], 10);
               const maxMinor = parseInt(maxVerMatch[2], 10);
@@ -62,6 +60,8 @@ jobs:
                 versions.push(`${minMajor}.${minor}`);
                 minor++;
               }
+              core.setOutput("min_python", versions.at(0));
+              core.setOutput("max_python", versions.at(-1));
               return JSON.stringify(versions);
             } catch (error) {
               core.setFailed(error.message);
