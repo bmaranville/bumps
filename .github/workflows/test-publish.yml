@@ -31,7 +31,6 @@ jobs:
           script: |
             const fs = require('fs');
             const assert = require('assert');
-
             try {
               const pyprojectToml = fs.readFileSync('pyproject.toml', 'utf8');
               const requiresMatch = pyprojectToml.match(/requires-python\s*=\s*['"]([^'"]+)['"]/);
@@ -66,7 +65,7 @@ jobs:
             } catch (error) {
               core.setFailed(error.message);
             }
-					result-encoding: string
+          result-encoding: string
 
   # Build a pure Python wheel and upload as an artifact
   build-wheel:
