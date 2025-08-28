@@ -73,8 +73,6 @@ jobs:
             const assert = require("assert");
             const minver = process.env.MIN_PYTHON.split(".").map((s) => +s);
             const maxver = process.env.MAX_PYTHON.split(".").map((s) => +s);
-            console.log({minver, maxver});
-            console.log("process.env:", process.env);
             assert(minver[0] === maxver[0], "Python major versions must match");
             const additional_versions = [];
             const min_minor = minver[1];
@@ -100,25 +98,20 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        py: [null]
+        py: [""] # placeholder, will use default version
         include: ${{ fromJson(needs.generate-additional-versions.outputs.result) }}
       fail-fast: false
 
     steps:
-      - name: print includes
-        run: |
-          echo '${{ needs.generate-additional-versions.outputs.result }}';
-          echo '${{ fromJson(needs.generate-additional-versions.outputs.result) }}'
-    
       - uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Set up Python ${{ matrix.py || env.MIN_PYTHON }}
+      - name: Set up Python ${{ matrix.py || env.MIN_PYTHON}}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.py || env.MIN_PYTHON }}
+          python-version: ${{ matrix.py || env.MIN_PYTHON}}
 
       - name: Download the wheel
         uses: actions/download-artifact@v4
@@ -141,7 +134,7 @@ jobs:
         run: uv run python check_fitters.py
 
       - name: Check that the docs build (linux only)
-        if: ${{ matrix.py == null && matrix.os == 'ubuntu-latest' }}
+        if: ${{ !matrix.py && matrix.os == 'ubuntu-latest' }}
         run: |
           source .venv/bin/activate
           make -j 4 -C doc SPHINXOPTS="-W --keep-going -n" html
