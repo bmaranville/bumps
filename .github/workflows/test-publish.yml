@@ -88,7 +88,7 @@ jobs:
             return JSON.stringify(additional_versions);
           result-encoding: string
       - name: Print versions
-        run: echo '${{ steps.generate-matrix.outputs.result }}'
+        run: echo '${{ steps.generate-include.outputs.result }}'
 
 # Test the wheel on different platforms, test webview, and check docs build
   test:
