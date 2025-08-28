@@ -84,6 +84,7 @@ jobs:
               minor++;
             }
             console.log({additional_versions});
+            core.setOutput("include", JSON.stringify(additional_versions));
             return JSON.stringify(additional_versions);
           result-encoding: string
 
@@ -98,7 +99,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         # all additional supported python versions
-        include: ${{ fromJson(needs.generate-matrix.outputs.result) }}
+        include: ${{ fromJson(needs.generate-matrix.outputs.generate-matrix.result) }}
 
       fail-fast: false
 
