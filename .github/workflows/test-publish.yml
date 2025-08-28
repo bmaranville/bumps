@@ -100,6 +100,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        py: [env.MIN_PYTHON]
         include: ${{ fromJson(needs.generate-additional-versions.outputs.result) }}
       fail-fast: false
 
