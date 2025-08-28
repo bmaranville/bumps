@@ -60,15 +60,14 @@ jobs:
             dist/bumps-*-py3-none-any.whl
             dist/bumps-*.tar.gz
 
-  generate-matrix:
+  generate-additional-versions:
     runs-on: ubuntu-latest
     outputs:
-      include: ${{ steps.generate-matrix.include }}
-      result: ${{ steps.generate-matrix.outputs.result }}
+      result: ${{ steps.generate-include.outputs.result }}
     steps:
-      - name: Generate matrix
+      - name: Generate additional versions
         uses: actions/github-script@v6
-        id: generate-matrix
+        id: generate-include
         with:
           script: |
             const assert = require("assert");
@@ -86,33 +85,23 @@ jobs:
               additional_versions.push({ py: `${minver[0]}.${minor}` });
               minor++;
             }
-            console.log({additional_versions});
-            core.setOutput("include", JSON.stringify(additional_versions));
             return JSON.stringify(additional_versions);
           result-encoding: string
       - name: Print versions
-        run: echo '${{ toJson(steps.generate-matrix) }}'
-
-  test-generated:
-    runs-on: ubuntu-latest
-    needs: generate-matrix
-    steps:
-      - name: Print output
-        run: echo '${{ toJson(needs.generate-matrix) }}'
+        run: echo '${{ steps.generate-matrix.outputs.result }}'
 
 # Test the wheel on different platforms, test webview, and check docs build
   test:
     runs-on: ${{ matrix.os }}
     needs: 
       - build-wheel
-      - generate-matrix
+      - generate-additional-versions
 
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         # all additional supported python versions
-        include: ${{ fromJson(needs.generate-matrix) }}
-
+        include: ${{ fromJson(needs.generate-additional-versions.outputs.result) }}
       fail-fast: false
 
     steps:
