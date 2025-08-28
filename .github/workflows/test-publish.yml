@@ -106,7 +106,10 @@ jobs:
 
     steps:
       - name: print includes
-        run: echo '${{ needs.generate-additional-versions.outputs.result }}'
+        run: |
+          echo '${{ needs.generate-additional-versions.outputs.result }}';
+          echo '${{ fromJson(needs.generate-additional-versions.outputs.result) }}'
+    
       - uses: actions/checkout@v4
 
       - name: Install uv
