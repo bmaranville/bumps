@@ -12,14 +12,66 @@ defaults:
   run:
     shell: bash
 
-env:
-  MIN_PYTHON: "3.11"
-  MAX_PYTHON: "3.13"
-
 jobs:
+  get-pyproject-python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.parse.outputs.result }}
+      min_python: ${{ steps.parse.outputs.min_python }}
+      max_python: ${{ steps.parse.outputs.max_python }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Parse pyproject.toml
+        uses: actions/github-script@v6
+        id: parse
+        with:
+          script: |
+            const fs = require('fs');
+            const toml = require('toml');
+            const assert = require('assert');
+
+            try {
+              const pyprojectToml = fs.readFileSync('pyproject.toml', 'utf8');
+              const requiresMatch = pyprojectToml.match(/requires-python\s*=\s*['"]([^'"]+)['"]/);
+              if (!requiresMatch) {
+                throw new Error("no reuires-python key-value found");
+              }
+              const requiresPython = requiresMatch[1];
+              const minVerMatch = requiresPython.match(/>=(\d+)\.(\d+)/);
+              if (!minVerMatch) {
+                throw new Error("No minimum version specified with '>='")
+              }
+              const maxVerMatch = requiresPython.match(/<=(\d+)\.(\d+)/);
+              if (!maxVerMatch) {
+                throw new Error("No maximum version specified with '<='");
+              }
+              if (minVerMatch[1] !== maxVerMatch[1]) {
+                throw new Error(`major version of min (${minVerMatch[1]}) and max (${maxVerMatch[1]}) don't agree`);
+              }
+              core.setOutput("min_python", minVerMatch[0]);
+              core.setOutput("max_python", maxVerMatch[0]);
+              const minMajor = parseInt(minVerMatch[1], 10);
+              const minMinor = parseInt(minVerMatch[2], 10);
+              const maxMinor = parseInt(maxVerMatch[2], 10);
+              assert(maxMinor >= minMinor, "max version is not greater than or equal to min version");
+              let minor = minMinor;
+              const versions = [];
+              while (minor <= maxMinor) {
+                versions.push(`${minMajor}.${minor}`);
+                minor++;
+              }
+              return JSON.stringify(versions);
+            catch (error) {
+              core.setFailed(error.message);
+            }
+
   # Build a pure Python wheel and upload as an artifact
   build-wheel:
     runs-on: ubuntu-latest
+    needs: get-pyproject-python-versions
 
     steps:
       - name: Checkout code
@@ -38,7 +90,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.MIN_PYTHON }}
+          python-version: ${{ needs.get-pyproject-python-versions.outputs.min_python }}
 
       - uses: actions/setup-node@v4
         with:
@@ -93,13 +145,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: 
       - build-wheel
-      - generate-additional-versions
+      - get-pyproject-python-versions
+    env:
+      MIN_PYTHON: ${{ needs.get-pyproject-python-versions.outputs.min_python }}
 
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        py: [""] # placeholder, will use default version
-        include: ${{ fromJson(needs.generate-additional-versions.outputs.result) }}
+        os: ["ubuntu-latest"]
+        py: ${{ fromJson(needs.get-pyproject-python-versions.outputs.result) }}
+        include: 
+          - os: windows-latest
+            py: "" # placeholder, will use default version
+          - os: macos-latest
+            py: ""
       fail-fast: false
 
     steps:
@@ -134,7 +192,7 @@ jobs:
         run: uv run python check_fitters.py
 
       - name: Check that the docs build (linux only)
-        if: ${{ !matrix.py && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.py == env.MIN_PYTHON && matrix.os == 'ubuntu-latest' }}
         run: |
           source .venv/bin/activate
           make -j 4 -C doc SPHINXOPTS="-W --keep-going -n" html
