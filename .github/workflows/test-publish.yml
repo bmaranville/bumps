@@ -85,6 +85,8 @@ jobs:
             }
             console.log({additional_versions});
             core.setOutput("include", JSON.stringify(additional_versions));
+            return JSON.stringify(additional_versions);
+          result-encoding: string
 
   test-generated:
     runs-on: ubuntu-latest
