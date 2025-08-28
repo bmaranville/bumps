@@ -91,7 +91,7 @@ jobs:
     needs: generate-matrix
     steps:
       - name: Print output
-        run: echo ${{ toJson(needs.generate-matrix) }}
+        run: echo '${{ toJson(needs.generate-matrix) }}'
 
 # Test the wheel on different platforms, test webview, and check docs build
   test:
