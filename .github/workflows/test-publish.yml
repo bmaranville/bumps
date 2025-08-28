@@ -64,7 +64,7 @@ jobs:
                 minor++;
               }
               return JSON.stringify(versions);
-            catch (error) {
+            } catch (error) {
               core.setFailed(error.message);
             }
 
