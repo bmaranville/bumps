@@ -100,7 +100,6 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        # all additional supported python versions
         include: [{"py":"3.12"},{"py":"3.13"}]
       fail-fast: false
 
