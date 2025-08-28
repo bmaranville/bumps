@@ -64,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       include: ${{ steps.generate-matrix.include }}
+      result: ${{ steps.generate-matrix.result }}
     steps:
       - name: Generate matrix
         uses: actions/github-script@v6
