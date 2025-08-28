@@ -105,6 +105,8 @@ jobs:
       fail-fast: false
 
     steps:
+      - name: print includes
+        run: echo '${{ needs.generate-additional-versions.outputs.result }}'
       - uses: actions/checkout@v4
 
       - name: Install uv
