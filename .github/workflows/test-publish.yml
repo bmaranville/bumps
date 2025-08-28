@@ -84,7 +84,8 @@ jobs:
               minor++;
             }
             console.log({additional_versions});
-            core.setOutput("include", JSON.stringify(additional_versions));
+            return JSON.stringify(additional_versions);
+          result-encoding: string
 
 # Test the wheel on different platforms, test webview, and check docs build
   test:
@@ -97,7 +98,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         # all additional supported python versions
-        include: ${{ fromJson(needs.generate-matrix.outputs.include) }}
+        include: ${{ fromJson(needs.generate-matrix.outputs.result) }}
 
       fail-fast: false
 
