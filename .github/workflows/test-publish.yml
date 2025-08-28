@@ -100,7 +100,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        py: [env.MIN_PYTHON]
+        py: ["${{ env.MIN_PYTHON }}"]
         include: ${{ fromJson(needs.generate-additional-versions.outputs.result) }}
       fail-fast: false
 
@@ -115,10 +115,10 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Set up Python ${{ matrix.py || env.MIN_PYTHON}}
+      - name: Set up Python ${{ matrix.py }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.py || env.MIN_PYTHON}}
+          python-version: ${{ matrix.py }}
 
       - name: Download the wheel
         uses: actions/download-artifact@v4
