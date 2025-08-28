@@ -66,6 +66,7 @@ jobs:
             } catch (error) {
               core.setFailed(error.message);
             }
+					result-encoding: string
 
   # Build a pure Python wheel and upload as an artifact
   build-wheel:
