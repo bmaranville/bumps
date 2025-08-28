@@ -12,6 +12,10 @@ defaults:
   run:
     shell: bash
 
+env:
+  MIN_PYTHON: "3.11"
+  MAX_PYTHON: "3.13"
+
 jobs:
   # Build a pure Python wheel and upload as an artifact
   build-wheel:
@@ -34,7 +38,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ env.MIN_PYTHON }}
 
       - uses: actions/setup-node@v4
         with:
@@ -55,22 +59,43 @@ jobs:
           path: |
             dist/bumps-*-py3-none-any.whl
             dist/bumps-*.tar.gz
-  # Test the wheel on different platforms, test webview, and check docs build
+
+  generate-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate matrix
+        uses: actions/github-script@v6
+        id: generate-matrix
+        with:
+          script: |
+            const assert = require("assert");
+            const minver = process.env.MIN_PYTHON.split(".").map((s) => +s);
+            const maxver = process.env.MAX_PYTHON.split(".").map((s) => +s);
+            assert(minver[0] === maxver[0], "Python major versions must match");
+            const additional_versions = [];
+            const min_minor = minver[1];
+            const max_minor = maxver[1];
+            // skip the minver, as it is already included
+            let minor = min_minor + 1;
+            while (minor <= max_minor) {
+              additional_versions.push({ py: `${minver[0]}.${minor}` });
+              minor++;
+            }
+            core.setOutput("include", JSON.stringify(additional_versions));
+
+# Test the wheel on different platforms, test webview, and check docs build
   test:
-    runs-on: ${{ matrix.cfg.os }}
-    needs: build-wheel
+    runs-on: ${{ matrix.os }}
+    needs: 
+      - build-wheel
+      - generate-matrix
 
     strategy:
       matrix:
-        cfg:
-          #- { os: ubuntu-latest, py: 3.8 }
-          #- { os: ubuntu-latest, py: 3.9, doc: 1 }
-          #- { os: ubuntu-latest, py: "3.10" }
-          - { os: ubuntu-latest, py: 3.11, doc: 1 }
-          - { os: ubuntu-latest, py: 3.12 }
-          - { os: ubuntu-latest, py: 3.13 }
-          - { os: windows-latest, py: "3.11" }
-          - { os: macos-latest, py: "3.11" }
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        # all additional supported python versions
+        include: ${{ fromJson(needs.generate-matrix.outputs.include) }}
+
       fail-fast: false
 
     steps:
@@ -79,10 +104,10 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Set up Python ${{ matrix.cfg.py }}
+      - name: Set up Python ${{ matrix.py || env.MIN_PYTHON}}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.cfg.py }}
+          python-version: ${{ matrix.py || env.MIN_PYTHON}}
 
       - name: Download the wheel
         uses: actions/download-artifact@v4
@@ -105,7 +130,7 @@ jobs:
         run: uv run python check_fitters.py
 
       - name: Check that the docs build (linux only)
-        if: matrix.cfg.doc == 1
+        if: matrix.py == null && matrix.os == 'ubuntu-latest'
         run: |
           source .venv/bin/activate
           make -j 4 -C doc SPHINXOPTS="-W --keep-going -n" html
