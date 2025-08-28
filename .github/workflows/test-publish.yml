@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       include: ${{ steps.generate-matrix.include }}
-      result: ${{ steps.generate-matrix.result }}
+      result: ${{ steps.generate-matrix.outputs.result }}
     steps:
       - name: Generate matrix
         uses: actions/github-script@v6
@@ -90,6 +90,8 @@ jobs:
             core.setOutput("include", JSON.stringify(additional_versions));
             return JSON.stringify(additional_versions);
           result-encoding: string
+      - name: Print versions
+        run: echo '${{ toJson(steps.generate-matrix) }}'
 
   test-generated:
     runs-on: ubuntu-latest
