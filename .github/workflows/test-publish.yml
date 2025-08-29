@@ -76,6 +76,7 @@ jobs:
 # Test the wheel on different platforms, test webview, and check docs build
   test:
     runs-on: ${{ matrix.os }}
+    name: "Test on ${{ matrix.os }} with Python ${{ matrix.py || env.MIN_PYTHON }}, docs: ${{ matrix.py == env.MIN_PYTHON && matrix.os == 'ubuntu-latest' }}"
     needs: 
       - build-wheel
       - get-pyproject-python-versions
