@@ -1,6 +1,5 @@
 import { readFileSync } from "fs";
 import assert from "assert";
-import { setOutput, setFailed } from "core";
 
 function parsePyproject() {
   try {
@@ -37,6 +36,19 @@ function parsePyproject() {
   } catch (error) {
     setFailed(error.message);
   }
+}
+
+function setOutput(name, value) {
+  console.log(`::set-output name=${name}::${value}`);
+}
+
+function setFailed(message) {
+  console.log(`::error::${message}`);
+  process.exit(1);
+}
+
+if (import.meta.filename === process.argv[1]) {
+  parsePyproject();
 }
 
 export default parsePyproject;
