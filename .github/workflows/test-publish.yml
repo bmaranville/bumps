@@ -81,8 +81,6 @@ jobs:
       - get-pyproject-python-versions
     env:
       MIN_PYTHON: ${{ needs.get-pyproject-python-versions.outputs.min_python }}
-    name: "Test on ${{ matrix.os }} with Python ${{ matrix.py || env.MIN_PYTHON }}, docs: ${{ matrix.py == env.MIN_PYTHON && matrix.os == 'ubuntu-latest' }}"
-
 
     strategy:
       matrix:
