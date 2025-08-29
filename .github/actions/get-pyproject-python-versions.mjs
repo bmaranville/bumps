@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, appendFileSync } from "fs";
 import assert from "assert";
 
 function parsePyproject() {
@@ -39,11 +39,11 @@ function parsePyproject() {
 }
 
 function setOutput(name, value) {
-  console.log(`::set-output name=${name}::${value}`);
+  appendFileSync(process.env.GITHUB_OUTPUT || 1, `${name}=${value}\n`);
 }
 
 function setFailed(message) {
-  console.log(`::error::${message}`);
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY || 2, `::error::${message}\n`);
   process.exit(1);
 }
 
