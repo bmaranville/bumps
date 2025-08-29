@@ -25,11 +25,8 @@ jobs:
         with:
           fetch-depth: 1
       - name: Parse pyproject.toml
-        uses: actions/github-script@v7
-        with:
-          script: |
-            import parsePyproject from "./.github/actions/get-pyproject-python-versions.mjs"
-            parsePyproject()
+        run: |
+          node ./.github/actions/get-pyproject-python-versions.mjs
         id: parse
         
   # Build a pure Python wheel and upload as an artifact
