@@ -1,11 +1,9 @@
 {
   "name": "bumps-webview-client",
   "version": "0.1.21",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bumps/bumps",
-    "directory": "bumps/webview/client"
+  "main": "bumps/webview/client/src/main.js",
+  "exports": {
+    "./*": "./bumps/webview/client/*"
   },
   "scripts": {
     "dev": "vite",

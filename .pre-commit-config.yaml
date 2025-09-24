@@ -6,7 +6,7 @@ repos:
         entry: eslint
         files: \.(vue|js|ts|mjs|tsx|jsx)$ # *.js, *.jsx, *.ts and *.tsx
         types: [file]
-        args: ["-c", "bumps/webview/client/eslint.config.js", "--fix"]
+        args: ["-c", "eslint.config.js", "--fix"]
         additional_dependencies: ["eslint@9.15.0"]
         language: node
   - repo: local
@@ -16,7 +16,7 @@ repos:
         entry: prettier
         files: \.(json|yaml|md|vue|js|ts|mjs|tsx|jsx)$
         types: [file]
-        args: ["--write", "--config", "bumps/webview/client/prettier.config.js"]
+        args: ["--write", "--config", "prettier.config.js"]
         additional_dependencies: ["prettier@3.4.1"]
         language: node
   - repo: https://github.com/pre-commit/pre-commit-hooks
