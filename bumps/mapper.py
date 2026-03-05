@@ -503,3 +503,74 @@ class MPIMapper(BaseMapper):
         # Set problem=None to stop the program.
         show_performance(MPIMapper.timestamps)
         MPIMapper.start_mapper(None, None)
+
+
+class DaskSlurmMapper(BaseMapper):
+    """
+    Dask-based distributed mapper that requests a SLURM allocation on the fly.
+
+    This mapper is designed for JupyterHub users who start with a small
+    allocation and need to "grab" a whole node for intensive computation.
+    """
+
+    cluster = None
+    client = None
+    timestamps = []
+
+    @staticmethod
+    def start_worker(problem):
+        pass
+
+    @staticmethod
+    def start_mapper(problem, modelargs=None, cpus=1):
+        from dask_jobqueue import SLURMCluster
+        from dask.distributed import Client
+        import sys
+
+        # 1. Request the Cluster
+        # We assume 'cpus' here refers to the number of nodes desired.
+        if DaskSlurmMapper.cluster is None:
+            # Note: You may need to customize 'queue', 'memory', and 'cores'
+            # to match your specific cluster's hardware specs.
+            DaskSlurmMapper.cluster = SLURMCluster(
+                cores=64,  # Physical cores per node
+                processes=64,  # One worker per core
+                memory="256GB",  # RAM per node
+                walltime="02:00:00",
+                python=sys.executable,  # Ensure workers use the same env
+                job_extra_directives=["--exclusive"],  # Ensure you get the WHOLE node
+            )
+
+            # 2. Scale to the requested number of nodes
+            DaskSlurmMapper.cluster.scale(jobs=cpus)
+            DaskSlurmMapper.client = Client(DaskSlurmMapper.cluster)
+
+            # 3. Wait for at least one worker to connect before proceeding
+            print(f"Waiting for {cpus} Slurm node(s) to report for duty...")
+            DaskSlurmMapper.client.wait_for_workers(n_workers=1)
+            print("Cluster ready. Launching computation.")
+
+        DaskSlurmMapper.timestamps = []
+
+        def mapper(points):
+            tstart = time.perf_counter_ns()
+
+            # Use client.map to distribute the problem.nllf calls
+            # We use 'gather' to bring results back to the Jupyter session
+            futures = DaskSlurmMapper.client.map(problem.nllf, points)
+            result = DaskSlurmMapper.client.gather(futures)
+
+            tstop = time.perf_counter_ns()
+            DaskSlurmMapper.timestamps.append((tstart, tstop))
+            return result
+
+        return mapper
+
+    @staticmethod
+    def stop_mapper(mapper=None):
+        if DaskSlurmMapper.client is not None:
+            show_performance(DaskSlurmMapper.timestamps)
+            DaskSlurmMapper.client.close()
+            DaskSlurmMapper.cluster.close()
+            DaskSlurmMapper.client = None
+            DaskSlurmMapper.cluster = None

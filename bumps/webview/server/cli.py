@@ -117,6 +117,7 @@ class BumpsOptions:
     parallel: int = 0
     threads: bool = False
     mpi: Optional[bool] = None
+    dask: bool = False
 
     # Webserver controls.
     mode: str = "edit"
@@ -449,6 +450,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="version",
         version=_branding(),
     )
+    misc.add_argument(
+        "--dask",
+        action="store_true",
+        help="Use DaskSlurmMapper to request a full SLURM node for the fit",
+    )
 
     # TODO: restructure so that -b -s -r --webview override each other
     # Maybe a runmode enum: 0=batch 1=edit 2=start 3=run
@@ -736,7 +742,7 @@ def interpret_fit_options(options: BumpsOptions):
 
     need_mapper = not options.chisq
     if need_mapper:
-        from bumps.mapper import MPIMapper, MPMapper, SerialMapper, ThreadPoolMapper, using_mpi
+        from bumps.mapper import MPIMapper, MPMapper, SerialMapper, ThreadPoolMapper, DaskSlurmMapper, using_mpi
 
         async def start_mapper(App=None):
             # print(f"{api.state.rank}start mapper")
@@ -748,7 +754,12 @@ def interpret_fit_options(options: BumpsOptions):
                 problem = api.state.problem.fitProblem
             else:
                 problem = None
-            if using_mpi() or options.mpi:
+            if options.dask:
+                # 'parallel' or 'cpus' from cli determines how many nodes/jobs to grab
+                from dask_jobqueue import SLURMCluster
+
+                mapper = DaskSlurmMapper
+            elif using_mpi() or options.mpi:
                 # print("Starting with MPI mapper")
                 mapper = MPIMapper
             elif options.parallel == 1:
