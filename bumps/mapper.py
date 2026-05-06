@@ -503,3 +503,60 @@ class MPIMapper(BaseMapper):
         # Set problem=None to stop the program.
         show_performance(MPIMapper.timestamps)
         MPIMapper.start_mapper(None, None)
+
+class BatchMapper(BaseMapper):
+    """
+    Parallel mapper optimized for batched backend execution (e.g., GPU/CUDA/JAX).
+    
+    Instead of iterating `problem.nllf(p)` over individual threads or processes, 
+    this mapper structurally pre-computes the physical slabs for an entire 
+    population of points and ships them as a single multi-dimensional payload 
+    to the underlying models.
+    """
+    timestamps = []
+
+    @staticmethod
+    def start_worker(problem):
+        pass
+
+    @staticmethod
+    def start_mapper(problem, modelargs=None, cpus=0):
+        import numpy as np
+        BatchMapper.timestamps = []
+
+        def mapper(points):
+            tstart = time.perf_counter_ns()
+            
+            num_models = problem.num_models
+            # Structure: prepared_models_batch[model_index][point_index]
+            prepared_models_batch = [[] for _ in range(num_models)]
+
+            original_p = problem.getp()
+            try:
+                for pvec in points:
+                    if problem.valid(pvec):
+                        problem.setp(pvec)
+                        slabs_for_models = problem.batch_nllf_prepare()
+                        for m_idx in range(num_models):
+                            prepared_models_batch[m_idx].append(slabs_for_models[m_idx])
+                    else:
+                        # Append an empty 0x6 array for invalid points. 
+                        # The GPU backend can parse this without crashing, but FitProblem 
+                        # will ultimately ignore the output anyway due to the failing mask.
+                        for m_idx in range(num_models):
+                            prepared_models_batch[m_idx].append(np.zeros((0, 6)))
+            finally:
+                problem.setp(original_p)
+
+            # Hand off the aggregated batch to the global problem evaluator
+            result = problem.batch_nllf(prepared_models_batch, points)
+
+            tstop = time.perf_counter_ns()
+            BatchMapper.timestamps.append((tstart, tstop))
+            return result
+
+        return mapper
+
+    @staticmethod
+    def stop_mapper(mapper=None):
+        show_performance(BatchMapper.timestamps)

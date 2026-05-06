@@ -556,6 +556,7 @@ class FitProblem(Generic[FitnessType], CovarianceMixin):
         return np.array(pop).T
 
     def nllf(self, pvec=None) -> float:
+        """Existing nllf implementation (unchanged)."""
         """
         Compute the cost function for a new parameter set p.
 
@@ -819,6 +820,80 @@ class FitProblem(Generic[FitnessType], CovarianceMixin):
                 failing.append(str(c))
 
         return nllf, failing
+
+    def batch_nllf_prepare(self) -> util.List[np.ndarray]:
+        """
+        Generate the raw slab representations for all models at the current 
+        parameter state, bypassing 'step_interfaces' and 'dA' contraction.
+        
+        Returns
+        -------
+        list of np.ndarray
+            A list containing the N x 6 raw slab arrays for each model in the problem.
+        """
+        # self.models is an iterator that safely handles freevars substitutions
+        return [model.batch_nllf_prepare() for model in self.models]
+
+    def batch_nllf(self, prepared_models_batch: util.List[util.List[np.ndarray]], points: util.Sequence[util.NDArray]) -> util.List[float]:
+        """
+        Compute the NLLF for a batch of points, evaluating priors and constraints 
+        in Python while offloading the heavy reflectivity calculations to the 
+        model's GPU backend.
+
+        Parameters
+        ----------
+        prepared_models_batch : list of list of np.ndarray
+            A list of length `num_models`. Each element is a list of length `batch_size` 
+            containing the prepared raw slab arrays for that specific model.
+        points : sequence of NDArray
+            The batch of parameter vectors to evaluate.
+
+        Returns
+        -------
+        list of float
+            The combined global NLLF values for each point in the batch.
+        """
+        batch_size = len(points)
+        total_nllf = np.zeros(batch_size)
+        failing_mask = np.zeros(batch_size, dtype=bool)
+
+        original_p = self.getp()
+        
+        try:
+            # 1. Evaluate parameter priors and constraints for each point natively
+            for i, pvec in enumerate(points):
+                if not self.valid(pvec):
+                    total_nllf[i] = np.inf
+                    failing_mask[i] = True
+                    continue
+
+                self.setp(pvec)
+                pparameter, bad_priors = self.parameter_nllf()
+                pconstraints, bad_constraints = self.constraints_nllf()
+
+                failing = bad_priors + bad_constraints
+                if failing:
+                    total_nllf[i] = pparameter + pconstraints + self.penalty_nllf
+                    failing_mask[i] = True
+                else:
+                    total_nllf[i] = pparameter + pconstraints
+
+            # 2. Evaluate model NLLFs in bulk via the backend
+            for m_idx, model in enumerate(self.models):
+                # The backend handles the entire batch for this specific model simultaneously
+                model_nllfs = model.batch_nllf(prepared_models_batch[m_idx])
+                weight_sq = self.weights[m_idx]**2
+
+                for i in range(batch_size):
+                    # Only add the model's computed NLLF if the priors/constraints were valid
+                    if not failing_mask[i]:
+                        total_nllf[i] += weight_sq * model_nllfs[i]
+                        
+        finally:
+            # Always ensure the FitProblem is restored to its original state
+            self.setp(original_p)
+
+        return total_nllf.tolist()
 
     def simulate_data(self, noise=None):
         """Simulate data with added noise"""

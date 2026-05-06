@@ -117,6 +117,7 @@ class BumpsOptions:
     parallel: int = 0
     threads: bool = False
     mpi: Optional[bool] = None
+    batch_calc: bool = False
 
     # Webserver controls.
     mode: str = "edit"
@@ -450,6 +451,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         version=_branding(),
     )
 
+    misc.add_argument(
+        "--batch-calc",
+        action=argparse.BooleanOptionalAction,
+        help="evaluate models in vectorized batches (optimized for GPU/JAX backends)",
+    )
+
     # TODO: restructure so that -b -s -r --webview override each other
     # Maybe a runmode enum: 0=batch 1=edit 2=start 3=run
     # Webserver controls
@@ -736,7 +743,7 @@ def interpret_fit_options(options: BumpsOptions):
 
     need_mapper = not options.chisq
     if need_mapper:
-        from bumps.mapper import MPIMapper, MPMapper, SerialMapper, ThreadPoolMapper, using_mpi
+        from bumps.mapper import MPIMapper, MPMapper, SerialMapper, ThreadPoolMapper, BatchMapper, using_mpi
 
         async def start_mapper(App=None):
             # print(f"{api.state.rank}start mapper")
@@ -751,6 +758,8 @@ def interpret_fit_options(options: BumpsOptions):
             if using_mpi() or options.mpi:
                 # print("Starting with MPI mapper")
                 mapper = MPIMapper
+            elif options.batch_calc:
+                mapper = BatchMapper
             elif options.parallel == 1:
                 mapper = SerialMapper
             elif options.threads:
