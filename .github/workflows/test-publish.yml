@@ -32,7 +32,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
-
+      - name: Debug UV Output
+        run: uv python list --output-format json
       - name: Get Filtered Minor Versions
         id: set-matrix
         run: |
